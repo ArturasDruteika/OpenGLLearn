@@ -1,5 +1,5 @@
-#include <glad/gl.h>
-#include <GLFW/glfw3.h>
+#include "glad/gl.h"
+#include "GLFW/glfw3.h"
 #include "spdlog/spdlog.h"
 
 
@@ -11,34 +11,34 @@ int main()
         return -1;
     }
 
-    GLFWwindow* window = glfwCreateWindow(800, 600, "GLFW Window", nullptr, nullptr);
-    if (!window)
+    GLFWwindow* pWindow = glfwCreateWindow(800, 600, "GLFW Window", nullptr, nullptr);
+    if (!pWindow)
     {
         spdlog::error("Failed to create GLFW window");
         glfwTerminate();
         return -1;
     }
 
-    glfwMakeContextCurrent(window);
+    glfwMakeContextCurrent(pWindow);
 
     if (!gladLoadGL(glfwGetProcAddress))
     {
         spdlog::error("Failed to initialize GLAD");
-        glfwDestroyWindow(window);
+        glfwDestroyWindow(pWindow);
         glfwTerminate();
         return -1;
     }
 
-    while (!glfwWindowShouldClose(window))
+    while (!glfwWindowShouldClose(pWindow))
     {
         glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glfwSwapBuffers(window);
+        glfwSwapBuffers(pWindow);
         glfwPollEvents();
     }
 
-    glfwDestroyWindow(window);
+    glfwDestroyWindow(pWindow);
     glfwTerminate();
     return 0;
 }
