@@ -6,6 +6,10 @@ Current file has most of the code using glfw functionality. OpenGL (specifically
 * `glClear(GL_COLOR_BUFFER_BIT);`
 I will talk more about these and other OpenGL specific functions in the later examples.
 
+At the end of this lesson, we will be able to generate a simple GLFW window.
+
+![GLFW Window](Assets/glfw_window.png)
+
 --- 
 ### Main GLFW Operations
 Steps to have a primitive GLFW window:
