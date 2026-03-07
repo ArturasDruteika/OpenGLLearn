@@ -1,6 +1,7 @@
 #include "glad/gl.h"
 #include "GLFW/glfw3.h"
 #include "spdlog/spdlog.h"
+#include <string>
 
 
 constexpr int OPENGL_MAJOR_VERSION = 4;
@@ -15,9 +16,10 @@ void framebufferSizeCallback(GLFWwindow* window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
-int CompileShader(const char* source, unsigned int shaderID)
+int CompileShader(const std::string& source, unsigned int shaderID)
 {
-    glShaderSource(shaderID, 1, &source, nullptr);
+    const char* sourceCStr = source.c_str();
+    glShaderSource(shaderID, 1, &sourceCStr, nullptr);
     glCompileShader(shaderID);
 
     int success;
@@ -31,7 +33,7 @@ int CompileShader(const char* source, unsigned int shaderID)
     return success;
 }
 
-unsigned int CreateShaderProgram(const char* vertexSource, const char* fragmentSource)
+unsigned int CreateShaderProgram(const std::string& vertexSource, const std::string& fragmentSource)
 {
     unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
     if (!CompileShader(vertexSource, vertexShader))
@@ -122,7 +124,7 @@ int main()
     glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    const char* vertexShaderSource = R"(
+    const std::string vertexShaderSource = R"(
         #version 460 core
         layout (location = 0) in vec3 aPos;
         layout (location = 1) in vec4 aColor;
@@ -136,7 +138,7 @@ int main()
         }
     )";
 
-    const char* fragmentShaderSource = R"(
+    const std::string fragmentShaderSource = R"(
         #version 460 core
         in vec4 ourColor;
         out vec4 FragColor;
