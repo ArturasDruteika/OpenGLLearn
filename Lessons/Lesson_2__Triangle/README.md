@@ -101,11 +101,28 @@ Another attribute of VBO is that it has an ID. Once you ask for OpenGL to genera
 
 If the VBO is a buffered data, then what is the point in calling it __Vertex Buffer Data__? Well, it is because usually, and most often, VBO's are used to store data that describes what a vertex is. How to descibe it will be answered in the VAO part.
 
-To create a VBO in C++, you have to call this OpenGL operation:
+To create a VBO in C++ and buffer vertices data, you have to call these OpenGL operations:
 
 ```C++
 unsigned int vbo;
 glGenBuffers(1, &vbo);
+glBindBuffer(GL_ARRAY_BUFFER, vbo);
+glBufferData(GL_ARRAY_BUFFER, sizeof(triangleVertices), triangleVertices, GL_STATIC_DRAW);
+```
+
+What happens here is pretty simple:
+
+1. `unsigned int vbo;` creates a vbo variable. Currently this variable does not mean anything.
+2. `glGenBuffers(1, &vbo);` generates a buffer __ID__. Currently, it does not generate a buffer inside the VRAM (even though the operation is called `glGenBuffers`) .This line basically puts vbo into context vision. The context is notified that a new buffer "handle" is created. This handle is a key to understand what is going to happen later. `vbo` is not a part inside the VRAM that has vertices data buffered. It is not a pointer or anything else that says "hey, I point to this memory data inside the VRAM. No, at the moment, it is only a simple handle with some ID assigned to it by the OpenGL Context.
+3. `glBindBuffer(GL_ARRAY_BUFFER, vbo);` Notifies context that all of the operations on the array buffers are going to be bound to this vbo (which as I said is just a simple handle with an ID). Youca n have this model in your head `GL_ARRAY_BUFFER binding = vbo`. With this operation called, once we actually going to buffer the data to VRAM, we (context) will be able to map it to this handle. You can think of it as a bank account. You can put your money to the bank, but you also need some info given to the bank that would say "this amount of money is associated for this person". The same way vertex buffer objects and actual data in the VRAM work.
+4. `glBufferData(GL_ARRAY_BUFFER, sizeof(triangleVertices), triangleVertices, GL_STATIC_DRAW);` this is the actual operation on which OpenGL loads `triangleVertices` data to VRAM (actaully, OpenGL decides where this data is going to live, it does not neccesseraly need to be on VRAm, it can be stored in RAM or anywhere else). If we did not bind buffer before calling this operation, it would be like putting money to the bank without any connection to which this money belong, so later in the future there would be no optiont to withdraw that money. 
+
+Going further with the bank example, you can have this mental model:
+
+```
+glGenBuffers -> create bank account number
+glBindBuffer -> select the account you want to operate on
+glBufferData -> deposit money into that account
 ```
 
 Why is it of type `unsigned int`? I do not know, ask someone who was responsible for making it that way, but now just pay attention that buffer (and, to be honest, many other OpenGL variables) are of this types. Unsigned int and OpenGL are like that couple that at first looks weird, but you see them everywhere together going hand in hand. I am sure, that when smart people designed OpenGL they had real concrete reasons on why a lot of stuff is unsigned int, but I have never deep dived into the reasons.
@@ -121,23 +138,49 @@ float triangleVertices[] = { 0.0f,  0.5f,  0.0f, 1.0f, 1.0f, 1.0f, -0.5f, -0.5f,
 
 Tell me honestly, if any of you could look at this and say "That is easy, it describes the positions and colors of each of the 3 vertices insidet he vertex data". Please, do not lie to yourself. It is easy to a developer to just add comments and order array data so taht visually it could mean something to a developer, but to OpenGL, no comments, no ordering will answer a basic question - "What is this data that is buffered here?". To help OpenGL to understand it the same way we can, we need to tell it which numbers and which positions mean what. 
 
-To do it, we have to use __Vertex Array Object - VAO__. Before answering some of your questions, I will paste the code from the main.cpp that will show you what is what and how does VAO come into this play.
+To do it, we have to use __Vertex Array Object - VAO__. To genrate VAO and tell how to read the data from the memory, we call these operations
 
 ```cpp
-1   unsigned int vbo;
-2   unsigned int vao;
+1   unsigned int vao;
+2.  glGenVertexArrays(1, &vao);
+3.  glBindVertexArray(vao);
 
-3   glGenVertexArrays(1, &vao);
-4   glGenBuffers(1, &vbo);
-
-5   glBindVertexArray(vao);
-6   glBindBuffer(GL_ARRAY_BUFFER, vbo);
-7   glBufferData(GL_ARRAY_BUFFER, sizeof(triangleVertices), triangleVertices, GL_STATIC_DRAW);
-8   glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-9   glEnableVertexAttribArray(0);
-10  glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(2 * sizeof(float)));
-11  glEnableVertexAttribArray(1);
+4.  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+5.  glEnableVertexAttribArray(0);
+6.  glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(2 * sizeof(float)));
+7.  glEnableVertexAttribArray(1);
 ```
 
-1. First two lines, we just create vbo and vao variables (pay attention that they are unsigned int type)
-2.  Lines 3, 4 - generate vao and vbo. How is ti different from the firs two lines? Well, at first we only created like some sort of variables that will be used for the OpenGL. Lines 3 and 4 is where the context comes into play. It assigned unique IDs to these 2 variables and, based on what operation (either `glGenVertexArrays` or `glGenBuffers`) knows that a variable `vbo` is a vertex buffer obj. and `vao` is a vertex array obj.
+1. `unsigned int vao;` Same as for vbo, it just creates a C++ variable thta is going to be used later on. Currently, it does not mean anything to OpenGL.
+2. `glGenVertexArrays(1, &vao);` Generates vertex array ID and assigns it to the `vao` variable. You can also call it a "handle".
+3. `glBindVertexArray(vao);` binds this handle. That means that every rules on how to read data from the memory will be associated with this handle.
+
+Now the last 4 lines is where a slightly deeper understanding is needed. But please do not panic, to be honest, it is way easier than what it looks like. To help you understand it, I will share this image:
+
+![vertex_data_image](Assets/vetices_data.drawio.png) 
+
+As you can see, it shows how the data inside the `triangleVertices` is ordered. It has 3 vertices, where each vertex has 2 components for coordinates (X and Y), and 4 components for the color (RGBA).
+
+4. `glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);` This is how we describe to OpenGL a single attribute about a vertex. It looks kinda tricky and weird, but let's go argument by argument:
+    
+    1. `0` means the location of this vertex attribute. Each vertex might be comprised of many attributes. It can have positions, colors, normals, texture coords and etc. `0` tells "this will be the first attributein the buffered data.
+    2. `2` means that this attribute is comprised of 2 components / elements. You can kinda imagine it as a rule that we place on this attribute "this attribute is comprised of 2 components".
+    3. `GL_FLOAT` answers what type of data this attribute is. Is it float, is it int, is it double? `GL_FLOAT` means that the first 2 numbers in the buffered data should be treated as floats.
+    4. `GL_FALSE` answers "once read, should normalization be aplied to these 2 numbers". It is simple, either false or true.
+    5. `6 * sizeof(float)` answers "how big of a stride OpenGL has to do, when reading a buffered data, before the next 2 numbers (components, that comprise this attribute) are seen again. Why is it sizeof(float)? Because OpenGL does not know the size of float in terms of bytes. In C++, `float` is usually 4 bytes. `6 * sizeof(float)` essentially says "the next pair of numbers is after 24 bytes".
+    6. `(void*)0` tells that this attribute starts at the position __0__.
+
+    Going back to this `float triangleVertices[] = { 0.0f,  0.5f,  0.0f, 1.0f, 1.0f, 1.0f, -0.5f, -0.5f,  0.0f, 1.0f, 1.0f, 1.0f, 0.5f, -0.5f,  0.0f, 1.0f, 1.0f, 1.0f };` and taking into consideration of the `glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);`' we essentially say that "starting from position 0, take these 2 numbers, keep in mind that these 2 numbers are floats, do not normalize them and vuoila, you have a single attribute of a single vertex. Now jump again for 6 (size of float) bytes and you will cross another 2 numbers that will comprise another attribute for another vertex. Then jump again, again, again and keep doing it as long as `sizeof(triangleVertices)` allows it to do.
+
+5. `glEnableVertexAttribArray(0);` enables the vertex attribute `0` so the GPU could be able to read the data from the data buffer during rendering and assign the specified chunk of it to attribute `0`.
+6. `glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(2 * sizeof(float)));` does exatcly the same thing as line __4__. It tells "The location of this vertex attribute is `1`. It is comprised of 4 numbers (components). These numbers are of type float. Do not normalize them. Another set of this attribute will be after `6 * size(float)` = 24 bytes. The start of this attribute is at `2 * sizeof(float)` = 8 bytes.
+7. `glEnableVertexAttribArray(1);` enables the vertex attribute `1` so the GPU could be able to read the data from the data buffer during rendering and assign the specified chunk of it to attribute `1`.
+
+That is basically it. Looking back at the last image, you can clearly see what these operatios. 
+
+![vertez_attribute_indications](Assets/vertez_attribute_indications.png)
+
+Green arrows point to the positions in the buffered data that is attribute `0`, while the red ones point to the attribute `1`. BUT, keep in mind, that OpenGL does not understand what these attributes mean. Up to now, it __ONLY__ knows that there are 2 attributes that comprise a single vertex.
+
+---
+### 5. Vertex / Fragment shaders
