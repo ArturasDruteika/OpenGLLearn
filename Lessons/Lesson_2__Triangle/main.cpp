@@ -104,10 +104,10 @@ int main()
     }
 
     float triangleVertices[] = {
-        // positions         // colors
-         0.0f,  0.5f, 0.0f,  0.0f, 1.0f, 1.0f, 1.0f, // top vertex 
-        -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 1.0f, 1.0f, // bottom left
-         0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 1.0f, 1.0f  // bottom right
+        // positions    // colors
+         0.0f,  0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // top vertex 
+        -0.5f, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // bottom left
+         0.5f, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f  // bottom right
     };
 
     unsigned int vbo;
@@ -119,21 +119,21 @@ int main()
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(triangleVertices), triangleVertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(2 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
     const std::string vertexShaderSource = R"(
         #version 460 core
-        layout (location = 0) in vec3 aPos;
+        layout (location = 0) in vec2 aPos;
         layout (location = 1) in vec4 aColor;
 
         out vec4 ourColor;
 
         void main()
         {
-            gl_Position = vec4(aPos, 1.0);
+            gl_Position = vec4(aPos, 0.0, 1.0);
             ourColor = aColor;
         }
     )";
