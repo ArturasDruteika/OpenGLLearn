@@ -1,5 +1,7 @@
 # Lesson 2 - Triangle 
 
+Before starting, I wanna share [learnopengl.com](https://learnopengl.com/Getting-started/Hello-Triangle) link which (in my mind) explains everything way better than what I am documenting here.
+
 This lesson is adding a few concepts into one. I did not want to separate these concepts into 2 or more lessons lessons due to a 1 major factor. Using the newest OpenGL version (ATM, the newest is 4.6), we cannot create a triangle without using the shaders (at least we cannot do it on Linux). For this, in this lesson we are going to discuss and learn about these topics:
 
 1. Triangle
@@ -184,3 +186,11 @@ Green arrows point to the positions in the buffered data that is attribute `0`, 
 
 ---
 ### 5. Vertex / Fragment shaders
+
+This is the last stage in rendering the triangle. This is also the place, where we tell OpenGL how to interpret what the 2 vertex attributes mean. After this stage, we finally see what `float triangleVertices[] = { 0.0f,  0.5f,  0.0f, 1.0f, 1.0f, 1.0f, -0.5f, -0.5f,  0.0f, 1.0f, 1.0f, 1.0f, 0.5f, -0.5f,  0.0f, 1.0f, 1.0f, 1.0f };` looks like on the screen.
+
+Right now, let's focus purely on what a __shader__ is. As far as I know, shader is nothing more than a program that can be run on the GPU. Yeah, that's it. At first, while learning OpenGL I was one of those people that thought "Shader must have something to do with shadows". To be honest, shaders are powerful tools that help squeezing top level shadows, but they themselves aren't what defines shadows and etc.. 
+
+Let's differentiate between what a vertex and a fragment is. As I said earlier, vertex is nothing more than where the lines intersect to form an internal angle. Triangle, in normal world, has 3 vertices. If you have 5 triangles, in total you will have __5 * 3 = 15__ vertices. That's easy.
+
+With fragments, it is a bit trickier. As you might now, rendering isn't comprised of "I give you info about vertices, generate buffers, bind what I need, tell how to read data from the buffer and that's it". No, there are many many steps, that for today, is not the best thing to explain. For today, I can describe fragment as this: ___a fragment is a candidate pixel produced when a triangle is projected onto the screen___. 
