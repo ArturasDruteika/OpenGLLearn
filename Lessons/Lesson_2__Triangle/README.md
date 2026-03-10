@@ -193,4 +193,64 @@ Right now, let's focus purely on what a __shader__ is. As far as I know, shader 
 
 Let's differentiate between what a vertex and a fragment is. As I said earlier, vertex is nothing more than where the lines intersect to form an internal angle. Triangle, in normal world, has 3 vertices. If you have 5 triangles, in total you will have __5 * 3 = 15__ vertices. That's easy.
 
-With fragments, it is a bit trickier. As you might now, rendering isn't comprised of "I give you info about vertices, generate buffers, bind what I need, tell how to read data from the buffer and that's it". No, there are many many steps, that for today, is not the best thing to explain. For today, I can describe fragment as this: ___a fragment is a candidate pixel produced when a triangle is projected onto the screen___. 
+With fragments, it is a bit trickier. As you might know, rendering isn't comprised of "I give you info about vertices, generate buffers, bind what I need, tell how to read data from the buffer and that's it". No, there are many many steps, that for today, is not the best thing to explain. For today, I can describe fragment as this: ___a fragment is a candidate pixel produced when a triangle is projected onto the screen___. 
+
+Imagine, that you have a wall, and in the middle of that wall there is a window. Also, on the outside, there is some object, let's say that there is a red car. A car is a 3D object, but looking through a window, that car appears to be a 2D, because you only see that car from 1 side. Also, imagine, that on a window, there is a very dense flat net placed that is see through. Now pixels, in this analogy, are the holes on the net. You might ask me "why aren't fragments called pixels, I mean in your example, every hole in the net is a pixel, so each hole might have a different color.". Well, yes, but fragments are a bit more. Imagine, that behind that car, there is aslo a black cat, but that cat is not visible through the window. If fragments were pixels, there would not be no fragments created for the cat, since we cannot see it, but this is the difference. At this stage (before fragment shader does it's job) there are fragments created for that cat. 
+
+Actually, to be ore precise, that car and that car would be "changed" to small triangles. A good example of this "imagine" is when you have a low resolution image. You practically can see pixels, detail is very low, but if the resolution is very big, no pixels are visible and the detail is high. In my example, change pixels to triangles, the more pixels comprise the car, the more detail of that car there is.
+
+Going back to my example, there might be cases where a triangle of cat occupies the same area on the window as the a triangle of the car. So there would be 2 fragments created for the samehole on the net, 1 for the cat's triangle and 1 fr the car's triangle.
+
+Why? Why do we need to have fragments of objects, that are clearly not visible? There are many reasons, but one of the reasons is that you want to see the depth of each fragment. __Depth__ is a new term , which basically is just a "distance" from the screen to that fragment. Also, another reason, why you want to keep those fragments is when you have some games, where there might be some abilities given that lets you see through the walls. After the fragment shader, OpenGL calls a special operation called __depth testing__. It's goal is to leave only those fragments that are closes to the screen, in other words, those fragments that have the lowest depth values. Finally, we are left with fragments that that __could__ be visible on the screen. Again, that still does not mean that they will be seen.
+
+To sum it up:
+
+* __Vertex Shader__ is a small program that is being run on the GPU per vertex. If you have 12 vertices, that means that every iteration on the main while loop, there will be 12 vertex shader program executions.
+* __Fragment Shader__ is a program that is being run on the GPU per fragment. So if your program rendering logic produces, let's say 1 000 000 fragments, that means that every iteration on the main while loop, there will be 1 000 000 fragment shader program executions.
+
+Now you might ask me "1 000 000? surely it cannot be that much". Let's take my monitor's resolution which is 2560 x 1440 = 3 686 400. So there, in minimum, will be 3 686 400 program executions.
+
+#### Coding vertex and fragmendt shaders
+
+Since these programs run many times on the GPU during each render loo, we should stress the fact that these programs should not be computationally heavy. The more heavy the shader is (especially the fragment shader, due to it's number of times being excecuted) the lower FPS (frames per second) you can expect.
+
+Here is the code for the vertex shader:
+
+```GLSL
+#version 460 core
+layout (location = 0) in vec2 aPos;
+layout (location = 1) in vec4 aColor;
+
+out vec4 ourColor;
+
+void main()
+{
+    gl_Position = vec4(aPos, 0.0, 1.0);
+    ourColor = aColor;
+}
+```
+
+Here is fragment shader:
+
+```GLSL
+#version 460 core
+in vec4 ourColor;
+out vec4 FragColor;
+
+void main()
+{
+    FragColor = ourColor;
+}
+```
+
+As you see, these programs are very lightweight, only a few lines of code (P.S. keep in mind that this is lightweight for this example. Professional AAA games or some other heavy rendering applications might have shaders with hundreds or sometimes thousands of lines of code, but we are not going to discuss it now).
+
+What do these shaders do? Let's first discuss the vertex shader. As you remember, VS (vertex shader) is run once for shader, so if we have a single triangle (as in this lesson we have), this VS code will be run 3 times every iteration.
+
+Let's go line by line and explain all of it:
+
+1. `#version 460 core` it just tells the OpenGL that this shader should be used with OpenGL version 4.6
+2. `layout (location = 0) in vec2 aPos;` and `layout (location = 1) in vec4 aColor;` this is the place where the VAO becomes handy. Remember how I said that VAO basically tells OpenGL how to read the data from the buffer on the GPU. It is important for these 2 lines. These 2 lines basically get fed those 2 attributes (their values) that we created earlier. Keep in mind, that even thugh the variables are named aPos (for position) and aColor, it does not mean that these attributes are positions and colors. We just chose to name these varibles this way. They key part is their types, specifically, `vec2` and `vec4`. They MUST correclate with the values from the VAO.
+3. `out vec4 ourColor;` this is the ouput variable (the one that is the output of this shader). It also has a type, which means that this VS will output a `vec4` type of data.
+4. `void main()` same as in C++, it says that this the main function that needs to be executed for this shader program. Kinda like an entry point to this program.
+5. `gl_Position = vec4(aPos, 0.0, 1.0);`
