@@ -269,5 +269,130 @@ What do these shaders do? Let's first discuss the vertex shader. As you remember
 3. `void main()` entrypoint for the fragment shader program program (same as VS).
 4. `out vec4 FragColor;` this is an output for of the FS. Again, you might ask me "Why VS and FS both output color? If FS outputs the color again, then what does it do?". This is the key to understanding FS. FS outputs color for each fragment left, that are ready to be placed on the screen. After FS, there are couple more steps, but those we will discuss later. After FS (right now), you can just take the values (color values, because this is what FS outputs) of those fragments and easily display them on the screen and you would see an actual image of what your triangle looks like.
 
-#### Compiling shaders
+#### Creating shader program
 
+Before using the shaders, we first need to create a shader program. __Shader Program__ is a set of shaders that GPU uses during rendering.
+
+To create a proper shader program using OpenGL, there are 2 steps that need to be completed:
+
+1. Compile shaders
+2. Create a shader program
+
+Let's go 1 by 1 (order matters) and explain why each stage is needed and what happens in those stages. To make it easier, I suggest going from the step 2 (Create a shader program) and then dive deeper into how the actual shader code gets compiled.
+
+#### Create a shader program
+
+This stage creates an actual shader program from 2 pieces, vertex and fragment shaders. We need this program for reasons like:
+
+* How to process vertices?
+* How to transform positions?
+* How to generate fragment color which includes colors?
+
+When we have a data buffer, that good old `float triangleVertices[] = { 0.0f,  0.5f,  0.0f, 1.0f, 1.0f, 1.0f, -0.5f, -0.5f,  0.0f, 1.0f, 1.0f, 1.0f, 0.5f, -0.5f,  0.0f, 1.0f, 1.0f, 1.0f };` we need some program that would read this, read the instructions on what these numbers mean and then produce pixel colors on the screen.
+
+You can sort of think about this program in the following way "Give this program a data and output me shapes and colors on the screen." ATM, it is totally enough to think of this program as this.
+
+```CPP
+
+unsigned int CreateShaderProgram(const std::string& vertexSource, const std::string& fragmentSource)
+{
+    unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    if (!CompileShader(vertexSource, vertexShader))
+    {
+        glDeleteShader(vertexShader);
+        return 0;
+    }
+
+    unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    if (!CompileShader(fragmentSource, fragmentShader))
+    {
+        glDeleteShader(vertexShader);
+        glDeleteShader(fragmentShader);
+        return 0;
+    }
+
+    unsigned int shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
+
+    int success;
+    char infoLog[512];
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    if (!success)
+    {
+        glGetProgramInfoLog(shaderProgram, 512, nullptr, infoLog);
+        spdlog::error("Shader program linking failed: {}", infoLog);
+        shaderProgram = 0;
+    }
+
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+
+    return shaderProgram;
+}
+
+```
+
+Lets go line by line and explain everything that happens here:
+
+1. `unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);` tells OpenGL to create an __empty__ shader object with ID of type __vertex__. This line right here, does not craete an actual shader, but it sort of prepares OpenGL for vertex shader creation.
+2. `if (!CompileShader(vertexSource, vertexShader))` compiles vertex shader code into a vertex shader "object". Right here the vertex shader is compiled (if success happens), but we still could not use this shader now.
+3. `unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);` does exactly the same thing as the previous line, but does it for the fragment shader.
+4. `if (!CompileShader(fragmentSource, fragmentShader))` exactly the same thing as the previous line, but only for a fragment shader.
+5. `unsigned int shaderProgram = glCreateProgram();` creates an __empty__ shader program object with ID. I just want to stress this fact again that every OpenGL object must have it's own ID, because OpenGL, internally, tracks everything using IDs. __Shader object__ and __shader program object__ are 2 different things. Do not think these are the same.
+6. `glAttachShader(shaderProgram, vertexShader);` and `glAttachShader(shaderProgram, fragmentShader);` attaches both shader objects to an empty shader program object. You need to attach these 2 (or any other number of defined shaders) shaders to this program, because otherwise the program will not know what to do with buffer data and rules how to read them. Attaching them, means that the final shader program will use these 2 shader programs for rendering pipeline.
+7. `glLinkProgram(shaderProgram);` links a shader program object. This right here (if successful), finally, creates an executable on the GPU side of our shader program which is defined by vertex and fragment codes.
+8. `int success;` and `char infoLog[512];` allocates necessary variables which are needed to handle errors, if they have occured during shader program creation.
+9. `glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);` returns the requested parameter from a shader program. You can sort of think of this operation as a __getter__ type of operation for objects in C++ (or other programming languages). You have to specify which program to extract info from, what type of info you want to extract and where to store the extracted result.
+10. `glGetProgramInfoLog(shaderProgram, 512, nullptr, infoLog);` extracts the info log from the shader program. This info log is mostly about the compiler / linker diagnostic information. `glGetProgramInfoLog` operation, basically lets you extract all those logged messages. We want to extract a log information, because we want to see why the program did not successfully compile. We again, specify which program we want to extract the logs, specify the number of characters to retrieve, `nullptr` if specified, tells the length of the string in the info log, and specify where to store all those logs.
+11. `shaderProgram = 0;` if program creation failed, it is advised (but not neccessary) to reset the program ID to 0. Keep in mind that 0 is a special ID, that usually means "no object". From an OpenGL's perspective if it sees and object with ID 0, it signals that this object is either uninitialized or in some other way not ready for it's job.
+12. `glDeleteShader(vertexShader);` and `glDeleteShader(fragmentShader);` 2 operations that delete shader objects. Why do we need to delete them? The answer is that the functionality of the shaders, which was described in the strings is already attached to the shader program. There is no need to keep shader objects that have 0 value to our application. To give you an analogy, imagine, that you have 2 books of instructions. First book describes how to assemble a ship, the other describes how to assemble a car. You need those books only, until you actaully assemble the ship and the car. After you done assembling them, there is no need to keep those books, because you already have the things assembled.
+13. `return shaderProgram;` returns a shader program ID. 
+
+To make it easier for you to think, this function does the same job as any of the compilers for the C++ code. You give a raw code in GLSL language, and voila, you get an actual program that is capable to receive data and description on how to read that data and then this program processes this information into pixel colors on the screen. Keep in mind that this program is working on the GPU and not on CPU.
+
+#### Shader compilation
+
+This is the last stop for this "How to render a triangle using OpenGL?" lesson.
+
+```C++
+int CompileShader(const std::string& source, unsigned int shaderID)
+{
+    const char* sourceCStr = source.c_str();
+    glShaderSource(shaderID, 1, &sourceCStr, nullptr);
+    glCompileShader(shaderID);
+
+    int success;
+    char infoLog[512];
+    glGetShaderiv(shaderID, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        glGetShaderInfoLog(shaderID, 512, nullptr, infoLog);
+        spdlog::error("Shader compilation failed: {}", infoLog);
+    }
+    return success;
+}
+```
+
+Mostly, all of is similar to `CreateShaderProgram`, so I will describe only shader compilation specific code:
+
+1. `glShaderSource(shaderID, 1, &sourceCStr, nullptr);` binds shader source code to the `shaderID`. Keep in mind that this shader ID is from her `unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);`. You can kinda think of this operation as storing the shader source code inside the denoted shader object.
+2. `glCompileShader(shaderID);` compiles that shader source code into an actual GPU-executable "like" shader code. After this, you still cannot directly use the program defined by vertex shader source code, because you need a shader program (which at this stage is still not created). After compiling shader source code, you can attach it directly during `glAttachShader(shaderProgram, vertexShader);`. Keep in mind that as an argument, you pass `shaderID`, because the shader code is already part of the shader object that has `shaderID`.
+
+### Frame Buffer Size Callback
+
+I did not elaborate on this much during this lesson, but it is not necesseraly neede for this, but still. 
+
+```C++
+void framebufferSizeCallback(GLFWwindow* window, int width, int height)
+{
+    glViewport(0, 0, width, height);
+}
+
+glfwSetFramebufferSizeCallback(pWindow, framebufferSizeCallback);
+```
+
+This is how to have a GLFW window resize callback trigger the OpenGL. Keep in mind, that GLFW window size and OpenGL window are not the same. To give you some intuition, comment the `glfwSetFramebufferSizeCallback(pWindow, framebufferSizeCallback);`, run the application and then try to resize the window. You can clearly see, that the GLFW window resizes how it should, but the triangle is not resized. 
+
+__KEEP IN MIND__, that this functionality is not needed. It totally depends on what is your goal with the rendering and GLFW window relationship.
