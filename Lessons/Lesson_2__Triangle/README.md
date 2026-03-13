@@ -206,9 +206,11 @@ Why? Why do we need to have fragments of objects, that are clearly not visible? 
 To sum it up:
 
 * __Vertex Shader__ is a small program that is being run on the GPU per vertex. If you have 12 vertices, that means that every iteration on the main while loop, there will be 12 vertex shader program executions.
-* __Fragment Shader__ is a program that is being run on the GPU per fragment. So if your program rendering logic produces, let's say 1 000 000 fragments, that means that every iteration on the main while loop, there will be 1 000 000 fragment shader program executions.
+* __Fragment Shader__ is a program that is being run on the GPU per fragment. So if your program rendering logic produces, let's say 1 000 000 fragments, that means that on that (because fragments number can differe every iteration if the objects move in the window) iteration on the main while loop, there will be 1 000 000 fragment shader program executions.
 
-Now you might ask me "1 000 000? surely it cannot be that much". Let's take my monitor's resolution which is 2560 x 1440 = 3 686 400. So there, in minimum, will be 3 686 400 program executions.
+Now you might ask me "1 000 000? surely it cannot be that much". Let's take my monitor's resolution which is 2560 x 1440 = 3 686 400. This means, that if the triangle or many triangles occupy all the space on the screen, there will be a minimum of 3 686 400 fragments created. Now, what if 2 triangles exist, first occupies the whole screen size, and the other is behind the first one, but it also occupies the full screen? Now there are 2560 x 1440 * 2 = 7 372 800 operations. 
+
+Do not get scared, there are ways that OpenGL internally deals with situations like these. What I want you to understand is that FS is executed 1000s of times more in a single iteration than VS, so be smart on what you calculate on the CPU (happens 1 time per iteration), what you place in the VS (what happens as many times as there are vertices) and what you place in the FS (what happens as many times as there are fragments). We will, for sure, talk way more about this when we touch the MVP and shadows topics.
 
 #### Code vertex and fragment shaders
 
@@ -389,6 +391,8 @@ So, what do we need to do in the while loop to see our triangle? Why do we need 
 1. Clear the background color and the color buffer.
 2. Issue a draw call
 
+#### Clearing Framebuffer
+
 In the Lesson 1 for the `main.cpp` I said that there are 2 operations that are not GLFW, but that are doing an actual OpenGL functionality. Those 2 operations were `glClearColor(...)` and `glClear(...)`. Why are these 2 needed? To answer it, we have to go into shallow depths of OpenGL.
 
 Remember how I said, that what FS (fragment shader) outputs, it can, essentially, be shown on the screen. Well, I have skipped 1 part. The fragment color values are not directly "placed" on the screen, but rather put to a separate buffer called __framebuffer__. This framebuffer holds those fragment color values, that are ready to be shown on the screen. This framebuffer is like a snapshot of the image that was generate during the i-th iteration on the main rendering loop. Framebuffer content (remember that it is not the framebuffer, but the content of it) is generated for every iteration, no matter what. Now with this generation of a new framebuffer content, there comes a little price that we have to remember how to deal with. Even though our triangle (at least in this lesson) is static (meaning, that every frame we will see the same triangle with the same colors occupying the same screen space) we still are generating a new framebuffer, but what if the triangle was rotating, or rotating and changing position every frame? That would mean that for every iteration, some pixel values would constantly change the values. 
@@ -412,6 +416,35 @@ glClear(GL_COLOR_BUFFER_BIT);
 This is needed so that every new frame, would be initialized from the begining, which usually is the background color. If you somehow managed to show a framebuffer before issuing a draw call and then after it was issues, you would see the GLFW window flicker colors from full background color to what you have rendered.
 
 
+#### Issuing a Draw Call
+
+The final stage of the final stage in the rendering of our triangle. We have everything set up, we have:
+
+1. Data loaded on the GPU
+2. Rules, that tell how to read the data
+3. Shader program
+4. We have a system that let's us clear the color values for every iteration
+
+What we need is the key part, drawing the actual triangle on the screen.
+
+Let's first get rid of these 2 lines and explain why these 2 operations are needed:
+
+1. `glUseProgram(shaderProgram);` tells OpenGL to use the shader program, associated with the `shaderProgram` ID. Remember, we need shaders to process and "paint" the triangles.
+2. `glBindVertexArray(vao);` binds the ruleset associated with the `vao` ID. Remember, we these rules to know what each number means in the `float triangleVertices[] = { 0.0f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f, -0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f };` data buffer.
+
+You can think of these 2 lines (and, to be honest these lines `glClearColor(BACKGROUND_COLOR[0], BACKGROUND_COLOR[1], BACKGROUND_COLOR[2], BACKGROUND_COLOR[3]);` and `glClear(GL_COLOR_BUFFER_BIT);`) that these are just a "setup" phase for this last line.
+
+`glDrawArrays(GL_TRIANGLES, 0, 3);` issues a draw call that uses triangles as primitives. Ok, this is where we tell OpenGL "ok, now call all your might, all you shaders and etc, and based on data I have bound, based on the rulset I gave you, use the shader program I have bound and draw me triangles". That is essentially it. 
+
+The arguments of `glDrawArrays(GL_TRIANGLES, 0, 3);`:
+
+1. `GL_TRIANGLES` tells that every 3 vertices for a single triangle.
+2. `0` start reading vertices from the index 0.
+3. `3` process 3 vertices. We only have 3 vertices defines, so we only need to process 3 of them. Later, you will see how to draw stuff that uses thousands of vertices.
+
+I hyped up this operation so much, but it does nothing more than just starts the internal OpenGL functionality which "paints" the pixels on the GLFW window. That is it.
+
+
 ### Frame Buffer Size Callback
 
 I did not elaborate on this much during this lesson, but it is not necesseraly neede for this, but still. 
@@ -427,17 +460,18 @@ glfwSetFramebufferSizeCallback(pWindow, framebufferSizeCallback);
 
 This is how to have a GLFW window resize callback trigger the OpenGL. Keep in mind, that GLFW window size and OpenGL window are not the same. To give you some intuition, comment the `glfwSetFramebufferSizeCallback(pWindow, framebufferSizeCallback);`, run the application and then try to resize the window. You can clearly see, that the GLFW window resizes how it should, but the triangle is not resized. 
 
-__KEEP IN MIND__, that this functionality is not needed. It totally depends on what is your goal with the rendering and GLFW window relationship.
+__KEEP IN MIND__, that this functionality is not neccessary to have. It totally depends on what is your goal with the rendering and GLFW window relationship.
 
 
 ### Conclusion
 
-Now we know how to render a single triangle using OpenGL!!! This is great, because it gives you the building blocks for the future on how to build more complex things. On the other side, don't get too cocky. A single triangle is something people can build of the top of their heads, nothing right here is complex. But the key I want you to understand is how the most basic rendering pipeline looks like.
+Now we know how to render a single triangle using OpenGL!!! This is great, because it gives you the building blocks for the future on how to build more complex things. On the other side, don't get too cocky. A single triangle is something people can build of the top of their heads, nothing right here is complex. But the key part I want you to understand is how the most basic rendering pipeline looks like. Know this, and large rendering systems can be disassembled to the basic building blocks which you can understand.
 
 From this lesson, the pipeline is mostly this (if we talk about rendering a triangle):
 
 1. Define triangle vertices data
 2. Load it to GPU
 3. Tell OpenGL how to read this data
-4. Create a shader program that will be able to deal with with the data buffer
-5. 
+4. Create a shader program that will be able to process the data buffer
+5. Run an infinite while loop
+6. For every iteration, issue a draw call
