@@ -380,6 +380,38 @@ Mostly, all of is similar to `CreateShaderProgram`, so I will describe only shad
 1. `glShaderSource(shaderID, 1, &sourceCStr, nullptr);` binds shader source code to the `shaderID`. Keep in mind that this shader ID is from her `unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);`. You can kinda think of this operation as storing the shader source code inside the denoted shader object.
 2. `glCompileShader(shaderID);` compiles that shader source code into an actual GPU-executable "like" shader code. After this, you still cannot directly use the program defined by vertex shader source code, because you need a shader program (which at this stage is still not created). After compiling shader source code, you can attach it directly during `glAttachShader(shaderProgram, vertexShader);`. Keep in mind that as an argument, you pass `shaderID`, because the shader code is already part of the shader object that has `shaderID`.
 
+### Main rendering loop
+
+Let's understand the final piece that is needed to have a triangle on the screen using OpenGL. In the __Lesson 1__, I have said that the main rendering while loop is working until the GLFW window is closed. 
+
+So, what do we need to do in the while loop to see our triangle? Why do we need to change something in the while loop? First of all, let's answer the "what" question, which, I hope will also answer the "why" question. What we need to do in the while loop are actually 2 things:
+
+1. Clear the background color and the color buffer.
+2. Issue a draw call
+
+In the Lesson 1 for the `main.cpp` I said that there are 2 operations that are not GLFW, but that are doing an actual OpenGL functionality. Those 2 operations were `glClearColor(...)` and `glClear(...)`. Why are these 2 needed? To answer it, we have to go into shallow depths of OpenGL.
+
+Remember how I said, that what FS (fragment shader) outputs, it can, essentially, be shown on the screen. Well, I have skipped 1 part. The fragment color values are not directly "placed" on the screen, but rather put to a separate buffer called __framebuffer__. This framebuffer holds those fragment color values, that are ready to be shown on the screen. This framebuffer is like a snapshot of the image that was generate during the i-th iteration on the main rendering loop. Framebuffer content (remember that it is not the framebuffer, but the content of it) is generated for every iteration, no matter what. Now with this generation of a new framebuffer content, there comes a little price that we have to remember how to deal with. Even though our triangle (at least in this lesson) is static (meaning, that every frame we will see the same triangle with the same colors occupying the same screen space) we still are generating a new framebuffer, but what if the triangle was rotating, or rotating and changing position every frame? That would mean that for every iteration, some pixel values would constantly change the values. 
+
+To understand it better, let's talk about some random pixel, let's define this pixel as position X = 500, Y = 600 on our screen. If our triangle is moving and rotating, there is a case, where this pixel will have to change the color because the triangle will move into this pixel or out of it. Now, let's imagine, that on iteration 1000, the triangle moved into the pixel. What happens visually is that the pixel changes color from the background color, which we are defined as `constexpr float BACKGROUND_COLOR[4] = { 0.1f, 0.2f, 0.3f, 1.0f };` to a triangle color, which we are defined as `{ 0.0f, 1.0f, 1.0f, 1.0f }` (look into the values of `triangleVertices`). Ok, that's great. But here comes an issue. Let's say that on iteration 1500, the triangle moves out of this pixel. What happens now is that the pixel color should change from this `{ 0.0f, 1.0f, 1.0f, 1.0f }` to this `{ 0.1f, 0.2f, 0.3f, 1.0f }`. It should, but it did not change. 
+
+What??? How it did not change, didn't the FS produce colors again??? Yes and no. FS produces colors for fragments that are in the triangle area. If the pixel occupies the space that is not covered by no fragments of any triangle, it will not be updated and the last value will be used. So, if in the case of our triangle that has moved outside the pixel X = 500, Y = 600, now this pixel has no fragments created. The color of this pixel is not updated, because it will take the last color that was assgined to it, which in our case is the color of the triangle.
+
+Now we have an issue, triangle is moving but instead of seeing a moving triangle, you kinda see a painted path of where this triangle is.
+
+To takcle this, we call these 2 operations:
+
+```C++
+glClearColor(BACKGROUND_COLOR[0], BACKGROUND_COLOR[1], BACKGROUND_COLOR[2], BACKGROUND_COLOR[3]);
+glClear(GL_COLOR_BUFFER_BIT);
+```
+
+1. `glClearColor(BACKGROUND_COLOR[0], BACKGROUND_COLOR[1], BACKGROUND_COLOR[2], BACKGROUND_COLOR[3]);` it specifies the clear values for the color buffer(s)
+2. `glClear(GL_COLOR_BUFFER_BIT);` clears buffer to the specified values. That means it assignes a framebuffer values from what you have specified in the `glClearColor(...)` operation.
+
+This is needed so that every new frame, would be initialized from the begining, which usually is the background color. If you somehow managed to show a framebuffer before issuing a draw call and then after it was issues, you would see the GLFW window flicker colors from full background color to what you have rendered.
+
+
 ### Frame Buffer Size Callback
 
 I did not elaborate on this much during this lesson, but it is not necesseraly neede for this, but still. 
@@ -396,3 +428,16 @@ glfwSetFramebufferSizeCallback(pWindow, framebufferSizeCallback);
 This is how to have a GLFW window resize callback trigger the OpenGL. Keep in mind, that GLFW window size and OpenGL window are not the same. To give you some intuition, comment the `glfwSetFramebufferSizeCallback(pWindow, framebufferSizeCallback);`, run the application and then try to resize the window. You can clearly see, that the GLFW window resizes how it should, but the triangle is not resized. 
 
 __KEEP IN MIND__, that this functionality is not needed. It totally depends on what is your goal with the rendering and GLFW window relationship.
+
+
+### Conclusion
+
+Now we know how to render a single triangle using OpenGL!!! This is great, because it gives you the building blocks for the future on how to build more complex things. On the other side, don't get too cocky. A single triangle is something people can build of the top of their heads, nothing right here is complex. But the key I want you to understand is how the most basic rendering pipeline looks like.
+
+From this lesson, the pipeline is mostly this (if we talk about rendering a triangle):
+
+1. Define triangle vertices data
+2. Load it to GPU
+3. Tell OpenGL how to read this data
+4. Create a shader program that will be able to deal with with the data buffer
+5. 
