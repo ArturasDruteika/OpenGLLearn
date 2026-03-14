@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.24)
 
-project(GLFWWindow)
+project(Lesson_1__GLFWWindow)
 
 set(CMAKE_BUILD_PARALLEL_LEVEL)
 set(CMAKE_CXX_STANDARD 23)
