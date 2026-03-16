@@ -4,3 +4,4 @@ project(Lessons)
 
 add_subdirectory(Lesson_1__GLFWWindow)
 add_subdirectory(Lesson_2__Triangle)
+add_subdirectory(Lesson_3__EBO)
