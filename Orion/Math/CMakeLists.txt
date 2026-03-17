@@ -8,7 +8,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_definitions(-DMATH_EXPORT)
 
-
 # ==== Constants ====
 set(CONSTANTS_HEADERS
     Math/Constants/include/Constants.hpp

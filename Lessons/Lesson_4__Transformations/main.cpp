@@ -4,8 +4,11 @@
 #include "Math/LinearAlgebra/include/LinearAlgebraDataTypes.hpp"
 #include "Math/LinearAlgebra/include/LinearAlgebraOperations.hpp"
 #include "Math/Trigonometry/include/Trigonometry.hpp"
+#include "Utils/FileOperations/include/FileOperations.hpp"
 #include "spdlog/spdlog.h"
 #include <cmath>
+#include <exception>
+#include <filesystem>
 #include <string>
 
 
@@ -156,33 +159,24 @@ int main()
     glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(2 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    const std::string vertexShaderSource = R"(
-        #version 460 core
-        layout (location = 0) in vec2 aPos;
-        layout (location = 1) in vec4 aColor;
+    std::string vertexShaderSource;
+    std::string fragmentShaderSource;
 
-        uniform mat3 u_transform;
+    std::filesystem::path vertexShaderPath = "shaders/vertex.glsl";
+    std::filesystem::path fragmentShaderPath = "shaders/fragment.glsl";
 
-        out vec4 ourColor;
-
-        void main()
-        {
-            vec3 transformed = u_transform * vec3(aPos, 1.0);
-            gl_Position = vec4(transformed.xy, 0.0, 1.0);
-            ourColor = aColor;
-        }
-    )";
-
-    const std::string fragmentShaderSource = R"(
-        #version 460 core
-        in vec4 ourColor;
-        out vec4 FragColor;
-
-        void main()
-        {
-            FragColor = ourColor;
-        }
-    )";
+    try
+    {
+        vertexShaderSource = Orion::Utils::FileOperations::LoadFileAsString(vertexShaderPath);
+        fragmentShaderSource = Orion::Utils::FileOperations::LoadFileAsString(fragmentShaderPath);
+    }
+    catch (const std::exception& exception)
+    {
+        spdlog::error("Failed to load shader files: {}", exception.what());
+        glfwDestroyWindow(pWindow);
+        glfwTerminate();
+        return -1;
+    }
 
     unsigned int shaderProgram = CreateShaderProgram(vertexShaderSource, fragmentShaderSource);
     if (shaderProgram == 0)
