@@ -20,9 +20,9 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE
         Glad
         glfw
+        glm::glm
         OpenGL::GL
         spdlog::spdlog
-        Math
     Utils
 )
 

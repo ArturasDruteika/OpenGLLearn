@@ -1,11 +1,11 @@
+#include "Utils/FileOperations/include/FileOperations.hpp"
+
 #include "glad/gl.h"
 #include "GLFW/glfw3.h"
-#include "Math/Constants/include/Constants.hpp"
-#include "Math/LinearAlgebra/include/LinearAlgebraDataTypes.hpp"
-#include "Math/LinearAlgebra/include/LinearAlgebraOperations.hpp"
-#include "Math/Trigonometry/include/Trigonometry.hpp"
-#include "Utils/FileOperations/include/FileOperations.hpp"
+#include "glm/glm.hpp"
+#include "glm/gtc/type_ptr.hpp"
 #include "spdlog/spdlog.h"
+
 #include <cmath>
 #include <exception>
 #include <filesystem>
@@ -17,6 +17,33 @@ constexpr int OPENGL_MINOR_VERSION = 6;
 constexpr int WINDOW_WIDTH = 800;
 constexpr int WINDOW_HEIGHT = 600;
 constexpr float BACKGROUND_COLOR[4] = { 0.1f, 0.2f, 0.3f, 1.0f };
+
+
+glm::mat3 CreateTranslation2D(const glm::vec2& translation)
+{
+    glm::mat3 result(1.0f);
+    result[2] = glm::vec3(translation, 1.0f);
+    return result;
+}
+
+glm::mat3 CreateRotation2D(float angleInRadians)
+{
+    const float cosine = std::cos(angleInRadians);
+    const float sine = std::sin(angleInRadians);
+
+    glm::mat3 result(1.0f);
+    result[0] = glm::vec3(cosine, sine, 0.0f);
+    result[1] = glm::vec3(-sine, cosine, 0.0f);
+    return result;
+}
+
+glm::mat3 CreateScale2D(const glm::vec2& scale)
+{
+    glm::mat3 result(1.0f);
+    result[0] = glm::vec3(scale.x, 0.0f, 0.0f);
+    result[1] = glm::vec3(0.0f, scale.y, 0.0f);
+    return result;
+}
 
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height)
@@ -78,32 +105,6 @@ unsigned int CreateShaderProgram(const std::string& vertexSource, const std::str
 
     return shaderProgram;
 }
-
-const float* GetMatrixData(const Orion::Math::Mat3& matrix)
-{
-    return &matrix[0][0];
-}
-
-Orion::Math::Mat3 MakeTranslation2D(const Orion::Math::Vec2& translation)
-{
-    Orion::Math::Mat3 result{};
-    result[0][2] = translation[0];
-    result[1][2] = translation[1];
-    return result;
-}
-
-Orion::Math::Mat3 MakeRotation2D(float angleRadians)
-{
-    const float cosine = std::cos(angleRadians);
-    const float sine = std::sin(angleRadians);
-
-    return Orion::Math::Mat3{
-        Orion::Math::Vec3{ cosine, -sine, 0.0f },
-        Orion::Math::Vec3{ sine, cosine, 0.0f },
-        Orion::Math::Vec3{ 0.0f, 0.0f, 1.0f }
-    };
-}
-
 
 int main()
 {
@@ -186,24 +187,25 @@ int main()
         return -1;
     }
 
-    const float rotationAngle = Orion::Math::Trigonometry::Deg2Rad(90.0f);
-    const Orion::Math::Vec2 nonUniformScale{ 0.5f, 1.5f };
-    const Orion::Math::Vec2 topLeftPosition{ -0.5f, 0.5f };
-    const Orion::Math::Vec2 bottomLeftPosition{ -0.5f, -0.5f };
-    const Orion::Math::Vec2 topRightPosition{ 0.5f, 0.5f };
-    const Orion::Math::Vec2 bottomRightPosition{ 0.5f, -0.5f };
+    const float rotationAngle = glm::radians(90.0f);
+    const glm::vec2 nonUniformScale{ 0.5f, 1.5f };
+    const glm::vec2 topLeftPosition{ -0.5f, 0.5f };
+    const glm::vec2 bottomLeftPosition{ -0.5f, -0.5f };
+    const glm::vec2 topRightPosition{ 0.5f, 0.5f };
+    const glm::vec2 bottomRightPosition{ 0.5f, -0.5f };
 
-    Orion::Math::Mat3 topLeft = MakeTranslation2D(topLeftPosition);
+    const glm::mat3 translateTopLeft = CreateTranslation2D(topLeftPosition);
+    const glm::mat3 translateBottomLeft = CreateTranslation2D(bottomLeftPosition);
+    const glm::mat3 translateTopRight = CreateTranslation2D(topRightPosition);
+    const glm::mat3 translateBottomRight = CreateTranslation2D(bottomRightPosition);
 
-    Orion::Math::Mat3 bottomLeft = MakeTranslation2D(bottomLeftPosition);
-    bottomLeft = bottomLeft * MakeRotation2D(rotationAngle);
+    const glm::mat3 rotate2D = CreateRotation2D(rotationAngle);
+    const glm::mat3 scale2D = CreateScale2D(nonUniformScale);
 
-    Orion::Math::Mat3 topRight = MakeTranslation2D(topRightPosition);
-    topRight = Orion::Math::LinAlgOps::Scale(topRight, Orion::Math::Vec3{ nonUniformScale[0], nonUniformScale[1], 1.0f });
-
-    Orion::Math::Mat3 bottomRight = MakeTranslation2D(bottomRightPosition);
-    bottomRight = bottomRight * MakeRotation2D(rotationAngle);
-    bottomRight = Orion::Math::LinAlgOps::Scale(bottomRight, Orion::Math::Vec3{ nonUniformScale[0], nonUniformScale[1], 1.0f });
+    const glm::mat3 topLeft = translateTopLeft;
+    const glm::mat3 bottomLeft = translateBottomLeft * rotate2D;
+    const glm::mat3 topRight = translateTopRight * scale2D;
+    const glm::mat3 bottomRight = translateBottomRight * rotate2D * scale2D;
 
     int transformLocation = glGetUniformLocation(shaderProgram, "u_transform");
     while (!glfwWindowShouldClose(pWindow))
@@ -214,16 +216,16 @@ int main()
         glUseProgram(shaderProgram);
         glBindVertexArray(vao);
 
-        glUniformMatrix3fv(transformLocation, 1, GL_TRUE, GetMatrixData(topLeft));
+        glUniformMatrix3fv(transformLocation, 1, GL_FALSE, glm::value_ptr(topLeft));
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
-        glUniformMatrix3fv(transformLocation, 1, GL_TRUE, GetMatrixData(bottomLeft));
+        glUniformMatrix3fv(transformLocation, 1, GL_FALSE, glm::value_ptr(bottomLeft));
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
-        glUniformMatrix3fv(transformLocation, 1, GL_TRUE, GetMatrixData(topRight));
+        glUniformMatrix3fv(transformLocation, 1, GL_FALSE, glm::value_ptr(topRight));
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
-        glUniformMatrix3fv(transformLocation, 1, GL_TRUE, GetMatrixData(bottomRight));
+        glUniformMatrix3fv(transformLocation, 1, GL_FALSE, glm::value_ptr(bottomRight));
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
         glfwSwapBuffers(pWindow);
