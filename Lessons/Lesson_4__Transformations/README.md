@@ -30,3 +30,59 @@ Also, keep in mind, that I just showed you how transformations happen in 2D. But
 
 ### Code Part
 
+Without anhy further pointless talks, let's dive deep into the code part, where I will show you how to code the transformation and how to use uniforms using OpenGL.
+
+
+#### Uniforms
+
+First, let's start here, since it will be over in a half a minute. Uniform is a way that let's developers to directly pass variables to shaders. What is the point of allowing developers directly pass values to the shaders? The first thing that comes to my mind is the paralellism of GPU. Remember what is the definition of a __shader__? (cough cough, a program that runs on GPU)... Also, remember that GPUs are great for program executions that are independent from one another (you can google what SIMD is). 
+
+Ok, I will elaborate on this a little more. ___The following example is going to be run on the CPU, meaning a single core of CPU is going to be used___. Immagine a simple array of numbers, let's define it as `int arrayOfNumbers[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};`. Imagine that there is a function that takes exactly 1s to complete, which does: 
+
+```C++
+int Some1SFunction(int originalValue):
+    ...
+    return processedOuput;
+```
+
+Also, imagine, that now, I want to apply this function to all of the numbers in the `arrayOfNumbers`. One way to do this is the following:
+
+```C++
+for (const number : arrayOfNumbers)
+    int result = Some1SFunction(number);
+```
+
+On CPU, this function would take 9s to complete, since it would be called 9 times. To speed this up, we can use threads. So if our CPU had 9 or more cores, each core could take a single call of `Some1SFunction` and voila, the time was reduced from 9s to just 1s.
+
+Ok, but what if our array has 10000 numbers? The CPU definitely does not have cores in terms of thousands. That's sad, but you know what has it? Yes, GPU. With some programming knowledge, you could run this operation on that 10000 number array, and since GPUs have thousands of minicores, this operation could be done seconds.
+
+Where do uniforms come into play? Well, remember that most of the time, we have arrays of vertex data. This array can have thousands of vertices defined. Imagine, that we wanted to multiple each vertex position by some matrix (which we are going to talk in the transformations section). Each of those transformations on each vertex will definitely take a toll on the speed of the rendering. This is where __uniforms__ become handy. Let's take vertex shader for example. It can process many vertices at the same time because the VS is running on the GPU. Because of it, we can apply that matrix to each of the vertices many times faster than it could be done on the CPU. But, how to tell the GPU which matrix to apply? I mean GPU does not have in it's own memory no notion of that matrix you want to apply to each vertex. To bypass it, you can add a changable parameter to the shader program called __uniform__.
+
+Take a look:
+
+```C++
+#version 460 core
+layout (location = 0) in vec2 aPos;
+layout (location = 1) in vec4 aColor;
+
+uniform mat3 u_transform;
+
+out vec4 ourColor;
+
+void main()
+{
+    vec3 transformed = u_transform * vec3(aPos, 1.0);
+    gl_Position = vec4(transformed.xy, 0.0, 1.0);
+    ourColor = aColor;
+}
+```
+
+`uniform mat3 u_transform;` is the newly added. Now the GPU knows, that there is an additional parameter, that is going to controlled by the user him/herself. We have a direct access from the program side to set a 3x3 size matrix to this shader. 
+
+Just remember one thing, that uniforms allow developers to directly set values in the shader programs.
+
+
+#### Transformations
+
+
+
