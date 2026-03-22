@@ -28,6 +28,71 @@ This is probably 99% of transformations you will need if you want to understand 
 Also, keep in mind, that I just showed you how transformations happen in 2D. But do not get too afraid, in 3D, these transformations happen the same way, just that there are more axis on which we can transform objects.
 
 
+### Essence of Transformations in Rendering
+
+I will try to give my own personal view, on why the tranformations are one of the building blovks in rendering. 
+
+As I said before, rendering, in my opinion, without transformations is not rendering at all. Why? Because without transformations, it would be extremely hard to show something that is ___changing___. For example, imagine that you want to render a basketball going into a basket from a 3 pt line. Without transformations, the only way to smoothly render this animation, would be to create a new sphere for the basketball every render iteration with different values for coordinates. That is as ineficiant as it can get. Now imagine 100 basketballs going to the hoop at the same time, I thing you get the gist of it. Another example would be zooming the view (we are not going to cover this now, but to do it you also need to use transformations). Without transformations, every zoom you do, you have to create a new object, that has a bigger size. Imagine that you are zooming in on a circle. Every zoom a new larger sphere has to be created.
+
+With transformations, instead of creating new objects, why can't we just change the way they appear on our screen. This is many times faster and "healthier" for computers to handle. Why? To answer this, just for a second, forget that there are transformations. Without them, if our rendered scene changes even the slightest, we would have to recreate all of our scene from scratch. That would mean that we have to:
+
+1. Create data buffers
+2. Reuse rules on how to read this data buffer
+3. Delete previously used objects
+4. Construct new objects
+5. Etc.
+
+This is extremely cost ineffective. Computers are fast, but that definitely hinders their speed by a lot.
+
+With transformations, instead of doing all those steps, why can't we just manipulate the data we already have in our data buffer? Let's take our good old triangle data from previous lessons:
+
+```C++
+float triangleVertices[] = {
+    // positions    // colors
+    0.0f,  0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // top vertex 
+    -0.5f, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // bottom left
+    0.5f, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f  // bottom right
+};
+```
+
+If we want to change the vertex position (`0.0, 0.5`), without transformations, we would have to delete this buffer and create the new one. With transformations, we can directly access the data buffer and according to some translation rule, we update the XY coords of the first vertex.
+
+To me, that is the essence of transofrmations in rendering. You just have some data in the buffer and you manipulate it according to your needs or rules that you have defined.
+
+
+### Transformations
+
+Since you read (I hope you did) [this article](https://learnopengl.com/Getting-started/Transformations), I can move directly to explaining how I understand what transformations is, what they are and how to use them. Our end goal is this window:
+
+![triangle_transformations](Assets/triangle_transformations.png)
+
+In this image you can see 4 different triangles placed on 4 different screen positions. First of a all, what do these triangles simbolize:
+
+1. ___Top Left Corner___ - triangle that has 0 transformations applied.
+2. ___Bottom Left Corner___ - triangle that has __rotation__ transformation applied.
+3. ___Top Right Corner___ - triangle that has __scaling__ transformation applied.
+4. ___Bottom Right Corner___ - triangle that has __rotation__ and __scaling__ transformations applied.
+
+Before explaining how did I tranform these triangles, I want to say that there is another, "secret" transformation that has been applied to all of these 4 triangles. It is the __translation__ transformation that has been applied to all of these 4 triangles.
+
+Also, from those tutorials you have read (that I hope you read), I hope you remember that there many coordinate systems for objects and other "stuff" like:
+
+* Model space
+* World space
+* View space
+* Projection space
+* Clip space
+
+In this lesson, we are only going to cover __local space__ and __model space__ (sometime in the future, I will for sure cover the remaining coordinates systems). We need to understand the first and the second coordinate systems to understand how transformations happen.
+
+
+#### Model Space
+
+__Model space__ is a type of coordinate system that is relative to object itself. That means that the object is centered around the origin (if it is 2D then it is [ 0, 0 ], if it is 3D - [ 0, 0, 0 ], etc.). Why do we need this type of coordinate system? Well, it is great for describing a single object. As alwasy, an example is worth more than a million words.
+
+So imagine you want to create a triangle
+
+
 ### Code Part
 
 Before I show you the code for this lesson, I want inform you that the code from the previous lesson is changed here. The things I have changed are:
@@ -38,7 +103,7 @@ Before I show you the code for this lesson, I want inform you that the code from
 
 Also, as a side note, from this point, moving in the future, we will be refactoring a lot of our code, to make it follow best practices. I am not saying, that all of our code will be the best it can, absolutely no, because then it will be hard to explain everything. But we will stop flooding our main.cpp file with all the code for a single lesson. Instead, we will separate what can be separated into classes, files and etc., so do not be scared.
 
-Without anhy further pointless talks, let's dive deep into the code part, where I will show you how to code the transformation and how to use uniforms using OpenGL.
+Without any further pointless talks, let's dive deep into the code part, where I will show you how to code the transformation and how to use uniforms using OpenGL.
 
 
 #### Uniforms
@@ -88,9 +153,5 @@ void main()
 `uniform mat3 u_transform;` is the newly added. Now the GPU knows, that there is an additional parameter, that is going to controlled by the user him/herself. We have a direct access from the program side to set a 3x3 size matrix to this shader. 
 
 Just remember one thing, that uniforms allow developers to directly set values in the shader programs.
-
-
-#### Transformations
-
 
 
