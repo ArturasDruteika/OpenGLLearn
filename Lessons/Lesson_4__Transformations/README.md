@@ -1,20 +1,20 @@
 # Lesson 4 - Transformations
 
-In this tesson we are going to learn tranformations and, as a side thing, shader uniforms. Transformations, as a whole is one of those building blocks, that someone, who is learning graphics, should definitely master it. But do not get too scared, unless you want to become a savant 3D graphics engineer, because transformations (at least to what I have used) is not a thing that a simple person, who does not understand math well, cannot understand.
+In this tesson we are going to learn tranformations and, as a side thing, shader uniforms. Transformations, as a whole is one of those building blocks, that someone, who is learning graphics, should definitely master it. But do not get too scared, unless you want to become a savant 3D graphics engineer, transformations (at least to what I have used) is not a thing that a simple person, who does not understand math well, cannot understand.
 
-Since I am not the best at explaining math topics and before continuing any further, I highly sugegst to you to:
+Since I am not the best at explaining math topics and before continuing any further, I highly suggest to you to:
 
 * Read [this article](https://learnopengl.com/Getting-started/Transformations)
 * If you are more of a visual learning, I advise you to look [this playlist](https://www.youtube.com/watch?v=fNk_zzaMoSs&list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab) by [3Blue1Brown](https://www.youtube.com/@3blue1brown/playlists). This, in my opinion, is the best way to visually understand the concepts of linear algebra.
 
-Again, do not get discouraged by the fact than N years ago, during math classes you did not pay attention, but you need to know the gist of it.
+Again, do not get discouraged by the fact than N years ago, during math classes you did not pay attention, because learning transformations is a process, where each person, given time, can understand.
 
 As for the uniforms, it is also, one of the building blocks you have to understand, but it is as simple as learning what a shader or vertex buffer is.
 
 ---
 ### Transformation types
 
-For the basic 3D rendering, in my opinion, you need to know 3 types of transformations:
+For the basic 3D object transformation, in my opinion, you need to know 3 types of transformations:
 
 1. __Scaling__ - resizing the object to make it bigger or smaller.
 ![Scaling](Assets/scaling.png)
@@ -23,16 +23,18 @@ For the basic 3D rendering, in my opinion, you need to know 3 types of transform
 3. __Translation__ - moving an object in space from position A to position B.
 ![Translation](Assets/translation.png)
 
-This is probably 99% of transformations you will need if you want to understand how rendering works. Again, I just want to stress this that this topic of __transformations__ is also an integral part if you want to understand how rendering works. I know, that it may sound weird, I mean "how does knowing how objects can be transformed help me to understand how to render an image". But without tranformations, all of your scenes will be just a static image where nothing happens. 
+This is probably 99% of transformations you will need if you want to understand how objects manipulation works. Again, I just want to stress this that this topic of __transformations__ is also an integral part if you want to understand how rendering works. I know, that it may sound weird, I mean "how does knowing how objects can be transformed help me to understand how to render an image". But without tranformations, all of your scenes will be just a static image where nothing happens. 
 
-Also, keep in mind, that I just showed you how transformations happen in 2D. But do not get too afraid, in 3D, these transformations happen the same way, just that there are more axis on which we can transform objects.
+Keep in mind, that I just showed you how transformations happen in 2D. But do not get too afraid, in 3D, these transformations happen the same way, just that there are more axis on which we can transform objects.
+
+Also, an important thing to say is that these 3 transformation are ony for the objects manipulations. These transformations only change the objects in world space (we are going to talk about this in this lesson later)/ Without these 3 matrix transformations, there are others, like __view__, __projection__ transformations. But, these topics are going to be left for the following lessons, because those topics are a bit harder to explain.
 
 
 ### Essence of Transformations in Rendering
 
-I will try to give my own personal view, on why the tranformations are one of the building blovks in rendering. 
+I will try to give my own personal view, on why the tranformations are one of the building blocks in rendering. 
 
-As I said before, rendering, in my opinion, without transformations is not rendering at all. Why? Because without transformations, it would be extremely hard to show something that is ___changing___. For example, imagine that you want to render a basketball going into a basket from a 3 pt line. Without transformations, the only way to smoothly render this animation, would be to create a new sphere for the basketball every render iteration with different values for coordinates. That is as ineficiant as it can get. Now imagine 100 basketballs going to the hoop at the same time, I thing you get the gist of it. Another example would be zooming the view (we are not going to cover this now, but to do it you also need to use transformations). Without transformations, every zoom you do, you have to create a new object, that has a bigger size. Imagine that you are zooming in on a circle. Every zoom a new larger sphere has to be created.
+As I said before, rendering, in my opinion, without transformations is not rendering at all. Why? Because without transformations, it would be extremely hard to show something that is ___changing___. For example, imagine that you want to render a basketball going into a basket from a 3 pt line. Without transformations, the only way to smoothly render this animation, would be to create a new sphere for the basketball every render iteration with different values for coordinates. That is as ineficiant as it can get. Now imagine 100 basketballs going to the hoop at the same time, I think you get the gist of it. Another example would be zooming the view (we are not going to cover this now, but to do it you also need to use transformations). Without transformations, every zoom you do, you have to create a new object, that has a bigger size. Imagine that you are zooming in on a circle. Every zoom a new larger sphere has to be created.
 
 With transformations, instead of creating new objects, why can't we just change the way they appear on our screen. This is many times faster and "healthier" for computers to handle. Why? To answer this, just for a second, forget that there are transformations. Without them, if our rendered scene changes even the slightest, we would have to recreate all of our scene from scratch. That would mean that we have to:
 
@@ -84,6 +86,13 @@ Also, from those tutorials you have read (that I hope you read), I hope you reme
 * Clip space
 
 In this lesson, we are only going to cover __local space__ and __model space__ (sometime in the future, I will for sure cover the remaining coordinates systems). We need to understand the first and the second coordinate systems to understand how transformations happen.
+
+One additional important fact I want to share with you. Since we are talking about transformations for the objects, from now on I want you to separate one thing. As I said in previous lessons, rendering is generating pixel color values, that can be shown on the screen, but there is one important concept you have to know. It is that there are 2 things you have to constantly work with, and they are:
+
+1. Purely rendering part, where given the data, computer generates pixel colors, based on the rendering pipeline you constructed.
+2. Real world part.
+
+The first thing is what we have learned in the first 3 lessons. The second one is where you will spend a lot of time also.
 
 
 #### Model Space
