@@ -12,27 +12,57 @@ Again, do not get discouraged by the fact than N years ago, during math classes 
 As for the uniforms, it is also, one of the building blocks you have to understand, but it is as simple as learning what a shader or vertex buffer is.
 
 ---
-### Transformation types
-
-For the basic 3D object transformation, in my opinion, you need to know 3 types of transformations:
-
-1. __Scaling__ - resizing the object to make it bigger or smaller.
-![Scaling](Assets/scaling.png)
-2. __Rotation__ - rotating the object around one of it's axis.
-![Rotation](Assets/rotation.png)
-3. __Translation__ - moving an object in space from position A to position B.
-![Translation](Assets/translation.png)
-
-This is probably 99% of transformations you will need if you want to understand how objects manipulation works. Again, I just want to stress this that this topic of __transformations__ is also an integral part if you want to understand how rendering works. I know, that it may sound weird, I mean "how does knowing how objects can be transformed help me to understand how to render an image". But without tranformations, all of your scenes will be just a static image where nothing happens. 
-
-Keep in mind, that I just showed you how transformations happen in 2D. But do not get too afraid, in 3D, these transformations happen the same way, just that there are more axis on which we can transform objects.
-
-Also, an important thing to say is that these 3 transformation are ony for the objects manipulations. These transformations only change the objects in world space (we are going to talk about this in this lesson later)/ Without these 3 matrix transformations, there are others, like __view__, __projection__ transformations. But, these topics are going to be left for the following lessons, because those topics are a bit harder to explain.
-
 
 ### Essence of Transformations in Rendering
 
 I will try to give my own personal view, on why the tranformations are one of the building blocks in rendering. 
+
+One important thing you have to understand about building a graphics engine is that no everything inside the graphics engine revolves around rendering. For example, let's say you want to render a trinagle. From the previous lessons, we know that a triangle is comprised of 3 vertices. In order for the OpenGL to see how you have defined those 3 vertices, you need to upload that that vertex data array to GPU using `glBufferData`. Now stop right here, before the `glBufferData` operation is called. Let's focus purely on the `triangleVertices` (from the previous lesson) array.
+
+If we isolated this `triangleVertices` array from all the OpenGL operations, could we say that `triangleVertices` is somehow related to rendering? Just look here:
+
+```C++
+int main()
+{
+    // Some code
+
+    float triangleVertices[] = {
+        // positions    // colors
+         0.0f,  0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // top vertex 
+        -0.5f, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // bottom left
+         0.5f, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f  // bottom right
+    };
+
+    // Some code
+
+    return 0;
+}
+
+```
+
+Looking at this piece of code, does it give any information that we are going to render a triangle on the screen defined by `triangleVertices`? No, it does not anbd this is the one of the major separation of concerns you have to understand. The whole graphics project you are building can (and matter of fact should be) be separated into 2 parts:
+
+1. __Rendering__ - everything regarding graphics api for OpenGL, Vulkan or any other graphics backend.
+2. __Real World__ - everything regarding the real world logic, like geometrical objects definitions, geometrical objects construction, physics, lighting, orientations, scenes, etc.
+
+What rendering is, you probobly know already, but what a real world it is this new concept that at first might be weird to understand as to why do we even need to separate it from the rendering. To understand easier what __real world__ I suggest changing the "real" with "virtual", thus __real world__ becomes __virtual world__. Does it make sense now? Every object we create, every logic we apply to it only lives inside computers, thus making it virtual. In order to render something, that something needs to be described and built from scratch. Going back to the triangle example, we have to provide OpenGL some data that it has to render. This "data" is what I (and I hope a lot of other people) call __real world__. This data for the triangle is quite simple, just 18 numbers in a sequential order. But in order to render something that would visually awe other people, a simple triangle is not enough. Just imagine, how many different geometrical shapes are required to render this frame:
+
+![Ghost Of Tsushima Real World](Assets/ghost_of_tsushima_real_world.png)
+
+Just look at this frame, this scene has so many object, like:
+
+* 3 people + 1 laying dead
+* Different clothing + different inventory (katanas, wakizashi, etc.)
+* Environment, with trees, leaves, grass, rocks, mud, etc.
+* Lighting and shadows (these 2 things are very big in terms of code lines)
+
+What this can and cannot show in a single frame is the "flow" of the scene. I mean this is just a single scene, so no movement, either for characters, or for environmental things, cannot be seen, but you can almost feel, how this scene is playing out in you head. This movement is also a separate aspect in real world. 
+
+Real world, most of the times, take up way more lines of code, than just calling some graphics backend API to render it. From my own personal experience, when creating my Andromeda graphics engine, I noticed that I spend 10x more time perfecting how the real world works (object creation, object movement, object transformations) than just simple writing code for how to render that real world. I, distictly, remember, how I came to a realization that you need to separate what rendering and real world is. It kinda scared me at the beginning, but now I am really glad that I have created my own small virtual reality which I can show to other people.
+
+I am telling you this, because real world without transformations does not work. No matter how you want to bypass transformations, it is impossible. Without transformations, there is no way to smoothly show how movement works, it is impossible to implement illumination with realistic shadows. That is why I decided that lesson 4 is going to be about transformations.
+
+Of course, this lesson is not going to be a full walkthrough on how to render scenes like the image I showed you before. I would have to write nonstop for like 2 weeks (no breaks just constant writing) to be able to tell you how to do stuff like that. I myself, at least at this point in my time, would not be able to creating games likes this, because it is really hard and takes enormous amount of time to make it happen. Just imagine, this game "ghost of tsushima" (the image I shared), was being created for 4 - 6 years and by ~150 people (I cannot prove the exact numbers, it was what I could find on the internet, so the numbers could be different). Imagine, the amount of total hours it takes to do this kinda stuff. And trust me when I say this, but it is impossible to create a game like this (or many other games) without transformations.
 
 As I said before, rendering, in my opinion, without transformations is not rendering at all. Why? Because without transformations, it would be extremely hard to show something that is ___changing___. For example, imagine that you want to render a basketball going into a basket from a 3 pt line. Without transformations, the only way to smoothly render this animation, would be to create a new sphere for the basketball every render iteration with different values for coordinates. That is as ineficiant as it can get. Now imagine 100 basketballs going to the hoop at the same time, I think you get the gist of it. Another example would be zooming the view (we are not going to cover this now, but to do it you also need to use transformations). Without transformations, every zoom you do, you have to create a new object, that has a bigger size. Imagine that you are zooming in on a circle. Every zoom a new larger sphere has to be created.
 
@@ -60,6 +90,24 @@ float triangleVertices[] = {
 If we want to change the vertex position (`0.0, 0.5`), without transformations, we would have to delete this buffer and create the new one. With transformations, we can directly access the data buffer and according to some translation rule, we update the XY coords of the first vertex.
 
 To me, that is the essence of transofrmations in rendering. You just have some data in the buffer and you manipulate it according to your needs or rules that you have defined.
+
+---
+### Transformation types
+
+For the basic 3D object transformation, in my opinion, you need to know 3 types of transformations:
+
+1. __Scaling__ - resizing the object to make it bigger or smaller.
+![Scaling](Assets/scaling.png)
+2. __Rotation__ - rotating the object around one of it's axis.
+![Rotation](Assets/rotation.png)
+3. __Translation__ - moving an object in space from position A to position B.
+![Translation](Assets/translation.png)
+
+This is probably 99% of transformations you will need if you want to understand how objects manipulation works. Again, I just want to stress this that this topic of __transformations__ is also an integral part if you want to understand how rendering works. I know, that it may sound weird, I mean "how does knowing how objects can be transformed help me to understand how to render an image". But without tranformations, all of your scenes will be just a static image where nothing happens. 
+
+Keep in mind, that I just showed you how transformations happen in 2D. But do not get too afraid, in 3D, these transformations happen the same way, just that there are more axis on which we can transform objects.
+
+Also, an important thing to say is that these 3 transformation are ony for the objects manipulations. These transformations only change the objects in world space (we are going to talk about this in this lesson later). Without these 3 matrix transformations, there are others, like __view__, __projection__ transformations. But, these topics are going to be left for the following lessons, because those topics are a bit harder to explain.
 
 
 ### Transformations
