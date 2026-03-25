@@ -97,11 +97,16 @@ To me, that is the essence of transofrmations in rendering. You just have some d
 For the basic 3D object transformation, in my opinion, you need to know 3 types of transformations:
 
 1. __Scaling__ - resizing the object to make it bigger or smaller.
-![Scaling](Assets/scaling.png)
+
+    ![Scaling](Assets/scaling.png)
+
 2. __Rotation__ - rotating the object around one of it's axis.
-![Rotation](Assets/rotation.png)
+
+    ![Rotation](Assets/rotation.png)
+
 3. __Translation__ - moving an object in space from position A to position B.
-![Translation](Assets/translation.png)
+
+    ![Translation](Assets/translation.png)
 
 This is probably 99% of transformations you will need if you want to understand how objects manipulation works. Again, I just want to stress this that this topic of __transformations__ is also an integral part if you want to understand how rendering works. I know, that it may sound weird, I mean "how does knowing how objects can be transformed help me to understand how to render an image". But without tranformations, all of your scenes will be just a static image where nothing happens. 
 
@@ -118,14 +123,12 @@ Since you read (I hope you did) [this article](https://learnopengl.com/Getting-s
 
 In this image you can see 4 different triangles placed on 4 different screen positions. First of a all, what do these triangles simbolize:
 
-1. ___Top Left Corner___ - triangle that has 0 transformations applied.
-2. ___Bottom Left Corner___ - triangle that has __rotation__ transformation applied.
-3. ___Top Right Corner___ - triangle that has __scaling__ transformation applied.
-4. ___Bottom Right Corner___ - triangle that has __rotation__ and __scaling__ transformations applied.
+1. ___Top Left Corner___ - triangle that has only __translation__ applied (no rotation, no scaling).
+2. ___Bottom Left Corner___ - triangle that has __translation__ and __rotation__ transformation applied.
+3. ___Top Right Corner___ - triangle that has __translation__ and __scaling__ transformation applied.
+4. ___Bottom Right Corner___ - triangle that has __translation__ and __rotation__ and __scaling__ transformations applied.
 
-Before explaining how did I tranform these triangles, I want to say that there is another, "secret" transformation that has been applied to all of these 4 triangles. It is the __translation__ transformation that has been applied to all of these 4 triangles.
-
-Also, from those tutorials you have read (that I hope you read), I hope you remember that there many coordinate systems for objects and other "stuff" like:
+I hope you remember that there many coordinate systems for objects (you can find these coordinate systems in the articles I have shared):
 
 * Model space
 * World space
@@ -135,19 +138,28 @@ Also, from those tutorials you have read (that I hope you read), I hope you reme
 
 In this lesson, we are only going to cover __local space__ and __model space__ (sometime in the future, I will for sure cover the remaining coordinates systems). We need to understand the first and the second coordinate systems to understand how transformations happen.
 
-One additional important fact I want to share with you. Since we are talking about transformations for the objects, from now on I want you to separate one thing. As I said in previous lessons, rendering is generating pixel color values, that can be shown on the screen, but there is one important concept you have to know. It is that there are 2 things you have to constantly work with, and they are:
-
-1. Purely rendering part, where given the data, computer generates pixel colors, based on the rendering pipeline you constructed.
-2. Real world part.
-
-The first thing is what we have learned in the first 3 lessons. The second one is where you will spend a lot of time also.
-
+Model space and world space transformations are what happens in the __real world__ (please remember that real world = virtual world).
 
 #### Model Space
 
-__Model space__ is a type of coordinate system that is relative to object itself. That means that the object is centered around the origin (if it is 2D then it is [ 0, 0 ], if it is 3D - [ 0, 0, 0 ], etc.). Why do we need this type of coordinate system? Well, it is great for describing a single object. As alwasy, an example is worth more than a million words.
+__Model space__ is a type of coordinate system that is relative to object itself. That means that the object is centered around the origin (if it is 2D then it is `[ 0, 0 ]`, if it is 3D - `[ 0, 0, 0 ]`, etc.). Why do we need this type of coordinate system? Well, it is great for describing a single object. As alwasy, an example is worth more than a million words.
 
-So imagine you want to create a triangle
+So imagine you want to create a triangle that, which center is shifted 4 units to the left. There are 2 options how you can achieve that:
+
+1. Populate `triangleVertices` like this:
+
+    ```C++
+    float triangleVertices[] = {
+        // positions    // colors
+         0.0f - 4,  0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // top vertex 
+        -0.5f - 4, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // bottom left
+         0.5f - 4, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f  // bottom right
+    };
+    ```
+    Now every coordinate will be shifted 4 units to the left.
+2. Populate `triangleVertices` normally, and after it's creation, apply translation transformation.
+
+In a normal world, most of the developers go the second route. This is where the model space comes into play. You can kind of think that model space let's you define the shape without any transformations. For me, what let's me understand model space better is this example "___What is easier, creating a shape on the corner of the screen, or creating a shape at the center, so that the entire shape would be visible?___". This example might help you to understand my meaning, imagine that you have an expo of some vases in a museum. Each vase has it's place in the expo, like some vases might be displayed in one room, others - in another room. What happens is that each vase has it;s own coordinates in the expo. But, in order to have vases displayed in the first place, you needed to somehow create vases in your own "vase creating" house, factory or whatever else. Maybe you had a specific vase making tool (for this example imagine that there is only a single tool like that)
 
 
 ### Code Part
