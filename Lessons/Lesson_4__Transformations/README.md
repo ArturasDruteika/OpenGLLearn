@@ -64,9 +64,17 @@ I am telling you this, because real world without transformations does not work.
 
 Of course, this lesson is not going to be a full walkthrough on how to render scenes like the image I showed you before. I would have to write nonstop for like 2 weeks (no breaks just constant writing) to be able to tell you how to do stuff like that. I myself, at least at this point in my time, would not be able to creating games likes this, because it is really hard and takes enormous amount of time to make it happen. Just imagine, this game "ghost of tsushima" (the image I shared), was being created for 4 - 6 years and by ~150 people (I cannot prove the exact numbers, it was what I could find on the internet, so the numbers could be different). Imagine, the amount of total hours it takes to do this kinda stuff. And trust me when I say this, but it is impossible to create a game like this (or many other games) without transformations.
 
-As I said before, rendering, in my opinion, without transformations is not rendering at all. Why? Because without transformations, it would be extremely hard to show something that is ___changing___. For example, imagine that you want to render a basketball going into a basket from a 3 pt line. Without transformations, the only way to smoothly render this animation, would be to create a new sphere for the basketball every render iteration with different values for coordinates. That is as ineficiant as it can get. Now imagine 100 basketballs going to the hoop at the same time, I think you get the gist of it. Another example would be zooming the view (we are not going to cover this now, but to do it you also need to use transformations). Without transformations, every zoom you do, you have to create a new object, that has a bigger size. Imagine that you are zooming in on a circle. Every zoom a new larger sphere has to be created.
+As I said before, rendering, in my opinion, without transformations is not rendering at all. Why? Because transformations are integral part of the real world, and you cannot render anything without some data. For example, imagine that you want to render a basketball going into a basket from a 3 pt line. You can create:
 
-With transformations, instead of creating new objects, why can't we just change the way they appear on our screen. This is many times faster and "healthier" for computers to handle. Why? To answer this, just for a second, forget that there are transformations. Without them, if our rendered scene changes even the slightest, we would have to recreate all of our scene from scratch. That would mean that we have to:
+1. Sphere that represents a ball
+2. Torus that represents a hoop
+3. Mathematical equations that describes the motion of a ball, provided the force, trajectory and other necessary variables
+
+Now, input all the time data points into those equations and now you have a trajectory of how the ball moves from the shooting spot to the hoop. What is missing, is the ability to visualize of movement of the sphere (ball) from the shooting spot up to the basket. For this we need translation transformation, which will help to constantly "transform" the position of a sphere from shooting spot up to the basket. 
+
+Without transformations, the only way to smoothly render this animation, would be to create a new sphere for the basketball every render iteration with different values for coordinates. That is as ineficiant as it can get. Now imagine 100 basketballs going to the hoop at the same time, I think you get the gist of it. Another example would be zooming the view (we are not going to cover this now, but to do it you also need to use transformations). Without transformations, every zoom you do, you have to create a new object, that has a bigger size. Imagine that you are zooming in on a circle. Every zoom a new larger sphere has to be created.
+
+You see? With transformations, instead of creating new objects, why just change the way they appear on our screen. This is many times faster and "healthier" for computers to handle. Why? To answer this, just for a second, forget that there are transformations. Without them, if our rendered scene changes even the slightest, we would have to recreate all of our scene from scratch. That would mean that we have to:
 
 1. Create data buffers
 2. Reuse rules on how to read this data buffer
@@ -157,10 +165,14 @@ So imagine you want to create a triangle that, which center is shifted 4 units t
     };
     ```
     Now every coordinate will be shifted 4 units to the left.
-2. Populate `triangleVertices` normally, and after it's creation, apply translation transformation.
+2. Imagine that you place the center of a triangle at the origin of a coordinate system, and generate positions of vertices relative to the origin. And after it's generation, apply translation transformation.
 
-In a normal world, most of the developers go the second route. This is where the model space comes into play. You can kind of think that model space let's you define the shape without any transformations. For me, what let's me understand model space better is this example "___What is easier, creating a shape on the corner of the screen, or creating a shape at the center, so that the entire shape would be visible?___". This example might help you to understand my meaning, imagine that you have an expo of some vases in a museum. Each vase has it's place in the expo, like some vases might be displayed in one room, others - in another room. What happens is that each vase has it;s own coordinates in the expo. But, in order to have vases displayed in the first place, you needed to somehow create vases in your own "vase creating" house, factory or whatever else. Maybe you had a specific vase making tool (for this example imagine that there is only a single tool like that)
+In a normal world, most of the developers go the second route. This is where the model space comes into play. Before creating an object, do not think where it is placed in a real world, instead, think about how the object, you want to create, is going to look like (i.e. where it's vertices are going to be relative to that object's center). Then, after the creation, just translate that object to the desired place. Model space is really great for this and allows user to think about vertices in a local space, where the origin is the center of the object and that vertices are placed relative to the origin.
 
+
+#### World Space
+
+__World Space__ is the coordinate system shared by all objects in the real world. Imagine a simple coordinate system, where the origin is some arbitrary point that you picked, from which you place all other objects. Simple as that. Imagine that a triangle (I mean the center of the object) is placed at the coordinates [4, 5], then, there might be a square at coordinates [-6, 7], a torus at [11, 22] and etc..
 
 ### Code Part
 
