@@ -1,6 +1,6 @@
 # Lesson 4 - Transformations
 
-In this tesson we are going to learn tranformations and, as a side thing, shader uniforms. Transformations, as a whole is one of those building blocks, that someone, who is learning graphics, should definitely master it. But do not get too scared, unless you want to become a savant 3D graphics engineer, transformations (at least to what I have used) is not a thing that a simple person, who does not understand math well, cannot understand.
+In this lesson we are going to learn tranformations and, as a side thing, shader uniforms. Transformations, as a whole is one of those building blocks, that someone, who is learning graphics, should definitely master it. But do not get too scared, unless you want to become a savant 3D graphics engineer, transformations (at least to what I have used) is not a thing that a simple person, who does not understand math well, cannot understand.
 
 Since I am not the best at explaining math topics and before continuing any further, I highly suggest to you to:
 
@@ -40,12 +40,12 @@ int main()
 
 ```
 
-Looking at this piece of code, does it give any information that we are going to render a triangle on the screen defined by `triangleVertices`? No, it does not anbd this is the one of the major separation of concerns you have to understand. The whole graphics project you are building can (and matter of fact should be) be separated into 2 parts:
+Looking at this piece of code, does it give any information that we are going to render a triangle on the screen defined by `triangleVertices`? No, it does not and this is the one of the major separation of concerns you have to understand. The whole graphics project you are building can (and matter of fact should be) be separated into 2 parts:
 
 1. __Rendering__ - everything regarding graphics api for OpenGL, Vulkan or any other graphics backend.
 2. __Real World__ - everything regarding the real world logic, like geometrical objects definitions, geometrical objects construction, physics, lighting, orientations, scenes, etc.
 
-What rendering is, you probobly know already, but what a real world it is this new concept that at first might be weird to understand as to why do we even need to separate it from the rendering. To understand easier what __real world__ I suggest changing the "real" with "virtual", thus __real world__ becomes __virtual world__. Does it make sense now? Every object we create, every logic we apply to it only lives inside computers, thus making it virtual. In order to render something, that something needs to be described and built from scratch. Going back to the triangle example, we have to provide OpenGL some data that it has to render. This "data" is what I (and I hope a lot of other people) call __real world__. This data for the triangle is quite simple, just 18 numbers in a sequential order. But in order to render something that would visually awe other people, a simple triangle is not enough. Just imagine, how many different geometrical shapes are required to render this frame:
+What rendering is, you probably know already, but what a real world it is this new concept that at first might be weird to understand as to why do we even need to separate it from the rendering. To understand easier what __real world__ I suggest changing the "real" with "virtual", thus __real world__ becomes __virtual world__. Does it make sense now? Every object we create, every logic we apply to it only lives inside computers, thus making it virtual. In order to render something, that something needs to be described and built from scratch. Going back to the triangle example, we have to provide OpenGL some data that it has to render. This "data" is what I (and I hope a lot of other people) call __real world__. This data for the triangle is quite simple, just 18 numbers in a sequential order. But in order to render something that would visually awe other people, a simple triangle is not enough. Just imagine, how many different geometrical shapes are required to render this frame:
 
 ![Ghost Of Tsushima Real World](Assets/ghost_of_tsushima_real_world.png)
 
@@ -58,13 +58,13 @@ Just look at this frame, this scene has so many object, like:
 
 What this can and cannot show in a single frame is the "flow" of the scene. I mean this is just a single scene, so no movement, either for characters, or for environmental things, cannot be seen, but you can almost feel, how this scene is playing out in you head. This movement is also a separate aspect in real world. 
 
-Real world, most of the times, take up way more lines of code, than just calling some graphics backend API to render it. From my own personal experience, when creating my Andromeda graphics engine, I noticed that I spend 10x more time perfecting how the real world works (object creation, object movement, object transformations) than just simple writing code for how to render that real world. I, distictly, remember, how I came to a realization that you need to separate what rendering and real world is. It kinda scared me at the beginning, but now I am really glad that I have created my own small virtual reality which I can show to other people.
+Real world, most of the times, take up way more lines of code, than just calling some graphics backend API to render it. From my own personal experience, when creating my Andromeda graphics engine, I noticed that I spend 10x more time perfecting how the real world works (object creation, object movement, object transformations) than just simple implementation for how to render images. I, distinctly, remember, how I came to a realization that you need to separate what rendering and real world is. It kinda scared me at the beginning, but now I am really glad that I have created my own small virtual reality which I can show to other people.
 
-I am telling you this, because real world without transformations does not work. No matter how you want to bypass transformations, it is impossible. Without transformations, there is no way to smoothly show how movement works, it is impossible to implement illumination with realistic shadows. That is why I decided that lesson 4 is going to be about transformations.
+I am telling you this, because real world does not work if we remove transformation logic. No matter how you want to bypass transformations, it is impossible. Without transformations, there is no way to smoothly show how movement works, it is impossible to implement illumination with realistic shadows. That is why I decided that lesson 4 is going to be about this topic.
 
 Of course, this lesson is not going to be a full walkthrough on how to render scenes like the image I showed you before. I would have to write nonstop for like 2 weeks (no breaks just constant writing) to be able to tell you how to do stuff like that. I myself, at least at this point in my time, would not be able to creating games likes this, because it is really hard and takes enormous amount of time to make it happen. Just imagine, this game "ghost of tsushima" (the image I shared), was being created for 4 - 6 years and by ~150 people (I cannot prove the exact numbers, it was what I could find on the internet, so the numbers could be different). Imagine, the amount of total hours it takes to do this kinda stuff. And trust me when I say this, but it is impossible to create a game like this (or many other games) without transformations.
 
-As I said before, rendering, in my opinion, without transformations is not rendering at all. Why? Because transformations are integral part of the real world, and you cannot render anything without some data. For example, imagine that you want to render a basketball going into a basket from a 3 pt line. You can create:
+You have to realize that transformations are integral part of the real world, and you cannot render anything without some data. For example, imagine that you want to render a basketball going into a basket from a 3 pt line. You can create:
 
 1. Sphere that represents a ball
 2. Torus that represents a hoop
@@ -72,9 +72,9 @@ As I said before, rendering, in my opinion, without transformations is not rende
 
 Now, input all the time data points into those equations and now you have a trajectory of how the ball moves from the shooting spot to the hoop. What is missing, is the ability to visualize of movement of the sphere (ball) from the shooting spot up to the basket. For this we need translation transformation, which will help to constantly "transform" the position of a sphere from shooting spot up to the basket. 
 
-Without transformations, the only way to smoothly render this animation, would be to create a new sphere for the basketball every render iteration with different values for coordinates. That is as ineficiant as it can get. Now imagine 100 basketballs going to the hoop at the same time, I think you get the gist of it. Another example would be zooming the view (we are not going to cover this now, but to do it you also need to use transformations). Without transformations, every zoom you do, you have to create a new object, that has a bigger size. Imagine that you are zooming in on a circle. Every zoom a new larger sphere has to be created.
+Without transformations, the only way to smoothly render this animation, would be to create a new sphere for the basketball every render iteration with different values for coordinates. That is as inefficiant as it can get. Now imagine 100 basketballs going to the hoop at the same time, I think you get the gist of it. Another example would be zooming the view (we are not going to cover this now, but to do it you also need to use transformations).
 
-You see? With transformations, instead of creating new objects, why just change the way they appear on our screen. This is many times faster and "healthier" for computers to handle. Why? To answer this, just for a second, forget that there are transformations. Without them, if our rendered scene changes even the slightest, we would have to recreate all of our scene from scratch. That would mean that we have to:
+You see? With transformations, instead of creating new objects, why not just change the way they appear on our screen. This is many times faster and "healthier" for computers to handle. Why? To answer this, just for a second, forget that there are transformations. Without them, if our rendered scene changes even the slightest, we would have to recreate all of our scene from scratch. That would mean that we have to:
 
 1. Create data buffers
 2. Reuse rules on how to read this data buffer
@@ -82,9 +82,9 @@ You see? With transformations, instead of creating new objects, why just change 
 4. Construct new objects
 5. Etc.
 
-This is extremely cost ineffective. Computers are fast, but that definitely hinders their speed by a lot.
+This is extremely inefficient. Computers are fast, but that definitely hinders their speed by a lot.
 
-With transformations, instead of doing all those steps, why can't we just manipulate the data we already have in our data buffer? Let's take our good old triangle data from previous lessons:
+With transformations, instead of doing all those steps, why can't we just manipulate how the data is interpreted during rendering? Let's take our good old triangle data from previous lessons:
 
 ```C++
 float triangleVertices[] = {
@@ -95,7 +95,7 @@ float triangleVertices[] = {
 };
 ```
 
-If we want to change the vertex position (`0.0, 0.5`), without transformations, we would have to delete this buffer and create the new one. With transformations, we can directly access the data buffer and according to some translation rule, we update the XY coords of the first vertex.
+If we want to change the vertex position (`0.0, 0.5`), without transformations, we would have to delete this buffer and create the new one. With transformations, we can directly apply changes to the objects in the vertex shader, i.e. change all of the vertices coordinates accroding to a provided transformation.
 
 To me, that is the essence of transofrmations in rendering. You just have some data in the buffer and you manipulate it according to your needs or rules that you have defined.
 
@@ -120,7 +120,7 @@ This is probably 99% of transformations you will need if you want to understand 
 
 Keep in mind, that I just showed you how transformations happen in 2D. But do not get too afraid, in 3D, these transformations happen the same way, just that there are more axis on which we can transform objects.
 
-Also, an important thing to say is that these 3 transformation are ony for the objects manipulations. These transformations only change the objects in world space (we are going to talk about this in this lesson later). Without these 3 matrix transformations, there are others, like __view__, __projection__ transformations. But, these topics are going to be left for the following lessons, because those topics are a bit harder to explain.
+Also, an important thing to say is that these 3 transformation are only for the objects manipulations. These transformations only change the objects in world space (we are going to talk about this in this lesson later). Without these 3 matrix transformations, there are others, like __view__, __projection__ transformations. But, these topics are going to be left for the following lessons, because those topics are a bit harder to explain.
 
 
 ### Transformations
@@ -129,7 +129,7 @@ Since you read (I hope you did) [this article](https://learnopengl.com/Getting-s
 
 ![triangle_transformations](Assets/triangle_transformations.png)
 
-In this image you can see 4 different triangles placed on 4 different screen positions. First of a all, what do these triangles simbolize:
+In this image you can see 4 different triangles placed on 4 different screen positions. First of a all, what do these triangles symbolize:
 
 1. ___Top Left Corner___ - triangle that has only __translation__ applied (no rotation, no scaling).
 2. ___Bottom Left Corner___ - triangle that has __translation__ and __rotation__ transformation applied.
@@ -150,7 +150,7 @@ Model space and world space transformations are what happens in the __real world
 
 #### Model Space
 
-__Model space__ is a type of coordinate system that is relative to object itself. That means that the object is centered around the origin (if it is 2D then it is `[ 0, 0 ]`, if it is 3D - `[ 0, 0, 0 ]`, etc.). Why do we need this type of coordinate system? Well, it is great for describing a single object. As alwasy, an example is worth more than a million words.
+__Model space__ is a type of coordinate system that is relative to object itself. That means that the object is defined relative to the origin (if it is 2D then it is `[ 0, 0 ]`, if it is 3D - `[ 0, 0, 0 ]`, etc.). Why do we need this type of coordinate system? Well, it is great for describing a single object. As always, an example is worth more than a million words.
 
 So imagine you want to create a triangle that, which center is shifted 4 units to the left. There are 2 options how you can achieve that:
 
@@ -174,6 +174,20 @@ In a normal world, most of the developers go the second route. This is where the
 
 __World Space__ is the coordinate system shared by all objects in the real world. Imagine a simple coordinate system, where the origin is some arbitrary point that you picked, from which you place all other objects. Simple as that. Imagine that a triangle (I mean the center of the object) is placed at the coordinates [4, 5], then, there might be a square at coordinates [-6, 7], a torus at [11, 22] and etc..
 
+To illustrate you the difference between model space and world space, I created these 2 images:
+
+* Model space
+
+    ![model_space_rectangle](Assets/model_space_rectangle.png)
+
+* World space
+
+    ![world_space_shapes](Assets/world_space_shapes.png)
+
+Do you see the difference? In the first image, you define only a single object, i.e. you create vertices relative to the origin. In the second image, you place the created objects in the shared world. 
+
+To sum it up, model space is for object creation, world space is where all the created objects are placed.
+
 ### Code Part
 
 Before I show you the code for this lesson, I want inform you that the code from the previous lesson is changed here. The things I have changed are:
@@ -189,9 +203,9 @@ Without any further pointless talks, let's dive deep into the code part, where I
 
 #### Uniforms
 
-First, let's start here, since it will be over in a half a minute. Uniform is a way that let's developers to directly pass variables to shaders. What is the point of allowing developers directly pass values to the shaders? The first thing that comes to my mind is the paralellism of GPU. Remember what is the definition of a __shader__? (cough cough, a program that runs on GPU)... Also, remember that GPUs are great for program executions that are independent from one another (you can google what SIMD is). 
+First, let's start here, since it will be over in a "half" a minute. Uniform is a way that let's developers to directly pass variables to shaders. What is the point of allowing developers directly pass values to the shaders? The first thing that comes to my mind is the parallelism of GPU. Remember what is the definition of a __shader__? (cough cough, a program that runs on GPU)... Also, remember that GPUs are great for program executions that are independent from one another (you can google what SIMD is). 
 
-Ok, I will elaborate on this a little more. ___The following example is going to be run on the CPU, meaning a single core of CPU is going to be used___. Immagine a simple array of numbers, let's define it as `int arrayOfNumbers[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};`. Imagine that there is a function that takes exactly 1s to complete, which does: 
+Ok, I will elaborate on this a little more. ___The following example is going to be run on the CPU, meaning a single core of CPU is going to be used___. Imagine a simple array of numbers, let's define it as `int arrayOfNumbers[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};`. Imagine that there is a function that takes exactly 1s to complete, which does: 
 
 ```C++
 int Some1SFunction(int originalValue):
@@ -210,7 +224,7 @@ On CPU, this function would take 9s to complete, since it would be called 9 time
 
 Ok, but what if our array has 10000 numbers? The CPU definitely does not have cores in terms of thousands. That's sad, but you know what has it? Yes, GPU. With some programming knowledge, you could run this operation on that 10000 number array, and since GPUs have thousands of minicores, this operation could be done seconds.
 
-Where do uniforms come into play? Well, remember that most of the time, we have arrays of vertex data. This array can have thousands of vertices defined. Imagine, that we wanted to multiple each vertex position by some matrix (which we are going to talk in the transformations section). Each of those transformations on each vertex will definitely take a toll on the speed of the rendering. This is where __uniforms__ become handy. Let's take vertex shader for example. It can process many vertices at the same time because the VS is running on the GPU. Because of it, we can apply that matrix to each of the vertices many times faster than it could be done on the CPU. But, how to tell the GPU which matrix to apply? I mean GPU does not have in it's own memory no notion of that matrix you want to apply to each vertex. To bypass it, you can add a changable parameter to the shader program called __uniform__.
+Where do uniforms come into play? Well, remember that most of the time, we have arrays of vertex data. This array can have thousands of vertices defined. Imagine, that we wanted to multiple each vertex position by some matrix (which we talked in the transformations section). Each of those transformations on each vertex will definitely take a toll on the speed of the rendering. This is where __uniforms__ become handy. Let's take vertex shader for example. It can process many vertices at the same time because the VS is running on the GPU. Because of it, we can apply that matrix to each of the vertices many times faster than it could be done on the CPU. But, how to tell the GPU which matrix to apply? I mean GPU does not magically know about the matrix we want to use to transform vertices. To bypass it, you can add a changable parameter to the shader program called __uniform__.
 
 Take a look:
 
