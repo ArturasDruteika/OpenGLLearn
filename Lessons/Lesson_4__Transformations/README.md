@@ -188,6 +188,139 @@ Do you see the difference? In the first image, you define only a single object, 
 
 To sum it up, model space is for object creation, world space is where all the created objects are placed.
 
+---
+### Matrices
+
+We pack transformations into matrices because they allow for transformation of the whole space simultaneously. What do I mean by this? Let's take 2 scenarios, the goal of this transformatation is to scale a triangle to twice it's size and to rotate by 90 degrees:
+
+1. Applying transforamtion without matrix
+2. Applying transformation with matrix
+
+In the first case, what we could do is take every triangle vertex and apply a scaling and and then rotation operations. It would look like this:
+
+```C++
+
+struct Vec2
+{
+    float x;
+    float y;
+};
+
+int main()
+{
+    std::array<Vec2, 3> triangle =
+    {
+        Vec2{ 0.0f,  0.5f },
+        Vec2{ -0.5f, -0.5f },
+        Vec2{ 0.5f, -0.5f }
+    };
+
+    float scaleFactor = 2.0f;
+
+    for (Vec2& vertex : triangle)
+    {
+        // --- Scaling ---
+        vertex.x = vertex.x * scaleFactor;
+        vertex.y = vertex.y * scaleFactor;
+
+        // --- Rotation (90 degrees) ---
+        float oldX = vertex.x;
+        float oldY = vertex.y;
+
+        vertex.x = -oldY;
+        vertex.y = oldX;
+    }
+}
+```
+
+At the first glance, it looks harmless, just 2 operations applied one after another. But the real issue here is the number of triangles. If we want to render a single triangle, than this is perfectly fine, a speed of our application is not going to be slow. What if there are millions of triangles per frame? You see the issue? Every iteration `for (Vec2& vertex : triangle)` is going to slow you application. It slows the program due to the fact that evety iteration 2 operations have to be applied one by one. Imagine, if there was a way, whre we could somehow combine these 2 transformations into a single entity and reuse it every time. This is where the magic of matrices lie.
+
+Now take a look at what the second option would look like:
+
+```C++
+struct Vec2
+{
+    float x;
+    float y;
+};
+
+struct Mat2
+{
+    float data[2][2];
+};
+
+Vec2 Multiply(const Mat2& matrix, const Vec2& vector)
+{
+    Vec2 result;
+    result.x = matrix.data[0][0] * vector.x + matrix.data[0][1] * vector.y;
+    result.y = matrix.data[1][0] * vector.x + matrix.data[1][1] * vector.y;
+    return result;
+}
+
+Mat2 Multiply(const Mat2& a, const Mat2& b)
+{
+    Mat2 result = { 0.0f };
+
+    for (int row = 0; row < 2; ++row)
+    {
+        for (int col = 0; col < 2; ++col)
+        {
+            result.data[row][col] = 0.0f;
+
+            for (int k = 0; k < 2; ++k)
+            {
+                result.data[row][col] += a.data[row][k] * b.data[k][col];
+            }
+        }
+    }
+
+    return result;
+}
+
+int main()
+{
+    std::array<Vec2, 3> triangle =
+    {
+        Vec2{ 0.0f,  0.5f },
+        Vec2{ -0.5f, -0.5f },
+        Vec2{ 0.5f, -0.5f }
+    };
+
+    float scaleFactor = 2.0f;
+
+    Mat2 scaleMatrix =
+    {{
+        { scaleFactor, 0.0f },
+        { 0.0f, scaleFactor }
+    }};
+
+    Mat2 rotationMatrix =
+    {{
+        { 0.0f, -1.0f },
+        { 1.0f,  0.0f }
+    }};
+
+    Mat2 transformationMatrix = Multiply(rotationMatrix, scaleMatrix);
+
+    for (Vec2& vertex : triangle)
+    {
+        vertex = Multiply(transformationMatrix, vertex);
+    }
+
+    return 0;
+}
+```
+
+Can you guess why this is better? The main advantage here is that instead of applying scaling and then rotation operations one by one for every vertex, we first combine ("encode") the 2 transformatons into a single entity - matrix, and then apply it to each vertex separately. This does not remove the need to process each vertex, but it allows us to define the transformation once and reuse it for all vertices. This becomes especially useful when many vertices share the same transformation, and it matches how transformations are applied in modern graphics pipelines.
+
+The main advantages of trasnformations represented as matrix are:
+
+* Combines multiple transformations into a single entity.
+* Makes transformations reusable (combine transfomations into a single matrix and reuse it for every vertex).
+* Scales conceptually. Going from 2D to 3D is simple.
+* Matrix transformations is what all of rendering uses, so it matches how graphics pipelines work.
+
+---
 ### Code Part
 
 Before I show you the code for this lesson, I want inform you that the code from the previous lesson is changed here. The things I have changed are:
@@ -249,4 +382,6 @@ void main()
 
 Just remember one thing, that uniforms allow developers to directly set values in the shader programs.
 
+
+#### Transformations
 
