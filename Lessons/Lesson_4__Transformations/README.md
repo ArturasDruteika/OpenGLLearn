@@ -320,21 +320,9 @@ The main advantages of trasnformations represented as matrix are:
 * Scales conceptually. Going from 2D to 3D is simple.
 * Matrix transformations is what all of rendering uses, so it matches how graphics pipelines work.
 
----
-### Code Part
 
-Before I show you the code for this lesson, I want inform you that the code from the previous lesson is changed here. The things I have changed are:
-
-1. I have moved the shaders code in separate files. I did that, because this is the convention on how to handle shaders (at least in our situations). For this and many more following lessons, we are not going to do shader generations throughout the lifetime of a program (that is what we maybe do far far into the future).
-2. Added my own library from [my own grahics engine](https://github.com/ArturasDruteika/Andromeda). For the lessons, I will be naming it __Orion__. So everything, that you can find in the __Orion__ folder, is what I use when I am creating __Andromeda__ graphics engine.
-3. Added __glm__ 3rd party. This is a great library for math. It has all the needed transformations and etc. when working with OpenGL.
-
-Also, as a side note, from this point, moving in the future, we will be refactoring a lot of our code, to make it follow best practices. I am not saying, that all of our code will be the best it can, absolutely no, because then it will be hard to explain everything. But we will stop flooding our main.cpp file with all the code for a single lesson. Instead, we will separate what can be separated into classes, files and etc., so do not be scared.
-
-Without any further pointless talks, let's dive deep into the code part, where I will show you how to code the transformation and how to use uniforms using OpenGL.
-
-
-#### Uniforms
+--- 
+### Uniforms
 
 First, let's start here, since it will be over in a "half" a minute. Uniform is a way that let's developers to directly pass variables to shaders. What is the point of allowing developers directly pass values to the shaders? The first thing that comes to my mind is the parallelism of GPU. Remember what is the definition of a __shader__? (cough cough, a program that runs on GPU)... Also, remember that GPUs are great for program executions that are independent from one another (you can google what SIMD is). 
 
@@ -382,6 +370,101 @@ void main()
 
 Just remember one thing, that uniforms allow developers to directly set values in the shader programs.
 
+---
+### Code Part
+
+Before I show you the code for this lesson, I want inform you that the code from the previous lesson is changed here. The things I have changed are:
+
+1. I have moved the shaders code in separate files. I did that, because this is the convention on how to handle shaders (at least in our situations). For this and many more following lessons, we are not going to do shader generations throughout the lifetime of a program (that is what we maybe do far far into the future).
+2. Added my own library from [my own grahics engine](https://github.com/ArturasDruteika/Andromeda). For the lessons, I will be naming it __Orion__. So everything, that you can find in the __Orion__ folder, is what I use when I am creating __Andromeda__ graphics engine.
+3. Added __glm__ 3rd party. This is a great library for math. It has all the needed transformations and etc. when working with OpenGL.
+
+Also, as a side note, from this point, moving in the future, we will be refactoring a lot of our code, to make it follow best practices. I am not saying, that all of our code will be the best it can, absolutely no, because then it will be hard to explain everything. But we will stop flooding our main.cpp file with all the code for a single lesson. Instead, we will separate what can be separated into classes, files and etc., so do not be scared.
+
+Without any further pointless talks, let's dive deep into the code part, where I will show you how to code the transformation and how to use uniforms using OpenGL.
 
 #### Transformations
+
+To easily use transfomations, we are going to use [glm](https://github.com/g-truc/glm) library. It is a great tool to apply and use all sorts of transformations. 
+
+Take a look at the transformations we are going to use:
+
+```C++
+glm::mat3 CreateTranslation2D(const glm::vec2& translation)
+{
+    glm::mat3 result(1.0f);
+    result[2] = glm::vec3(translation, 1.0f);
+    return result;
+}
+
+glm::mat3 CreateRotation2D(float angleInRadians)
+{
+    const float cosine = std::cos(angleInRadians);
+    const float sine = std::sin(angleInRadians);
+
+    glm::mat3 result(1.0f);
+    result[0] = glm::vec3(cosine, sine, 0.0f);
+    result[1] = glm::vec3(-sine, cosine, 0.0f);
+    return result;
+}
+
+glm::mat3 CreateScale2D(const glm::vec2& scale)
+{
+    glm::mat3 result(1.0f);
+    result[0] = glm::vec3(scale.x, 0.0f, 0.0f);
+    result[1] = glm::vec3(0.0f, scale.y, 0.0f);
+    return result;
+}
+
+...
+
+
+    const float rotationAngle = glm::radians(90.0f);
+    const glm::vec2 nonUniformScale{ 0.5f, 1.5f };
+    const glm::vec2 topLeftPosition{ -0.5f, 0.5f };
+    const glm::vec2 bottomLeftPosition{ -0.5f, -0.5f };
+    const glm::vec2 topRightPosition{ 0.5f, 0.5f };
+    const glm::vec2 bottomRightPosition{ 0.5f, -0.5f };
+
+    const glm::mat3 translateTopLeft = CreateTranslation2D(topLeftPosition);
+    const glm::mat3 translateBottomLeft = CreateTranslation2D(bottomLeftPosition);
+    const glm::mat3 translateTopRight = CreateTranslation2D(topRightPosition);
+    const glm::mat3 translateBottomRight = CreateTranslation2D(bottomRightPosition);
+
+    const glm::mat3 rotate2D = CreateRotation2D(rotationAngle);
+    const glm::mat3 scale2D = CreateScale2D(nonUniformScale);
+
+    const glm::mat3 topLeft = translateTopLeft;
+    const glm::mat3 bottomLeft = translateBottomLeft * rotate2D;
+    const glm::mat3 topRight = translateTopRight * scale2D;
+    const glm::mat3 bottomRight = translateBottomRight * rotate2D * scale2D;
+```
+
+Let's go line by line and I will try to explain what is going on in here:
+
+```C++
+const float rotationAngle = glm::radians(90.0f);
+const glm::vec2 nonUniformScale{ 0.5f, 1.5f };
+const glm::vec2 topLeftPosition{ -0.5f, 0.5f };
+const glm::vec2 bottomLeftPosition{ -0.5f, -0.5f };
+const glm::vec2 topRightPosition{ 0.5f, 0.5f };
+const glm::vec2 bottomRightPosition{ 0.5f, -0.5f };
+```
+We, basically, what we want to trasform in simplest terms. You can say that these lines only define what transformations are going to be used later. At this point, these are just simple values, which we are going to use later. Also, we have not defined to which objects we are going to apply these transformations. 
+
+`const float rotationAngle = glm::radians(90.0f);` this is pretty self explanatory, a single value (in radians) that tells how much to rotate something. But the next 5 lines are vectors, which have 2 numbers in them. Since we are rendering triangles in 2D world (in the future we are going to transition to 3D), scaling and translation need to be 2D vectors. Why? Because each of those 2 numbers define transformation on a single axis. Let's take this `const glm::vec2 nonUniformScale{ 0.5f, 1.5f };`. this is a scaling vector which tells how much to scale X and Y axes separately, i.e. `0.5` scales the X axis, `1.5` scales the Y axis. Keep in mind that X and Y axes are set arbitratrely, meaning that you can use `1.5` for X and `0.5` for Y axis. But, the convention is this, first number in a transformation vector is for X, second - Y, third - Z. Translation works the same, in the `const glm::vec2 topLeftPosition{ -0.5f, 0.5f };` the -0.5 tells where to move in the X axis, `1.5` tells where to move in the Y axis.
+
+Now let's discuss these lines:
+
+```C++
+const glm::mat3 translateTopLeft = CreateTranslation2D(topLeftPosition);
+const glm::mat3 translateBottomLeft = CreateTranslation2D(bottomLeftPosition);
+const glm::mat3 translateTopRight = CreateTranslation2D(topRightPosition);
+const glm::mat3 translateBottomRight = CreateTranslation2D(bottomRightPosition);
+
+const glm::mat3 rotate2D = CreateRotation2D(rotationAngle);
+const glm::mat3 scale2D = CreateScale2D(nonUniformScale);
+```
+
+This is where the matrices come into play. 
 
