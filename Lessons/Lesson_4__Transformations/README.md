@@ -122,7 +122,7 @@ Keep in mind, that I just showed you how transformations happen in 2D. But do no
 
 Also, an important thing to say is that these 3 transformation are only for the objects manipulations. These transformations only change the objects in world space (we are going to talk about this in this lesson later). Without these 3 matrix transformations, there are others, like __view__, __projection__ transformations. But, these topics are going to be left for the following lessons, because those topics are a bit harder to explain.
 
-
+---
 ### Transformations
 
 Since you read (I hope you did) [this article](https://learnopengl.com/Getting-started/Transformations), I can move directly to explaining how I understand what transformations is, what they are and how to use them. Our end goal is this window:
@@ -321,6 +321,22 @@ The main advantages of trasnformations represented as matrix are:
 * Matrix transformations is what all of rendering uses, so it matches how graphics pipelines work.
 
 
+#### Homogenous Coordinate Space
+
+Notice in the previous example, I only showed how to contruct transformation matrix for scaling and rotation. In 2D environment 2D transformation matrix works perfectly fine for scaling and rotation transformations, but issue arises when we want to also combine a translation transformation. 
+
+Why does 2x2 matrix work for scaling and rotations but not for transformations? Both scaling and rotation is a linear operation, meaning that after applying these 2 operations:
+
+* Origin stays at the origin
+* Parallel lines stay parallel
+* Straight lines stay straight
+
+Just think about it, when you rotate something, the origin still stays at the origin, the parallel lines stay parallel and straight lines stay straight. Scaling works the same. But translation breaks one linear transformation rule, which is that even though, parallel lines stay parallel, straight lines stay straight, but the origin is moved. Try to visualize these 3 operations in your head. When you apply rotation, all the space around the origin is rotated, when you apply scaling, everything is scaled, but when you translate something, origin moves to that translation point or in that translation direction. This is a huge problem if we want to combine all the transformations (rotation, scale, translation) into a single entity.
+
+To combine multiple transformations into a single matrix, we have to use this trick, where we introduce an additional dimension to a transformation matrix. This added additional dimension is what makes the transformation matrix lay in the homogeneous coordinate system. The homogeneous matrix will have a size of (N + 1) x (N + 1) where N is the dimension count of your real world. Right now we work with 2D shapes, so our homogeneous matrix is 3 x 3. "But wait, what is the point of that additional dimension? What purpose does it serve?" The additional dimension allows us to express translation matrix as a linear transformation, which then allows us to combine rotation, scaling and translation into a single transformation matrix. 
+
+To have a deeper understanding on why specifically the additional dimension helps with translation operation, I suggest you to google or chatgpt it. I can understand it, but I do not want to try to explain it here since I may do some mistakes in doing so. The provided links at the start of this lesson elaborate on homogenous coordinate system pretty well also. For the basic beginers, you only need to know that the additional dimensions allows to combine translation transformation with scaling and rotation transformations.
+
 --- 
 ### Uniforms
 
@@ -457,14 +473,65 @@ We, basically, what we want to trasform in simplest terms. You can say that thes
 Now let's discuss these lines:
 
 ```C++
-const glm::mat3 translateTopLeft = CreateTranslation2D(topLeftPosition);
-const glm::mat3 translateBottomLeft = CreateTranslation2D(bottomLeftPosition);
-const glm::mat3 translateTopRight = CreateTranslation2D(topRightPosition);
-const glm::mat3 translateBottomRight = CreateTranslation2D(bottomRightPosition);
+glm::mat3 CreateTranslation2D(const glm::vec2& translation)
+{
+    glm::mat3 result(1.0f);
+    result[2] = glm::vec3(translation, 1.0f);
+    return result;
+}
 
-const glm::mat3 rotate2D = CreateRotation2D(rotationAngle);
-const glm::mat3 scale2D = CreateScale2D(nonUniformScale);
+glm::mat3 CreateRotation2D(float angleInRadians)
+{
+    const float cosine = std::cos(angleInRadians);
+    const float sine = std::sin(angleInRadians);
+
+    glm::mat3 result(1.0f);
+    result[0] = glm::vec3(cosine, sine, 0.0f);
+    result[1] = glm::vec3(-sine, cosine, 0.0f);
+    return result;
+}
+
+glm::mat3 CreateScale2D(const glm::vec2& scale)
+{
+    glm::mat3 result(1.0f);
+    result[0] = glm::vec3(scale.x, 0.0f, 0.0f);
+    result[1] = glm::vec3(0.0f, scale.y, 0.0f);
+    return result;
+}
+
+...
+
+    const glm::mat3 translateTopLeft = CreateTranslation2D(topLeftPosition);
+    const glm::mat3 translateBottomLeft = CreateTranslation2D(bottomLeftPosition);
+    const glm::mat3 translateTopRight = CreateTranslation2D(topRightPosition);
+    const glm::mat3 translateBottomRight = CreateTranslation2D(bottomRightPosition);
+
+    const glm::mat3 rotate2D = CreateRotation2D(rotationAngle);
+    const glm::mat3 scale2D = CreateScale2D(nonUniformScale);
 ```
 
-This is where the matrices come into play. 
+This is where the matrices come into play. As I said before, matrices are great for reusability, adding transformations into a single entity and, also, matrices are a standart in how transformations should be used. Let's discuss this part:
 
+```C++
+glm::mat3 CreateTranslation2D(const glm::vec2& translation)
+{
+    glm::mat3 result(1.0f);
+    result[2] = glm::vec3(translation, 1.0f);
+    return result;
+}
+
+...
+
+const glm::mat3 translateTopLeft = CreateTranslation2D(topLeftPosition);
+```
+
+These lines help us create a translation transformation matrix. Since we know how matrices work (again, I hope you read the articles I provided) I will tell you how the translation matrix looks like it is. `CreateTranslation2D(const glm::vec2& translation)` constructs a matrix that looks like this:
+
+```
+[  1  0  tx  ]
+[  0  1  ty  ]
+[  0  0  1   ]
+​
+```
+
+"What are tx and ty? Wait, before answering this, can you tell me why the translation matrix is 3x3 when we are still working in a 2D world?"
