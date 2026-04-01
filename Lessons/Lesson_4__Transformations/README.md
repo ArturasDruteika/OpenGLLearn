@@ -321,7 +321,7 @@ The main advantages of trasnformations represented as matrix are:
 * Matrix transformations is what all of rendering uses, so it matches how graphics pipelines work.
 
 
-#### Homogenous Coordinate Space
+#### Homogeneous Coordinate Space
 
 Notice in the previous example, I only showed how to contruct transformation matrix for scaling and rotation. In 2D environment 2D transformation matrix works perfectly fine for scaling and rotation transformations, but issue arises when we want to also combine a translation transformation. 
 
@@ -534,4 +534,11 @@ These lines help us create a translation transformation matrix. Since we know ho
 ​
 ```
 
-"What are tx and ty? Wait, before answering this, can you tell me why the translation matrix is 3x3 when we are still working in a 2D world?"
+"What are tx and ty? Wait, before answering this, can you tell me why the translation matrix is 3x3 when we are still working in a 2D world?" To answer this, first get really familiar with "Homogeneous Coordinate Space" paragraph in the "Transformations" section. As I said, transformation matrix always has 1 more dimension than real world you are working in, so because we have a 2D world, our transformtion matrix is 3x3.
+
+The `tx` and `ty` variables is the offset, or the position you wnat to translate the object. Please know that offset and position are 2 different approaches on how we can translate our object, do not confuse them as one. These are not the same because there are 2 main possibilieties on how a object can be translated (moved):
+
+1. Give only a position of where you want to see you object moved to. An example is when you have an object at the initial position of (4, 7) and you want that object to be moved to a position of (10, -6). With this approach you supply your function the final position where you want to see your object moved.
+2. Give an offset, meaning how much in which directions the object should be moved. An example is when you have an object at the initial position of (4, 7) and you want that object to be shifted by 10 units on the X axis and -6 units on the Y axis. That would put our object at the final position of (4 + 10, 7 + (-6)) = (14, -2).
+
+Do you see the difference now? These are just 2 options on how you can move your object, both are equally valid. It is up to the programmer on how he / she programs the translation operation.
