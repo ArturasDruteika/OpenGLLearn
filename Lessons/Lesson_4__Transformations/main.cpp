@@ -45,7 +45,6 @@ glm::mat3 CreateScale2D(const glm::vec2& scale)
     return result;
 }
 
-
 void framebufferSizeCallback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);

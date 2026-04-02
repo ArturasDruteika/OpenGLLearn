@@ -523,6 +523,9 @@ glm::mat3 CreateTranslation2D(const glm::vec2& translation)
 ...
 
 const glm::mat3 translateTopLeft = CreateTranslation2D(topLeftPosition);
+const glm::mat3 translateBottomLeft = CreateTranslation2D(bottomLeftPosition);
+const glm::mat3 translateTopRight = CreateTranslation2D(topRightPosition);
+const glm::mat3 translateBottomRight = CreateTranslation2D(bottomRightPosition);
 ```
 
 These lines help us create a translation transformation matrix. Since we know how matrices work (again, I hope you read the articles I provided) I will tell you how the translation matrix looks like it is. `CreateTranslation2D(const glm::vec2& translation)` constructs a matrix that looks like this:
@@ -541,4 +544,118 @@ The `tx` and `ty` variables is the offset, or the position you wnat to translate
 1. Give only a position of where you want to see you object moved to. An example is when you have an object at the initial position of (4, 7) and you want that object to be moved to a position of (10, -6). With this approach you supply your function the final position where you want to see your object moved.
 2. Give an offset, meaning how much in which directions the object should be moved. An example is when you have an object at the initial position of (4, 7) and you want that object to be shifted by 10 units on the X axis and -6 units on the Y axis. That would put our object at the final position of (4 + 10, 7 + (-6)) = (14, -2).
 
-Do you see the difference now? These are just 2 options on how you can move your object, both are equally valid. It is up to the programmer on how he / she programs the translation operation.
+Do you see the difference now? These are just 2 options on how you can move your object, both are equally valid. It is up to the programmer on how he / she programs the translation operation. For this lesson, our translation is gooing to be the first case, meaning we pass the final value where we want to see our object placed. In the future, we are definitely going to implement the offset translation.
+
+Going back to the code part, notice, that there are 4 different translation matrices. For this lesson, we need 4 translations, because our goal is to render 4 triangles placed at different positions on the screen (as seen in the Transformations section (first image)). This means that each of those triangles has a translation transformation applied to them so that their position could be changed on the screen. Remember how in model and world space I talked about the differences between these 2 coordinate systems? This is where the understanding of these concepts help us realize the need of transformations better.
+
+If you look at the `triangleVertices`, you can see that the positions are defined in the model space, meaning that all vertex position are relative to the origin. If you rendered the triangle with the positions of `triangleVertices`, without the translation transformation applied, you would see exactly the same triangle as in lesson 2.
+
+Before showing how to apply transformtions to objects, let's first look at these lines, just so that we could finish with transformation definitions:
+
+```C++
+glm::mat3 CreateRotation2D(float angleInRadians)
+{
+    const float cosine = std::cos(angleInRadians);
+    const float sine = std::sin(angleInRadians);
+
+    glm::mat3 result(1.0f);
+    result[0] = glm::vec3(cosine, sine, 0.0f);
+    result[1] = glm::vec3(-sine, cosine, 0.0f);
+    return result;
+}
+
+glm::mat3 CreateScale2D(const glm::vec2& scale)
+{
+    glm::mat3 result(1.0f);
+    result[0] = glm::vec3(scale.x, 0.0f, 0.0f);
+    result[1] = glm::vec3(0.0f, scale.y, 0.0f);
+    return result;
+}
+
+...
+
+    const glm::mat3 rotate2D = CreateRotation2D(rotationAngle);
+    const glm::mat3 scale2D = CreateScale2D(nonUniformScale);
+```
+
+Analogous to the translation matrices, right here, we are constructing matrices for rotation and scaling. The created matrices are exactly the same shape as translation matrix. 
+
+To better understand why the rotation matrix is the way it looks like, I highly suggest you to watch these videos:
+
+* [Rotation Matrices by Dr. Trefor Bazett](https://www.youtube.com/watch?v=rUKsjo1nReE)
+* [Rotation Matrix by Dr Peyam](https://www.youtube.com/watch?v=Ta8cKqltPfU&t=380s)
+
+These videos, at least to me, allowed to understand how rotation transformations work using matrices.
+
+Scaling is probably the easiest of all the transformation in terms of matrices. The only thing you need to change are the diagonal values for each axis in the matrix. This way that dimension of the object is going to be scaled according to the value.
+
+Keep in mind 2 things about all of the 3 transformations:
+
+1. To construct a transformation, first create an identity (sometimes called eye) matrix of shape (N + 1, N + 1) (identity matrix is the type of matrix where each element is 0 except for diagonal values, which are set to 1). To create an eye matrix, use `glm::mat3 result(1.0f)`. Identity matrix is unique, because it does not transform the the term you are multiplying. If you multiply A x y, where A is an identity matrix and y is a vector, the result is going to be y (A x y = y). Same rule applies to matrix x matrix multiplication. If you multiply A x B, where A is an identity transformation and B some other matrix, the answer is going to be B (A x B = B). With matrix multiplication remember that it is not commutative, meaning that `M x N != N x M`, but with identity matrices, `A x B == B x A`.
+2. Pay attention which matrix values are changed in each of the transformation matrix. For translation, only the 3rd axis's x and y values are changed. For rotation, 1-st and 2-nd axes's x and y values are changed. For scaling, only the diagonal values are changed excpt the last dimension's.
+
+#### Model Matrix
+
+I think that this is the last topic we are going to understand about the matrix transformations in this lesson. This is the finale. 
+
+__Model Matrix__ is the transformation matrix that combines all other transformations into a single entity. 
+
+Imagine that you have an object that you want to scale by some amount, then rotate by some degrees and then translate to some position. Instead of doing this:
+
+``` Python
+# T - translation matrix
+# R - rotation matrix
+# S - scaling matrix
+
+for vertex_position_local_space in vertex_positions_local_space:
+    vertex_position_world_space = T x R x S x vertex_position_local_space
+```
+
+why can't we do this:
+
+``` Python
+# T - translation matrix
+# R - rotation matrix
+# S - scaling matrix
+# M - model matrix
+
+M = T x R x S
+
+for vertex_position_local_space in vertex_positions_local_space:
+    vertex_position_world_space = M x vertex_position_local_space
+```
+
+Can you see the benefits? Instead of recalculating the same value every time a new vertex position comes, why can't we just calculate it a single time and reuse it. It becomes even more efficient if the same transformations are going to be applied to multiple objets.
+
+In graphics, __model matrix__ can be defines as a transformation that moves an object from model space to world space. It is because if you remove rotation and scale transformations, model matrix is consttuced as a translation matrix, thus using model model an object is being translated to a specified point in space.
+
+One, very important thing to mention, is the order of multiplication for construction of model matrix. Did you notice why in here `M = T x R x S` I use this sequence? This is the convention (at least in graphics world) for how to construct a model matrix. If you want to know where in the real world your vertex position is going to land, follow these steps:
+
+```
+p_m - vertex position in model (local) space
+p_w
+S - scaling matrix
+R - rotation matrix
+T - translation matrix
+M - model matrix, where M is initialized as an identity matrix
+
+1.  M = S
+2.  M = R x M
+3.  M = T x M
+4.  p_w = M x p_m
+```
+
+Also, please rememeber, that every object that you want to place in the real world, has it's own unique model matrix. If 2 or more objects share the same model matrix, that means that these 2 objects are exactly the same, in terms of all of their vertices positions. 
+
+Why every object has it's own model matrix? Well, just think about it. I mean you might want to create one object that is rotated 40 degrees on the X axis and scaled to look twice as big. The other object, might be moved to the opposite direction from the first object and rotate 90 degrees on the Y axis. The third object might lay directly in between these 2 objects, but be twice as small as the second object. If either a single scaling component, or rotation degrees, or postion differs, that means that a new model matrix is constructed.
+
+So with this knowledge, we can go to this part:
+
+```C++
+const glm::mat3 topLeft = translateTopLeft;
+const glm::mat3 bottomLeft = translateBottomLeft * rotate2D;
+const glm::mat3 topRight = translateTopRight * scale2D;
+const glm::mat3 bottomRight = translateBottomRight * rotate2D * scale2D;
+```
+
+Since we have 4 triangles, we have 4 unique model matrices.
