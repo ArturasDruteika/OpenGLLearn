@@ -658,4 +658,45 @@ const glm::mat3 topRight = translateTopRight * scale2D;
 const glm::mat3 bottomRight = translateBottomRight * rotate2D * scale2D;
 ```
 
-Since we have 4 triangles, we have 4 unique model matrices.
+Since we have 4 triangles, we have 4 unique model matrices. Take a look again at this image:
+
+![triangle_transformations](Assets/triangle_transformations.png)
+
+1. `topLeft` - model matrix for the triangle at the top left corner
+2. `bottomLeft` - model matrix for the triangle at the bottom left corner
+3. `topRight` - model matrix for the triangle at the top right corner
+4. `bottomRight` - model matrix for the triangle at the bottom right corner
+
+Each of these model matrices transforms an original triangle in a unique way. Again, notice, that we retain the multiplication order for model matrices, that follows this rule `M = T x R x S`. 
+
+You might ask "why some of the model matrices do not have all the transformations in them, like where `topLeft` is only a translation matrix?". There are 2 ways how you can think about them:
+
+1. Think that model matrix does not need to have all transformations embedded in it.
+2. Always think that model matrix needs to have all the transformations embedded, but if it is missing one or the other, implicitly substitute that transformation matrix with identity matrix. It works, because identity matrix does not change the outer product.
+
+Both of these ideas work fine, it is just the way you want to think about model matrix.
+
+
+#### Main Loop
+
+Finally, we have arrived at the end of this lesson. The long awaited main rendering loop. There are basically 2 new lines that need discussion, since all other have been talked about in the previous lessons. Let's go line by line:
+
+1. `int transformLocation = glGetUniformLocation(shaderProgram, "u_transform");` this lines allows us to get the ID of a location in the shader program . Using this ID, we will be able to directly set the `u_transform`, which is a variable representing a model matrix. notice that the ID is of type `int` and not `unsigned int`. It is like this because `glGetUniformLocation` can return a -1 if the specified uniform does not exist in the shader program. Right now, you opened the VS shader for this lesson, you would notice that it has `u_transform` defined as a uniform. Names have to match, so if you tried to do this `int transformLocation = glGetUniformLocation(shaderProgram, "u_transformmm");`, the `transformLocation` would have a value of -1. Arguments are also pretty self explanatory, `shaderProgram` tells for which shader program the location is needed. `"u_transform"` specifies which uniform is needed from the shader program.
+2. `glUniformMatrix3fv(transformLocation, 1, GL_FALSE, glm::value_ptr(topLeft));` - in short, this line is where we actually set our transformation matrix's values to the shader. It's arguments are as follows:
+
+    1. `GLint location` - specifies the location in the shader. Notice that you do not need to specify the shader program itself, only an ID of a location. This is one of those "OpenGL is a state machine where every little tiny thing has it's own ID".
+    2. `GLsizei count` - count for how many matrices we are sending to the shader. Shaders can have uniforms as arrays also. We will talk about this in the future.
+    3. `GLboolean transpose` - almost always it is going to be false, since we do not need to transpose our matrix. 
+    4. `const GLfloat * value` - pointer to the value you want to set in the shader.
+
+One important thing I want to say about `glUniformMatrix3fv` is that there are many variations for this function. It changes based on what uniform variable type you want to set. For example:
+
+* `glUniform1i` - sets variable type `int`
+* `glUniform1f` - sets variable type `float`
+* `glUniformMatrix4iv` - sets variable matrix of size 4 x 4 where each entry is of type `int`
+
+
+---
+### Conclusion
+
+That is it, we did it. We have the basic knowledge about transformations and how to use them to change the way objects appear on our screen. As I said, transformations is the building block in rendering, so knowing them allows you to build all kinds of shapes and manipulate them. And did you notice another thing, once you realize what transformations are, math, especially linear algebra does not seem so distant and unknown. 
