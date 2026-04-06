@@ -144,7 +144,7 @@ I hope you remember that there are many coordinate systems for objects; you can 
 * Projection space
 * Clip space
 
-In this lesson, we are only going to cover __local space__ and __model space__ (sometime in the future, I will for sure cover the remaining coordinates systems). We need to understand the first and second coordinate systems to understand how transformations happen.
+In this lesson, we are only going to cover __model space__ and __world space__ (sometime in the future, I will for sure cover the remaining coordinates systems). We need to understand the first and second coordinate systems to understand how transformations happen.
 
 Model space and world space transformations are what happen in the __real world__ (please remember that real world = virtual world).
 
@@ -333,9 +333,29 @@ Why does a 2x2 matrix work for scaling and rotation but not for translation? Bot
 
 Just think about it: when you rotate something, the origin still stays at the origin, the parallel lines stay parallel, and straight lines stay straight. Scaling works the same way. But translation breaks one rule of linear transformation. Even though parallel lines stay parallel and straight lines stay straight, the origin is moved. Try to visualize these 3 operations in your head. When you apply rotation, all the space around the origin is rotated. When you apply scaling, everything is scaled. But when you translate something, the origin moves to that translation point or in that translation direction. This is a huge problem if we want to combine all the transformations - rotation, scale, and translation - into a single entity.
 
+How does translation operation look like in 2D world? What we want from a translation transformation is this: if we have a vector `[x, y]`, the translation operation should do this --> `[x + tx, y + tx]`, or in simpler terms:
+
+$ \begin{bmatrix} x' \\ y' \end{bmatrix}
+= \begin{bmatrix} x + t_x \\ y + t_y \end{bmatrix} \quad \text{where } x', y' \text{ are the coordinates of the translated vector} $
+
+This is how mathematically a translation looks like. I mean we want to shift our original vector by some x amount and by some y amount. Here comes the problem if we want to express translation transformation as a 2 x 2 matrix. Look at this simple 2 x 2 matrix and vector multiplication:
+
+$ \begin{bmatrix} x' \\ y' \end{bmatrix}
+= \begin{bmatrix} a & b \\ c & d \end{bmatrix}
+\begin{bmatrix} x \\ y \end{bmatrix}
+= \begin{bmatrix} ax + by \\ cx + dy \end{bmatrix} 
+--> \begin{bmatrix} x' \\ y' \end{bmatrix} 
+= \begin{bmatrix} ax + by \\ cx + dy \end{bmatrix} $
+
+Now `x'` depend on x and y terms, the same goes for `y'`.
+
 To combine multiple transformations into a single matrix, we have to use this trick where we introduce an additional dimension to a transformation matrix. This additional dimension is what makes the transformation matrix lie in homogeneous coordinate space. The homogeneous matrix will have a size of `(N + 1) x (N + 1)`, where `N` is the number of dimensions in your real world. Right now we work with 2D shapes, so our homogeneous matrix is `3 x 3`. "But wait, what is the point of that additional dimension? What purpose does it serve?" The additional dimension allows us to express a translation matrix as a linear transformation, which then allows us to combine rotation, scaling, and translation into a single transformation matrix.
 
-To have a deeper understanding of why exactly the additional dimension helps with translation, I suggest you Google it or ask ChatGPT about it. I can understand it, but I do not want to try to explain it here since I may make some mistakes while doing so. The links I provided at the start of this lesson also elaborate on homogeneous coordinate space pretty well. For basic beginners, you only need to know that the additional dimension allows us to combine translation transformation with scaling and rotation transformations.
+To have a deeper understanding of why exactly the additional dimension helps with translation, first, let's understand how a homogeneous matrix looks in 2D environment. In 2D world, logically thinking, trasnformations should have a shape of `2 x 2`, but, as mentioned earlier, trasnlation cannot be expressed in 2 x 2 transformation due to the fact 
+
+
+
+
 
 --- 
 ### Uniforms
