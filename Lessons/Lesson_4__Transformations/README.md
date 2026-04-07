@@ -331,9 +331,9 @@ Why does a 2x2 matrix work for scaling and rotation but not for translation? Bot
 * Parallel lines stay parallel
 * Straight lines stay straight
 
-Just think about it: when you rotate something, the origin still stays at the origin, the parallel lines stay parallel, and straight lines stay straight. Scaling works the same way. But translation breaks one rule of linear transformation. Even though parallel lines stay parallel and straight lines stay straight, the origin is moved. Try to visualize these 3 operations in your head. When you apply rotation, all the space around the origin is rotated. When you apply scaling, everything is scaled. But when you translate something, the origin moves to that translation point or in that translation direction. This is a huge problem if we want to combine all the transformations - rotation, scale, and translation - into a single entity.
+Just think about it: when you rotate something, the origin still stays at the origin, the parallel lines stay parallel, and straight lines stay straight. Scaling works the same way. But translation breaks one rule of linear transformation. Even though parallel lines stay parallel and straight lines stay straight, the origin is moved. Try to visualize these 3 operations in your head. When you apply rotation, all the space around the origin is rotated. When you apply scaling, everything is scaled. But when you translate something, the origin is mapped to a new point or in that translation direction. This is a huge problem if we want to combine all the transformations - rotation, scale, and translation - into a single entity.
 
-How does translation operation look like in 2D world? What we want from a translation transformation is this: if we have a vector `[x, y]`, the translation operation should do this --> `[x + tx, y + tx]`, or in simpler terms:
+How does translation operation look like in 2D world? What we want from a translation transformation is this: if we have a vector `[x, y]`, the translation operation should do this --> `[x + tx, y + ty]`, or in simpler terms:
 
 $ \begin{bmatrix} x' \\ y' \end{bmatrix}
 = \begin{bmatrix} x + t_x \\ y + t_y \end{bmatrix} \quad \text{where } x', y' \text{ are the coordinates of the translated vector} $
@@ -347,15 +347,188 @@ $ \begin{bmatrix} x' \\ y' \end{bmatrix}
 --> \begin{bmatrix} x' \\ y' \end{bmatrix} 
 = \begin{bmatrix} ax + by \\ cx + dy \end{bmatrix} $
 
-Now `x'` depend on x and y terms, the same goes for `y'`.
+Now `x'` depend on x and y terms, the same goes for `y'`. Once again, remember, that `x'` should only be equal to `x + tx`, same as `y'` which should be `y + ty`
 
-To combine multiple transformations into a single matrix, we have to use this trick where we introduce an additional dimension to a transformation matrix. This additional dimension is what makes the transformation matrix lie in homogeneous coordinate space. The homogeneous matrix will have a size of `(N + 1) x (N + 1)`, where `N` is the number of dimensions in your real world. Right now we work with 2D shapes, so our homogeneous matrix is `3 x 3`. "But wait, what is the point of that additional dimension? What purpose does it serve?" The additional dimension allows us to express a translation matrix as a linear transformation, which then allows us to combine rotation, scaling, and translation into a single transformation matrix.
+To combine multiple transformations into a single matrix, we have to use this trick where we introduce an additional dimension to a transformation matrix. This additional dimension is the "hack" that allows us to to make the:
 
-To have a deeper understanding of why exactly the additional dimension helps with translation, first, let's understand how a homogeneous matrix looks in 2D environment. In 2D world, logically thinking, trasnformations should have a shape of `2 x 2`, but, as mentioned earlier, trasnlation cannot be expressed in 2 x 2 transformation due to the fact 
+$ \begin{bmatrix} x' \\ y' \end{bmatrix}
+= \begin{bmatrix} x + t_x \\ y + t_y \end{bmatrix}$
 
+The homogeneous matrix will have a size of `(N + 1) x (N + 1)`, where `N` is the number of dimensions in your real world. Right now we work with 2D shapes, so our homogeneous matrix is `3 x 3`. "But wait, what is the point of that additional dimension? What purpose does it serve?" The additional dimension allows us to express a translation matrix as a linear transformation, which then allows us to combine rotation, scaling, and translation into a single transformation matrix.
 
+To have a deeper understanding of why exactly the additional dimension helps with translation, first, let's see how a homogeneous matrix looks like:
 
+$ 
+    \begin{bmatrix} 
+        1 & 0 & 0 \\ 
+        0 & 1 & 0 \\ 
+        0 & 0 & 1 
+    \end{bmatrix}
+$
 
+Hold up, this looks like a simple identity matrix, isn't it? Yes, but now, we can, with the additional dimension, we can make our translation matrix look like this:
+
+$ 
+    \begin{bmatrix} 
+        1 & 0 & tx \\ 
+        0 & 1 & ty \\ 
+        0 & 0 & 1 
+    \end{bmatrix}
+$
+
+Do you see how this helps? If not, I will help you a little. Our original vector, that we wanted to translate looked like this:
+
+$ 
+    \begin{bmatrix} 
+        x \\ y 
+    \end{bmatrix}
+$
+
+As you know, in order to be able to use matrix multiplication, the shape of a matrix has to be `m x n`, and the shape of a vector has to be `n x a` (i.e. the columns count of the matrix must be equal to the rows count of the vector). But our vector has the shape of `2 x 1`, when the matrix shape is `3 x 3`. 3 != 2, which prevents us from applying the translation matrix on to our vector. But what if we did this to our original vector:
+
+$ 
+    \begin{bmatrix} 
+        x \\ y \\ 1 
+    \end{bmatrix}
+$
+
+We, essentialy, added an additional coordinate to our vector, so now it's shape is `3 x 1`. Now let's multiply the translation matrix with our vector:
+
+$
+    \begin{bmatrix} 
+        1 & 0 & tx \\ 
+        0 & 1 & ty \\ 
+        0 & 0 & 1 
+    \end{bmatrix}
+    *
+    \begin{bmatrix} 
+        x \\ y \\ 1 
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        1 \cdot x + 0 \cdot y + tx \cdot 1 \\
+        0 \cdot x + 1 \cdot y + ty \cdot 1 \\
+        0 \cdot x + 0 \cdot y + 1 \cdot 1
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        x + tx \\
+        y + ty \\
+        1
+    \end{bmatrix}
+$
+
+OMG, magic, just look at the final result for the x and y coordinates, they are:
+
+$
+    \begin{bmatrix} 
+        x + t_x \\ 
+        y + t_y 
+    \end{bmatrix}
+$
+
+But what about the additional `1` we have in the vector? The cool part, we can convert back to 2D coordinates by dividing by `w`. The remove operation is simple, but first, let's understand one thing about this final vector which is still in the homogeneous coordinates. Remember, we want to have this:
+
+$
+    \begin{bmatrix} 
+        x \\ y 
+    \end{bmatrix}
+$
+
+but we still have this:
+
+$
+    \begin{bmatrix} 
+        x \\ y \\ 1
+    \end{bmatrix}
+$
+
+The 3-rd coordinate of our vector is called a `w` (__homogeneous coordinate__). The general form of a vector in homogeneos space (if our original vector is 2D) is this:
+
+$
+    \begin{bmatrix} 
+        x \\ y \\ w
+    \end{bmatrix}
+$
+
+In order to remove this `w` component we have to perform this operation:
+
+$
+    \begin{bmatrix} 
+        x \\ y \\ w
+    \end{bmatrix}
+    ->
+    \begin{bmatrix} 
+        x / w \\ y / w
+    \end{bmatrix}
+$
+
+With `1` as the homogeneos coordinate, the whole thing becomes even more simple:
+
+$
+    \begin{bmatrix} 
+        x \\ y \\ 1
+    \end{bmatrix}
+    ->
+    \begin{bmatrix} 
+        x / 1 \\ y / 1
+    \end{bmatrix}
+    =
+    \begin{bmatrix} 
+        x \\ y
+    \end{bmatrix}
+$
+
+I am not going to elaborate much on the `w` coordinate on this lesson, but remember that it is not always going to be equal to `1`. This coordinate is going to play a cruicial role once we reach the __view__ and __projecton__ matrices.
+
+Also, let's look how the rotation and scaling matrices look like in the homogeneous space. Rotation matrix:
+
+$
+    \begin{bmatrix}
+        \cos\theta & -\sin\theta & 0 \\
+        \sin\theta & \cos\theta  & 0 \\
+        0          & 0           & 1
+    \end{bmatrix}
+    \begin{bmatrix}
+        x \\ y \\ 1
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        x \cos\theta - y \sin\theta \\
+        x \sin\theta + y \cos\theta \\
+        1
+    \end{bmatrix}
+    ->
+    \begin{bmatrix}
+        x \cos\theta - y \sin\theta \\
+        x \sin\theta + y \cos\theta
+    \end{bmatrix}
+$
+
+Scaling:
+
+$
+    \begin{bmatrix}
+        s_x & 0   & 0 \\
+        0   & s_y & 0 \\
+        0   & 0   & 1
+    \end{bmatrix}
+    \begin{bmatrix}
+        x \\ y \\ 1
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        s_x \cdot x \\
+        s_y \cdot y \\
+        1
+    \end{bmatrix}
+    ->
+    \begin{bmatrix}
+        s_x x \\ s_y y
+    \end{bmatrix}
+$
+
+To sum everything up, __homogeneous coordinates__ allow us to unify all affine transformations (translation, rotation, scaling) into a single matrix multiplication framework.
 
 --- 
 ### Uniforms
