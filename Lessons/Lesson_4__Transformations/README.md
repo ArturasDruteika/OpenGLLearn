@@ -323,22 +323,22 @@ The main advantages of transformations represented as matrices are:
 
 #### Homogeneous Coordinate Space
 
-Notice that in the previous example, I only showed how to construct transformation matrices for scaling and rotation. In a 2D environment, a 2D transformation matrix works perfectly fine for scaling and rotation transformations, but an issue arises when we want to also combine a translation transformation.
+Notice that in the previous example, I only showed how to construct transformation matrices for scaling and rotation. In a 2D environment, a 2D transformation matrix works perfectly fine for scaling and rotation transformations, but an issue arises when we also want to include a translation transformation.
 
-Why does a 2x2 matrix work for scaling and rotation but not for translation? Both scaling and rotation are linear operations, meaning that after applying these 2 operations:
+Why does a 2x2 matrix work for scaling and rotation but not for translation? Both scaling and rotation are linear operations, meaning that after applying these two operations:
 
 * The origin stays at the origin
 * Parallel lines stay parallel
 * Straight lines stay straight
 
-Just think about it: when you rotate something, the origin still stays at the origin, the parallel lines stay parallel, and straight lines stay straight. Scaling works the same way. But translation breaks one rule of linear transformation. Even though parallel lines stay parallel and straight lines stay straight, the origin is moved. Try to visualize these 3 operations in your head. When you apply rotation, all the space around the origin is rotated. When you apply scaling, everything is scaled. But when you translate something, the origin is mapped to a new point or in that translation direction. This is a huge problem if we want to combine all the transformations - rotation, scale, and translation - into a single entity.
+Just think about it: when you rotate something, the origin remains at the origin, the parallel lines stay parallel, and straight lines stay straight. Scaling works the same way. But translation breaks one rule of linear transformation. Even though parallel lines stay parallel and straight lines stay straight, the origin is moved. Try to visualize these 3 operations in your head. When you apply rotation, all the space around the origin is rotated. When you apply scaling, everything is scaled. But when you translate something, the origin is mapped to a new point in the direction of the translation. This becomes a problem if we want to combine all transformations - rotation, scale, and translation - into a single entity.
 
 How does translation operation look like in 2D world? What we want from a translation transformation is this: if we have a vector `[x, y]`, the translation operation should do this --> `[x + tx, y + ty]`, or in simpler terms:
 
 $ \begin{bmatrix} x' \\ y' \end{bmatrix}
 = \begin{bmatrix} x + t_x \\ y + t_y \end{bmatrix} \quad \text{where } x', y' \text{ are the coordinates of the translated vector} $
 
-This is how mathematically a translation looks like. I mean we want to shift our original vector by some x amount and by some y amount. Here comes the problem if we want to express translation transformation as a 2 x 2 matrix. Look at this simple 2 x 2 matrix and vector multiplication:
+This is how mathematically a translation looks like. In other words, we want to shift our vector by some amount in the x and y directions. Here lies the problem: we cannot express a translation transformation using a 2 × 2 matrix. Look at this simple 2 x 2 matrix and vector multiplication:
 
 $ \begin{bmatrix} x' \\ y' \end{bmatrix}
 = \begin{bmatrix} a & b \\ c & d \end{bmatrix}
@@ -347,7 +347,7 @@ $ \begin{bmatrix} x' \\ y' \end{bmatrix}
 --> \begin{bmatrix} x' \\ y' \end{bmatrix} 
 = \begin{bmatrix} ax + by \\ cx + dy \end{bmatrix} $
 
-Now `x'` depend on x and y terms, the same goes for `y'`. Once again, remember, that `x'` should only be equal to `x + tx`, same as `y'` which should be `y + ty`
+Now `x'` depends on x and y terms, the same goes for `y'`. Once again, remember that `x'` should only be equal to `x + tx`, same as `y'` which should be `y + ty`
 
 To combine multiple transformations into a single matrix, we have to use this trick where we introduce an additional dimension to a transformation matrix. This additional dimension is the "hack" that allows us to to make the:
 
@@ -366,7 +366,7 @@ $
     \end{bmatrix}
 $
 
-Hold up, this looks like a simple identity matrix, isn't it? Yes, but now, we can, with the additional dimension, we can make our translation matrix look like this:
+Hold up, this looks like a simple identity matrix, isn't it? Yes, but now, with the additional dimension, we can represent the translation matrix like this:
 
 $ 
     \begin{bmatrix} 
@@ -376,7 +376,7 @@ $
     \end{bmatrix}
 $
 
-Do you see how this helps? If not, I will help you a little. Our original vector, that we wanted to translate looked like this:
+Do you see how this helps? If not, let me explain. Our original vector, that we wanted to translate looked like this:
 
 $ 
     \begin{bmatrix} 
@@ -392,7 +392,7 @@ $
     \end{bmatrix}
 $
 
-We, essentialy, added an additional coordinate to our vector, so now it's shape is `3 x 1`. Now let's multiply the translation matrix with our vector:
+We essentially added an additional coordinate to our vector, so now it's shape is `3 x 1`. Now let's multiply the translation matrix with our vector:
 
 $
     \begin{bmatrix} 
@@ -427,7 +427,7 @@ $
     \end{bmatrix}
 $
 
-But what about the additional `1` we have in the vector? The cool part, we can convert back to 2D coordinates by dividing by `w`. The remove operation is simple, but first, let's understand one thing about this final vector which is still in the homogeneous coordinates. Remember, we want to have this:
+But what about the additional `1` we have in the vector? The cool part is that we can convert back to 2D coordinates by dividing by `w`. The removal operation is simple, but first, let's understand one thing about this final vector which is still in the homogeneous coordinates. Remember, we want to have this:
 
 $
     \begin{bmatrix} 
@@ -443,7 +443,7 @@ $
     \end{bmatrix}
 $
 
-The 3-rd coordinate of our vector is called a `w` (__homogeneous coordinate__). The general form of a vector in homogeneos space (if our original vector is 2D) is this:
+The 3rd coordinate of our vector is called a `w` (__homogeneous coordinate__). The general form of a vector in homogeneous space (if our original vector is 2D) is this:
 
 $
     \begin{bmatrix} 
@@ -479,7 +479,7 @@ $
     \end{bmatrix}
 $
 
-I am not going to elaborate much on the `w` coordinate on this lesson, but remember that it is not always going to be equal to `1`. This coordinate is going to play a cruicial role once we reach the __view__ and __projecton__ matrices.
+I am not going to elaborate much on the `w` coordinate on this lesson, but remember that it is not always going to be equal to `1`. This coordinate is going to play a crucial role once we reach the __view__ and __projecton__ matrices.
 
 Also, let's look how the rotation and scaling matrices look like in the homogeneous space. Rotation matrix:
 
