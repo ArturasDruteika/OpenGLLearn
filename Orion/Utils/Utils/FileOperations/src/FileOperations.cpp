@@ -1,0 +1,35 @@
+#include "../include/FileOperations.hpp"
+
+#include <fstream>
+#include <sstream>
+#include <stdexcept>
+
+
+namespace Orion::Utils
+{
+	std::string FileOperations::LoadFileAsString(const std::string& filePath)
+	{
+		std::ifstream file(filePath);
+		if (!file.is_open())
+		{
+			throw std::runtime_error("Failed to open file: " + filePath);
+		}
+
+		std::stringstream contentStream;
+		contentStream << file.rdbuf();
+		return contentStream.str();
+	}
+
+	std::string FileOperations::LoadFileAsString(const std::filesystem::path& filePath)
+	{
+		std::ifstream file(filePath);
+		if (!file.is_open())
+		{
+			throw std::runtime_error("Failed to open file: " + filePath.string());
+		}
+
+		std::stringstream contentStream;
+		contentStream << file.rdbuf();
+		return contentStream.str();
+	}
+}

@@ -4,4 +4,5 @@ project(External)
 
 add_subdirectory(glfw)
 add_subdirectory(Glad)
+add_subdirectory(glm)
 add_subdirectory(spdlog)

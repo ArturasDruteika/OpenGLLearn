@@ -8,6 +8,7 @@ In my opinion, the following resources explain rendering and OpenGL much better.
 
 1. [__Cherno__](https://www.youtube.com/@TheCherno) videos about [OpenGL](https://www.youtube.com/watch?v=W3gAzLwfIP0&list=PLlrATfBNZ98foTJPJ_Ev03o2oq3-GGOS2) and [Game Engine](https://www.youtube.com/watch?v=JxIZbV_XjAs&list=PLlrATfBNZ98dC-V-N3m0Go4deliWHPFwT)
 2. [__Learn OpenGL__](https://learnopengl.com/)
+3. [__Learning Modern 3D Graphics Programming__](https://paroj.github.io/gltut/)
 
 Also, a all the OpenGL docs (functions and other stuff) can be found here [__docs.gl__](https://docs.gl/)
 
