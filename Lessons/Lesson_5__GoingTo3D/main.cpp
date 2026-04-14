@@ -8,9 +8,11 @@
 #include "spdlog/spdlog.h"
 
 #include <cmath>
+#include <cstddef>
 #include <exception>
 #include <filesystem>
 #include <string>
+#include <vector>
 
 
 constexpr int OPENGL_MAJOR_VERSION = 4;
@@ -18,6 +20,13 @@ constexpr int OPENGL_MINOR_VERSION = 6;
 constexpr int WINDOW_WIDTH = 800;
 constexpr int WINDOW_HEIGHT = 800;
 constexpr float BACKGROUND_COLOR[4] = { 0.1f, 0.2f, 0.3f, 1.0f };
+
+
+struct Vertex
+{
+    glm::vec3 position;
+    glm::vec4 color;
+};
 
 
 glm::mat4 CreateRotationX3D(float angleInRadians)
@@ -165,50 +174,63 @@ int main()
 
     glEnable(GL_DEPTH_TEST);
 
-    float pyramidVertices[] =
+    const glm::vec3 top = { 0.0f, 0.35f, 0.0f };
+    const glm::vec3 frontLeft = { -0.25f, -0.25f, 0.25f };
+    const glm::vec3 frontRight = { 0.25f, -0.25f, 0.25f };
+    const glm::vec3 backLeft = { -0.25f, -0.25f, -0.25f };
+    const glm::vec3 backRight = { 0.25f, -0.25f, -0.25f };
+
+    const glm::vec4 neonBlue1 = { 0.0f, 0.3f, 0.8f, 1.0f };
+    const glm::vec4 neonBlue2 = { 0.0f, 0.7f, 1.0f, 1.0f };
+    const glm::vec4 neonGreen = { 0.2f, 1.0f, 0.2f, 1.0f };
+    const glm::vec4 neonPurple = { 0.8f, 0.0f, 1.0f, 1.0f };
+    const glm::vec4 baseBlue = { 0.0f, 0.4f, 0.8f, 1.0f };
+    const glm::vec4 basePurple = { 0.4f, 0.0f, 0.8f, 1.0f };
+
+    const std::vector<Vertex> vertices =
     {
-        // Front face vertices (Neon Blue 1)
-         0.0f,  0.35f,  0.0f,   0.0f, 0.3f, 0.8f, 1.0f,   // 0
-        -0.25f, -0.25f,  0.25f, 0.0f, 0.7f, 1.0f, 1.0f,   // 1
-         0.25f, -0.25f,  0.25f, 0.0f, 0.7f, 1.0f, 1.0f,   // 2
+        // Front face
+        { top, neonBlue1 },       // 0
+        { frontLeft, neonBlue2 }, // 1
+        { frontRight, neonBlue2 },// 2
 
-        // Right face vertices (Neon Green)
-         0.0f,  0.35f,  0.0f,   0.2f, 1.0f, 0.2f, 1.0f,   // 3
-         0.25f, -0.25f,  0.25f, 0.2f, 1.0f, 0.2f, 1.0f,   // 4
-         0.25f, -0.25f, -0.25f, 0.2f, 1.0f, 0.2f, 1.0f,   // 5
+        // Right face
+        { top, neonGreen },       // 3
+        { frontRight, neonGreen },// 4
+        { backRight, neonGreen }, // 5
 
-        // Back face vertices (Neon Purple)
-         0.0f,  0.35f,  0.0f,   0.8f, 0.0f, 1.0f, 1.0f,   // 6
-         0.25f, -0.25f, -0.25f, 0.8f, 0.0f, 1.0f, 1.0f,   // 7
-        -0.25f, -0.25f, -0.25f, 0.8f, 0.0f, 1.0f, 1.0f,   // 8
+        // Back face
+        { top, neonPurple },      // 6
+        { backRight, neonPurple },// 7
+        { backLeft, neonPurple }, // 8
 
-        // Left face vertices (Neon Blue 2)
-         0.0f,  0.35f,  0.0f,   0.0f, 0.4f, 0.8f, 1.0f,   // 9
-        -0.25f, -0.25f, -0.25f, 0.0f, 0.8f, 1.0f, 1.0f,   // 10
-        -0.25f, -0.25f,  0.25f, 0.0f, 0.8f, 1.0f, 1.0f,   // 11
+        // Left face
+        { top, neonBlue2 },       // 9
+        { backLeft, neonBlue1 },  // 10
+        { frontLeft, neonBlue1 }, // 11
 
-        // Base vertices
-        -0.25f, -0.25f,  0.25f, 0.0f, 0.4f, 0.8f, 1.0f,   // 12
-        -0.25f, -0.25f, -0.25f, 0.0f, 0.4f, 0.8f, 1.0f,   // 13
-         0.25f, -0.25f, -0.25f, 0.4f, 0.0f, 0.8f, 1.0f,   // 14
-         0.25f, -0.25f,  0.25f, 0.4f, 0.0f, 0.8f, 1.0f    // 15
+        // Base
+        { frontLeft, baseBlue },   // 12
+        { backLeft, baseBlue },    // 13
+        { backRight, basePurple }, // 14
+        { frontRight, basePurple } // 15
     };
 
-    unsigned int pyramidIndices[] =
+    const std::vector<unsigned int> indices =
     {
         // Side faces
-        0, 1, 2,       // Front
-        3, 4, 5,       // Right
-        6, 7, 8,       // Back
-        9, 10, 11,     // Left
+        0, 1, 2,
+        3, 4, 5,
+        6, 7, 8,
+        9, 10, 11,
 
         // Base
         12, 13, 14,
         12, 14, 15
     };
 
-    unsigned int vbo;
     unsigned int vao;
+    unsigned int vbo;
     unsigned int ebo;
 
     glGenVertexArrays(1, &vao);
@@ -218,15 +240,39 @@ int main()
     glBindVertexArray(vao);
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(pyramidVertices), pyramidVertices, GL_STATIC_DRAW);
+    glBufferData(
+        GL_ARRAY_BUFFER,
+        static_cast<GLsizeiptr>(vertices.size() * sizeof(Vertex)),
+        vertices.data(),
+        GL_STATIC_DRAW
+    );
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(pyramidIndices), pyramidIndices, GL_STATIC_DRAW);
+    glBufferData(
+        GL_ELEMENT_ARRAY_BUFFER,
+        static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned int)),
+        indices.data(),
+        GL_STATIC_DRAW
+    );
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)0);
+    glVertexAttribPointer(
+        0,
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+        sizeof(Vertex),
+        reinterpret_cast<void*>(offsetof(Vertex, position))
+    );
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(
+        1,
+        4,
+        GL_FLOAT,
+        GL_FALSE,
+        sizeof(Vertex),
+        reinterpret_cast<void*>(offsetof(Vertex, color))
+    );
     glEnableVertexAttribArray(1);
 
     std::string vertexShaderSource;
@@ -243,6 +289,9 @@ int main()
     catch (const std::exception& exception)
     {
         spdlog::error("Failed to load shader files: {}", exception.what());
+        glDeleteVertexArrays(1, &vao);
+        glDeleteBuffers(1, &vbo);
+        glDeleteBuffers(1, &ebo);
         glfwDestroyWindow(pWindow);
         glfwTerminate();
         return -1;
@@ -251,6 +300,9 @@ int main()
     unsigned int shaderProgram = CreateShaderProgram(vertexShaderSource, fragmentShaderSource);
     if (shaderProgram == 0)
     {
+        glDeleteVertexArrays(1, &vao);
+        glDeleteBuffers(1, &vbo);
+        glDeleteBuffers(1, &ebo);
         glfwDestroyWindow(pWindow);
         glfwTerminate();
         return -1;
@@ -259,7 +311,7 @@ int main()
     const float rotationAngleX = glm::radians(-20.0f);
     const float rotationAngleY = glm::radians(35.0f);
     const float rotationAngleZ = glm::radians(0.0f);
-    const glm::vec3 scale{ 1.4f, 1.4f, 1.4f };
+    const glm::vec3 scale = { 1.4f, 1.4f, 1.4f };
 
     const glm::mat4 rotateX3D = CreateRotationX3D(rotationAngleX);
     const glm::mat4 rotateY3D = CreateRotationY3D(rotationAngleY);
@@ -302,10 +354,15 @@ int main()
         glUseProgram(shaderProgram);
         glBindVertexArray(vao);
 
-        glm::mat4 mvp = projection * view * model;
+        const glm::mat4 mvp = projection * view * model;
         glUniformMatrix4fv(mvpLocation, 1, GL_FALSE, glm::value_ptr(mvp));
 
-        glDrawElements(GL_TRIANGLES, 18, GL_UNSIGNED_INT, nullptr);
+        glDrawElements(
+            GL_TRIANGLES,
+            static_cast<GLsizei>(indices.size()),
+            GL_UNSIGNED_INT,
+            nullptr
+        );
 
         glfwSwapBuffers(pWindow);
         glfwPollEvents();
