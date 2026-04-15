@@ -16,10 +16,18 @@
 
 
 constexpr int OPENGL_MAJOR_VERSION = 4;
-constexpr int OPENGL_MINOR_VERSION = 6;
+constexpr int OPENGL_MINOR_VERSION = 4;
 constexpr int WINDOW_WIDTH = 800;
 constexpr int WINDOW_HEIGHT = 800;
 constexpr float BACKGROUND_COLOR[4] = { 0.1f, 0.2f, 0.3f, 1.0f };
+
+constexpr float FOV_DEGREES = 45.0f;
+constexpr float NEAR_PLANE = 0.1f;
+constexpr float FAR_PLANE = 100.0f;
+
+// Global changable parameters
+int g_FramebufferWidth = WINDOW_WIDTH;
+int g_FramebufferHeight = WINDOW_HEIGHT;
 
 
 struct Vertex
@@ -79,6 +87,9 @@ glm::mat4 CreateScale3D(const glm::vec3& scale)
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height)
 {
+    g_FramebufferWidth = width;
+    g_FramebufferHeight = height;
+
     glViewport(0, 0, width, height);
 }
 
@@ -172,14 +183,17 @@ int main()
         return -1;
     }
 
-    glEnable(GL_DEPTH_TEST);
+    glfwGetFramebufferSize(pWindow, &g_FramebufferWidth, &g_FramebufferHeight);
+    glViewport(0, 0, g_FramebufferWidth, g_FramebufferHeight);
 
+    // Pyramid is comprised of 5 vertices
     const glm::vec3 top = { 0.0f, 0.35f, 0.0f };
     const glm::vec3 frontLeft = { -0.25f, -0.25f, 0.25f };
     const glm::vec3 frontRight = { 0.25f, -0.25f, 0.25f };
     const glm::vec3 backLeft = { -0.25f, -0.25f, -0.25f };
     const glm::vec3 backRight = { 0.25f, -0.25f, -0.25f };
 
+    // Each side of the pyramid will have it's own unique color
     const glm::vec4 neonBlue1 = { 0.0f, 0.3f, 0.8f, 1.0f };
     const glm::vec4 neonBlue2 = { 0.0f, 0.7f, 1.0f, 1.0f };
     const glm::vec4 neonGreen = { 0.2f, 1.0f, 0.2f, 1.0f };
@@ -190,44 +204,44 @@ int main()
     const std::vector<Vertex> vertices =
     {
         // Front face
-        { top, neonBlue1 },       // 0
-        { frontLeft, neonBlue2 }, // 1
-        { frontRight, neonBlue2 },// 2
+        { top, neonBlue1 },        // 0: top
+        { frontLeft, neonBlue2 },  // 1: front-left
+        { frontRight, neonBlue2 }, // 2: front-right
 
         // Right face
-        { top, neonGreen },       // 3
-        { frontRight, neonGreen },// 4
-        { backRight, neonGreen }, // 5
+        { top, neonGreen },        // 3: top
+        { frontRight, neonGreen }, // 4: front-right
+        { backRight, neonGreen },  // 5: back-right
 
         // Back face
-        { top, neonPurple },      // 6
-        { backRight, neonPurple },// 7
-        { backLeft, neonPurple }, // 8
+        { top, neonPurple },       // 6: top
+        { backRight, neonPurple }, // 7: back-right
+        { backLeft, neonPurple },  // 8: back-left
 
         // Left face
-        { top, neonBlue2 },       // 9
-        { backLeft, neonBlue1 },  // 10
-        { frontLeft, neonBlue1 }, // 11
+        { top, neonBlue2 },        // 9: top
+        { backLeft, neonBlue1 },   // 10: back-left
+        { frontLeft, neonBlue1 },  // 11: front-left
 
-        // Base
-        { frontLeft, baseBlue },   // 12
-        { backLeft, baseBlue },    // 13
-        { backRight, basePurple }, // 14
-        { frontRight, basePurple } // 15
+        // Base face - square
+        { frontLeft, baseBlue },    // 12: front-left
+        { backLeft, baseBlue },     // 13: back-left
+        { backRight, basePurple },  // 14: back-right
+        { frontRight, basePurple }  // 15: front-right
     };
 
     const std::vector<unsigned int> indices =
     {
-        // Side faces
         0, 1, 2,
         3, 4, 5,
         6, 7, 8,
         9, 10, 11,
 
-        // Base
         12, 13, 14,
         12, 14, 15
     };
+
+    glEnable(GL_DEPTH_TEST);
 
     unsigned int vao;
     unsigned int vbo;
@@ -318,19 +332,14 @@ int main()
     const glm::mat4 rotateZ3D = CreateRotationZ3D(rotationAngleZ);
     const glm::mat4 scale3D = CreateScale3D(scale);
 
-    const glm::mat4 model = rotateY3D * rotateX3D * rotateZ3D * scale3D;
+    // Rotation matrix multiplication sequence rule: R = Ry * Rx * Rz
+    const glm::mat4 rotation3D = rotateY3D * rotateX3D * rotateZ3D;
+    const glm::mat4 model = rotation3D * scale3D;
 
     const glm::mat4 view = glm::lookAt(
         glm::vec3(0.0f, 0.0f, 2.5f),
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 1.0f, 0.0f)
-    );
-
-    const glm::mat4 projection = glm::perspective(
-        glm::radians(45.0f),
-        static_cast<float>(WINDOW_WIDTH) / static_cast<float>(WINDOW_HEIGHT),
-        0.1f,
-        100.0f
     );
 
     int mvpLocation = glGetUniformLocation(shaderProgram, "u_mvp");
@@ -353,6 +362,17 @@ int main()
 
         glUseProgram(shaderProgram);
         glBindVertexArray(vao);
+
+        const float aspectRatio =
+            static_cast<float>(g_FramebufferWidth) /
+            static_cast<float>(g_FramebufferHeight > 0 ? g_FramebufferHeight : 1);
+
+        const glm::mat4 projection = glm::perspective(
+            glm::radians(FOV_DEGREES),
+            aspectRatio,
+            NEAR_PLANE,
+            FAR_PLANE
+        );
 
         const glm::mat4 mvp = projection * view * model;
         glUniformMatrix4fv(mvpLocation, 1, GL_FALSE, glm::value_ptr(mvp));
