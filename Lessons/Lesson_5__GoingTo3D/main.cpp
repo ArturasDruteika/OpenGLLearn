@@ -333,13 +333,21 @@ int main()
     const glm::mat4 scale3D = CreateScale3D(scale);
 
     // Rotation matrix multiplication sequence rule: R = Ry * Rx * Rz
-    const glm::mat4 rotation3D = rotateY3D * rotateX3D * rotateZ3D;
-    const glm::mat4 model = rotation3D * scale3D;
+    // Keep the same final framing, but apply this transform to the camera instead of the model.
+    const glm::mat4 model = scale3D;
+
+    const glm::mat4 cameraRotation3D = rotateY3D * rotateX3D * rotateZ3D;
+    const glm::mat4 inverseRotation3D = glm::transpose(cameraRotation3D);
+    const glm::vec3 baseCameraPosition = { 0.0f, 0.0f, 2.5f };
+    const glm::vec3 baseCameraUp = { 0.0f, 1.0f, 0.0f };
+
+    const glm::vec3 cameraPosition = glm::vec3(inverseRotation3D * glm::vec4(baseCameraPosition, 1.0f));
+    const glm::vec3 cameraUp = glm::normalize(glm::vec3(inverseRotation3D * glm::vec4(baseCameraUp, 0.0f)));
 
     const glm::mat4 view = glm::lookAt(
-        glm::vec3(0.0f, 0.0f, 2.5f),
+        cameraPosition,
         glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(0.0f, 1.0f, 0.0f)
+        cameraUp
     );
 
     int mvpLocation = glGetUniformLocation(shaderProgram, "u_mvp");
