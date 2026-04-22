@@ -71,7 +71,8 @@ Let's go 1 by 1 and explain all of these:
 
 * __Position__ - the coordinates of the camera.
 * __Forward (View Direction)__ - it is a vector, a direction the camera is looking to. Imagine that from a camera a straight vector is point. This vector points to the direction the is focused.
-* __Up__ - a vector that is pointing to the up direction from the camera (that is perpendicular to the forward vector)
+* __Up__ - a vector that is pointing to the up direction from the camera and that is perpendicular to the forward vector.
+* __Right__ - a vector that is pointing to the right direction from the camera  and that is perpendicular to the forward vector.
 * __Near Plane (Image Plane)__ - the closest distance the object can be seen. Anything closer than that, and the object is not going to be rendered.
 * __Far Plane__ the farthest distance the object can be seen. Anything farther than that, and the object is not going to be rendered.
 * __View Frustum__ - a truncated pyramid (a pyramid with its top sliced off), where the two parallel faces are the near plane and the far plane.
@@ -80,3 +81,22 @@ Let's go 1 by 1 and explain all of these:
 Looking at the image, only 2 out of the 3 objects would be seen, the green cube and the red sphere, the blue cone would not be visible to the camera because it is outside the view frustum. 
 
 Also, take a look at the __image plane__ in the image. In the parenthesis it is named as "screen". If it is easier for you, you can totally think of it like that, but please do not make a mistake thinking that the the view starts at the camera position. Now, why is that a problem? Well, mathematically, if a near plane is the coords of the camera, then the view frustum is not a frustum at all, but a pyramid, since no plane can be constructed in 1 point. That is why it is very important to have a near plane a little farther from the actual camera position, thus making a frustum possible.
+
+#### Up and Right Vectors
+
+Let's dive a little deeper for the __up__ and the __right__ vectors. First of all, why do we need these 2 vectors?
+
+* __Up__ is used for the generation of the __view__ matrix (we are going to cover this later in this lesson).
+* __Right__ is used to calculate the up vector.
+
+So in a sense, we need A construct C, but we need B to construct A, where A is up, B is right, C is view. 
+
+How to calculate these vectors? Below are the equations for vectors caclulation:
+
+$
+\mathbf{Right} = \mathrm{normalize}(\mathbf{Forward} \times \mathbf{Up})
+$
+
+$
+\mathbf{Up} = \mathbf{Right} \times \mathbf{Forward}
+$
