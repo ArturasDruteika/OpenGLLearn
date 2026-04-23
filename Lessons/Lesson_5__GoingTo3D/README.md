@@ -86,17 +86,55 @@ Also, take a look at the __image plane__ in the image. In the parenthesis it is 
 
 Let's dive a little deeper for the __up__ and the __right__ vectors. First of all, why do we need these 2 vectors?
 
-* __Up__ is used for the generation of the __view__ matrix (we are going to cover this later in this lesson).
+* __Up__ (camera up, not the world up) is used for the generation of the __view__ matrix (we are going to cover this later in this lesson).
 * __Right__ is used to calculate the up vector.
 
-So in a sense, we need A construct C, but we need B to construct A, where A is up, B is right, C is view. 
+So in a sense, we need A to construct C, but we need B to construct A, where A is up, B is right, C is view. 
 
 How to calculate these vectors? Below are the equations for vectors caclulation:
 
 $
-\mathbf{Right} = \mathrm{normalize}(\mathbf{Forward} \times \mathbf{Up})
+    \mathbf{Right} = \mathrm{normalize}(\mathbf{Forward} \times \mathbf{WorldUp})
 $
 
 $
 \mathbf{Up} = \mathbf{Right} \times \mathbf{Forward}
 $
+
+Keep in mind 2 things:
+
+1. `WorldUp` is a global up direction for the world, for example in 3D world, `up` vector would be [0, 1, 0] 
+2. `x` is not a dot product but a cross section multiplication which is done this way:
+
+    $
+        \mathbf{a} =
+        \begin{bmatrix} 
+            a_x \\ a_y \\ a_z
+        \end{bmatrix}, \quad
+        \mathbf{b} =
+        \begin{bmatrix} 
+            b_x \\ b_y \\ b_z
+        \end{bmatrix}
+        \rightarrow
+        \mathbf{a} \times \mathbf{b}
+            =
+        \begin{bmatrix} 
+            a_y b_z - a_z b_y \\ 
+            a_z b_x - a_x b_z \\ 
+            a_x b_y - a_y b_x
+        \end{bmatrix}
+    $
+
+Cross multiplication of 2 vectors is great because it spits out a 3-rd vector which is perpendicular to `a` and `b` vectors. To better understand why a 3-rd vector is perpendicular, just take a look at this image:
+
+![cross_product](Assets/cross_product.png)
+
+It clearly shows that a produced `n` vector is perpendicular to both `a` and `b`, or in other words, it is perpendicular to a plane that is defines by a total span of vectors `a` and `b`. Also, another important thing to see in this image is the order of multiplication. The cross product is not __commutatve__. `a × b` and `b × a` produce vectors that point in opposite directions. The exact direction is determined by the right-hand rule, not by absolute notions like `up` or `down`, seen below:
+
+![cross_product](Assets/cross_section_right_hand_rule.png)
+
+The important thing to remember from this sections is that we need `up` (camera up) in order to get the `view` matrix.
+
+
+#### Near / Far Planes and View Frustum
+
