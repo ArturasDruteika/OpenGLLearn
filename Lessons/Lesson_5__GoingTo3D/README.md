@@ -138,3 +138,13 @@ The important thing to remember from this sections is that we need `up` (camera 
 
 #### Near / Far Planes and View Frustum
 
+Once these 3 concepts are understood, you will understand half of what you see on your screen and why do you see it as you do ( a couple smiling faces). Why only a half? Well, because there are still concepts like __view__ and __projection__ matrices (which, as I said, I will cover on this lesson). But those, in my opinion, should be discussed after near, far planes and view frustum sits wells in your head. So, let's start digesting it. 
+
+![view_frustum](Assets/view_frustum.png)
+
+I hope this image elaborates a little more as to what I mean by near, far planes and view frustum. You can think of a near plane as to where the monitor screen starts. Far plane is where the visibility ends, and what you see on your screen is inside the view frustum (the blue volume in the image). I explained on why the near plane cannot start at the coordinates of a camera, but I never told why does the far plane have to have a defined end. 
+
+The far plane has to have a defined ending because otherwise an infinite view frustum would happen. This would be a huge problem for your GPU, because looking infinitely far back there might be objects that are in the frustum's volume, so in a sense, calculations on those objects would be done. Also, for the same GPU problem, it is advised not to make a far plane super far away. Do not forget, that the more objects are visible, the more computation is needed to process and render them. But, it is up to the programmer to find an optimal solution for the distance of the far plane. Some scenes do not need the far plane to be very far away, but others, like a scenery of trees or a huge field require it to be farther away.
+
+Again, to sum this little section, just know that based on the near and the far planes, the view frustum is constructed, and everything that is seen through the monitor screen is inside the view frustum.
+
