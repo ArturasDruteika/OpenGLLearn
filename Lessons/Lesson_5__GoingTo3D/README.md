@@ -148,3 +148,37 @@ The far plane has to have a defined ending because otherwise an infinite view fr
 
 Again, to sum this little section, just know that based on the near and the far planes, the view frustum is constructed, and everything that is seen through the monitor screen is inside the view frustum.
 
+#### Field of View (FOV)
+
+__FOV__ is the angle that determines how much of the world the camera can see at one.
+
+To illustrate what the FOV is, here is the first explanatory image:
+
+![fov_1](Assets/fov_1.png)
+
+As you can see in this image, field of view angles fo from wide to narrow. Each colored triangle (in 3D it would be a pyramid) shows what area is visible through the camera lense. Wide angle is great in capturing near objects, but each captured objects has less detail in a single frame, while narrow angle is great for having a great detail in far away objects, but instead of seeing many objects, a few or a single object is visible. It is essentially a tradeoff, and each case or each combination might require to look at the scene with a different angle. The image below captures this idea:
+
+![fov_2](Assets/fov_2.png)
+
+There is a single tree in an empty field. The top right image shows how this scene is captured using a wide angle. Almost the entire scene is captured, all the mountains and hills, all of the sky and grass, captured in a single image. We can say that we see about 90% of the actual scene. But, using this picture, if we wanted to see the individual details of the tree or a mountain or even a grass, we would see that it lacks pixels. There is not enough detail for each individual object. Here comes the the bottom right image. A single tree is captured. A lot of detail for an individual tree, you can easiluy see it's branches and almost individual leafs. But, not a lot of background. Instead of the full view of the actual scene, we see about 5% of it, only a single tree with a little background that surrounds it. But then again, it is up to the person that uses the camera to determine what he / she wants to capture.
+
+Also, looking at the top right and top bottom images, one important thing to say is that both images have the same amount of total pixels.
+
+The exact same FOV principles hold in the rendering world. If you have a camera that has a wide FOV angle, you will be able to see a lot of scene at once throuh your monitor screen, but each separate object might not have the most detail and vice versa with a narrow FOV angle.
+
+The equation for FOV is the following:
+
+$
+FOV = 2 \cdot \arctan\left(\frac{sensor\_size}{2 \cdot focal\_length}\right)
+$
+
+But keep in mind that FOV is a single angle, meaning it describes the angle only for a single dimension.
+You can specialize for horizontal and vertical FOV:
+
+$
+FOV_h = 2 \cdot \arctan\left(\frac{sensor\_width}{2 \cdot focal\_length}\right)
+$
+
+$
+FOV_v = 2 \cdot \arctan\left(\frac{sensor\_height}{2 \cdot focal\_length}\right)
+$
