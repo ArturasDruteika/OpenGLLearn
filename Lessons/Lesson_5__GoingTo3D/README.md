@@ -129,7 +129,7 @@ Cross multiplication of 2 vectors is great because it spits out a 3-rd vector wh
 
 ![cross_product](Assets/cross_product.png)
 
-It clearly shows that a produced `n` vector is perpendicular to both `a` and `b`, or in other words, it is perpendicular to a plane that is defines by a total span of vectors `a` and `b`. Also, another important thing to see in this image is the order of multiplication. The cross product is not __commutatve__. `a × b` and `b × a` produce vectors that point in opposite directions. The exact direction is determined by the right-hand rule, not by absolute notions like `up` or `down`, seen below:
+It clearly shows that a produced `n` vector is perpendicular to both `a` and `b`, or in other words, it is perpendicular to a plane that is defines by a total span of vectors `a` and `b`. Also, another important thing to see in this image is the order of multiplication. The cross product is not __commutatve__. `a × b` and `b × a` produce vectors that point in opposite directions. The exact direction is determined by the right-hand rule. Right hand rule works by pointing your index finger to the direction the first vector is pointing and middle finger - to the direction the second vector points, then the direction of the 3-rd vector is determined by your thumb. Just take a look at the image below:
 
 ![cross_product](Assets/cross_section_right_hand_rule.png)
 
@@ -150,7 +150,7 @@ Again, to sum this little section, just know that based on the near and the far 
 
 #### Field of View (FOV)
 
-__FOV__ is the angle that determines how much of the world the camera can see at one.
+__FOV__ is the angle that determines how much of the world the camera can see at one. This parameter is needed once we start calculating the projection matrix (which we will cover in this lesson).
 
 To illustrate what the FOV is, here is the first explanatory image:
 
@@ -182,3 +182,26 @@ $
 $
 FOV_v = 2 \cdot \arctan\left(\frac{sensor\_height}{2 \cdot focal\_length}\right)
 $
+
+But, these are the equations that help as determine the FOV in the real world. In redering, we usually directly set the FOV. Also, one important thing to note here is that FOV is usually set for the vertcal component. Why? Well, as you will see later, the horizontal component can be extracted knowing what is the aspect ratio.
+
+
+#### Aspect Ratio
+
+__Aspect Ratio__ tells the ration between the pixels in width and pixels in height. No magic, just easy to understand topic. This parameter, same as FOV, is needed to calculate the projection matrix. The equation for the aspect ratio is this:
+
+$
+aspect\_ratio = \frac{width}{height}
+$
+
+I hope this image explains everything to you about the aspect ratio.
+
+![aspect_ratio](Assets/aspect_ratio.png)
+
+Now, that we have went through all the "small" building blocks of the camera, let's go to the "big bolder" topics.
+
+
+---
+### Camera Transformations: View and Projection Matrices
+
+These 2 remaining topics about the camera are, at least for me, kind of hard to understand. I mean, I remember when I first stumbled on these 2 words and was like "what is that?". Trust me when I say this, but it took me some time to get a good grip on what these things are. 
