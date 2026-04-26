@@ -98,7 +98,7 @@ $
 $
 
 $
-\mathbf{Up} = \mathbf{Right} \times \mathbf{Forward}
+    \mathbf{Up} = \mathbf{Right} \times \mathbf{Forward}
 $
 
 Keep in mind 2 things:
@@ -169,18 +169,18 @@ The exact same FOV principles hold in the rendering world. If you have a camera 
 The equation for FOV is the following:
 
 $
-FOV = 2 \cdot \arctan\left(\frac{sensor\_size}{2 \cdot focal\_length}\right)
+    FOV = 2 \cdot \arctan\left(\frac{sensor\_size}{2 \cdot focal\_length}\right)
 $
 
 But keep in mind that FOV is a single angle, meaning it describes the angle only for a single dimension.
 You can specialize for horizontal and vertical FOV:
 
 $
-FOV_h = 2 \cdot \arctan\left(\frac{sensor\_width}{2 \cdot focal\_length}\right)
+    FOV_h = 2 \cdot \arctan\left(\frac{sensor\_width}{2 \cdot focal\_length}\right)
 $
 
 $
-FOV_v = 2 \cdot \arctan\left(\frac{sensor\_height}{2 \cdot focal\_length}\right)
+    FOV_v = 2 \cdot \arctan\left(\frac{sensor\_height}{2 \cdot focal\_length}\right)
 $
 
 But, these are the equations that help as determine the FOV in the real world. In redering, we usually directly set the FOV. Also, one important thing to note here is that FOV is usually set for the vertcal component. Why? Well, as you will see later, the horizontal component can be extracted knowing what is the aspect ratio.
@@ -204,4 +204,29 @@ Now, that we have went through all the "small" building blocks of the camera, le
 ---
 ### Camera Transformations: View and Projection Matrices
 
-These 2 remaining topics about the camera are, at least for me, kind of hard to understand. I mean, I remember when I first stumbled on these 2 words and was like "what is that?". Trust me when I say this, but it took me some time to get a good grip on what these things are. 
+These 2 remaining topics about the camera are, at least for me, kind of hard to understand. I mean, I remember when I first stumbled on these 2 words and was like "what is that?". Trust me when I say this, but it took me some time to get a good grip on what these things are. This is, probobly, the first time where the notion of "why do I see objects like I do in pure form?" comes to light. First of all, in this section stop thinking anything outside the real world. I mean when I will be explaining these 2 matrices, do not think about no OpenGL or shaders or any other thing related to pixel coloration. Instead, all the time think about the real world (virtual world).
+
+Remember how to get the model matrix of each object, you have to follow these steps:
+
+$
+    \text{Local} \;\rightarrow\; \text{Scaling} \;\rightarrow\; \text{Rotation} \;\rightarrow\; \text{Translation} \;\rightarrow\; \text{Model}
+$
+
+Well, somewhat the same logic can be applie here:
+
+$
+    \text{Model} \rightarrow \text{View} \rightarrow \text{Projection} \rightarrow \text{NDC} \rightarrow \text{Screen}
+$
+
+Before moving any further, here you can see __NDC__ and __Screen__. I am going to cover these 2 in this or the following lessons. For now, just know that NDC (normalized device coordinate) is resolution or pixel invariant 2D coordinate system. It's range is `[-1, 1]` (both, for X and for Y axes). Screen is the actual pixel coordinates (also 2D, because screen is flat), meaning that when X and Y coordinates are given, they represent the actual pixel position on your monitor screen. 
+
+We know what a model matrix is, but following it, we can also see our 2 main protagonists of this section. Since __view__ goes right after the model matrix, let's start with it.
+
+__View Matrix__ is a matrix that transforms world space into camera (view) space. It transforms all objects in the scene in such a way that the camera becomes the origin of the coordinate system and looks along a fixed direction. To help visualize this, imagine a cube placed at position [x, y, z] in world space, and a camera located at `[x_c, y_c, z_c]`. After applying the view matrix, the coordinate system is transformed so that the camera is effectively at `[0, 0, 0]`, and the cube is moved and rotated to a new position `[x_t, y_t, z_t]` relative to the camera. In other words, instead of moving the camera, the entire world is transformed relative 
+to the camera's position and orientation.
+
+What might help you to better understand how a camera view coordinate are how the axis look like. Remember what are camera's forward direction, right and up vectors? Well, these become axes in the camera view coordinate system:
+
+* Forward vector --> -Z axis (since Z axis goes towards the screen)
+* Right vector --> +X axis
+* Up vector --> +Y axis
