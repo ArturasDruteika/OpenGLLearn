@@ -222,6 +222,9 @@ Before moving any further, here you can see __NDC__ and __Screen__. I am going t
 
 We know what a model matrix is, but following it, we can also see our 2 main protagonists of this section. Since __view__ goes right after the model matrix, let's start with it.
 
+
+#### View Transformation
+
 __View Matrix__ is a matrix that transforms world space into camera (view) space. It transforms all objects in the scene in such a way that the camera becomes the origin of the coordinate system and looks along a fixed direction. To help visualize this, imagine a cube placed at position [x, y, z] in world space, and a camera located at `[x_c, y_c, z_c]`. After applying the view matrix, the coordinate system is transformed so that the camera is effectively at `[0, 0, 0]`, and the cube is moved and rotated to a new position `[x_t, y_t, z_t]` relative to the camera. In other words, instead of moving the camera, the entire world is transformed relative 
 to the camera's position and orientation.
 
@@ -230,3 +233,21 @@ What might help you to better understand how a camera view coordinate are how th
 * Forward vector --> -Z axis (since Z axis goes towards the screen)
 * Right vector --> +X axis
 * Up vector --> +Y axis
+
+The idea of view matrix is kinda simple. You need a view transform in order to move all the world in such a way that the camera would be the origin of it. You need the camera to be the origin because you see the real world through your monitor, and he monitor is eesentialy the camera lense through which you see the real world. 
+
+There are also deeper and much more important reasons on why the view transform is necessary. For example, it mathematically simplifies a lot of the stuff for the GPU. Imagine for a second that you did not use the view transform. In this case, now the GPU has to somehow figure out what is visible and what is not. And how would the GPU do it? Well, in this case, for every object the GPU would have to calculate the camera orientation (because we want to see if the object is visible or not), compute projections differently. We would need all this stuff because, at the end, the clip space essentially tells what objects are in the camera view are and which not. View transformation simplifies a lot of steps, and also, because matrices are amazing, you can combine the view matrix with the projection matrix (which we are going to discuss now).
+
+#### Projection Transformation
+
+Dilemma is simple - we have 3D objects which are represented by triangles where each vertex is defined in 3D space (X, Y, Z) coordinates. The problem is that our screen is 2D, and pixels are usually specified by 2 coordinates [X, Y]. Now, how can we transform 3D points in a way that we could see them on a 2D screen? Lucky for us, we have one special transformation, suited exactly for these kinda situations. Here comes the __projection transformation__.
+
+__Projection Transformation__ - transforms 3D points in camera (view) space into a form that can be mapped onto a 2D screen. 
+
+Remember this image:
+
+![camera](Assets/camera.png)
+
+Well in this situation the view on your monitor should be something like this:
+
+![camera](Assets/camera_view_through_monitor.png)
