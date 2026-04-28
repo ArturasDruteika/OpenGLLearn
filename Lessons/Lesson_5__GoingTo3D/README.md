@@ -251,3 +251,22 @@ Remember this image:
 Well in this situation the view on your monitor should be something like this:
 
 ![camera](Assets/camera_view_through_monitor.png)
+
+Now, since we know the reason for which we need the projection transformation, let's see how we can actually inplement it. Before we start, I have to inform you that we will see some math, but please do not leave this lesson here.
+
+
+#### Mathematical Core Behind Projection Transformation
+
+The core problem we are trying to solve is that we want 3D points in camera space to be transformed to 2D coordinates. Again, we need 2D coordinates because we are slowly moving towards a final image that will be see on your screen. 
+
+The problem can be generalized by this:
+
+$
+    \pi : \mathbb{R}^3 \rightarrow \mathbb{R}^2, \quad \text{where } \pi \text{ is the projection function}
+$
+
+which maps a 3D point to a 2D point:
+
+$
+    p = (x, y, z) \;\rightarrow\; p' = (x', y')
+$
