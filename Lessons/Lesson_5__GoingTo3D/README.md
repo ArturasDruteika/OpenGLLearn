@@ -270,3 +270,66 @@ which maps a 3D point to a 2D point:
 $
     p = (x, y, z) \;\rightarrow\; p' = (x', y')
 $
+
+The simplest way to transform 3D points to 2D is to divide `x` and `y` coordinates by the `z` (depth) value. 
+
+$
+    x' = \frac{d \cdot x}{z}, \quad y' = \frac{d \cdot y}{z}
+$
+
+This way we would retain the distance, where once the `z` value is large, the division by `z` would produce a small value. This is all great, but here lies some small problem. The way we divide coordinates by `z` is not considered a linear operation. As you remember from our previous lesson, I stressed the fact that transformations (if possible) should be linear, because this way we can combine multiple operations into a single matrix. You may ask me "why isn't this operation linear?". Remember, a linear transformation is a transformation that satisfies these 2 rules:
+
+1. Additivity:
+
+    $
+        T(\mathbf{u} + \mathbf{v}) = T(\mathbf{u}) + T(\mathbf{v})
+    $
+
+2. Homogeneity:
+
+    $
+        T(a\,\mathbf{u}) = a\,T(\mathbf{u})
+    $
+
+Let's check the additivy first for the division by `z`:
+
+$
+    u = (1, 0, 1) \ ; v = (0, 1, 1)
+$
+
+Project `u` and `v` vectors (divide `x` and `y` by `z`):
+
+$
+    \begin{aligned}
+        T(\mathbf{u}) &= T(1,0,1) = \left(\frac{x}{z}, \frac{y}{z}\right) = \left(\frac{1}{1}, \frac{0}{1}\right) = (1,0) \\
+        T(\mathbf{v}) &= T(0,1,1) = \left(\frac{x}{z}, \frac{y}{z}\right) = \left(\frac{0}{1}, \frac{1}{1}\right) = (0,1)
+    \end{aligned}
+$
+
+Now let's add:
+
+$
+    T(u)+T(v)=(1,0)+(0,1)=(1,1)
+$
+
+So, we have the first result for the `T(u) + T(v) = (1, 1)`. Now wee need to check what the `T(u + v)` will give. 
+
+First, let's add the 2 vectors together:
+
+$
+    w = u + v= (1, 0, 1) + (0, 1, 1) = (1, 1, 2)
+$
+
+Project the result:
+
+$
+    \begin{aligned}
+        T(\mathbf{w}) &= T(1,1,2) = \left(\frac{x}{z}, \frac{y}{z}\right) = \left(\frac{1}{2}, \frac{1}{2}\right) 
+    \end{aligned}
+$
+
+Do you see the problem? I mean why the simple division by `z` is not linear?
+
+$
+    T(u)+T(v) \neq T(u+v) \rightarrow (1, 1) \neq \left(\frac{1}{2}, \frac{1}{2}\right)
+$
