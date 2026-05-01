@@ -238,6 +238,53 @@ The idea of view matrix is kinda simple. You need a view transform in order to m
 
 There are also deeper and much more important reasons on why the view transform is necessary. For example, it mathematically simplifies a lot of the stuff for the GPU. Imagine for a second that you did not use the view transform. In this case, now the GPU has to somehow figure out what is visible and what is not. And how would the GPU do it? Well, in this case, for every object the GPU would have to calculate the camera orientation (because we want to see if the object is visible or not), compute projections differently. We would need all this stuff because, at the end, the clip space essentially tells what objects are in the camera view are and which not. View transformation simplifies a lot of steps, and also, because matrices are amazing, you can combine the view matrix with the projection matrix (which we are going to discuss now).
 
+#### Mathematical Core and Intuition Behind View Transformation
+
+The core problem we are trying to solve with view transformation is that we want to transform the space in such a way that the camera is the origin of this new coordinate system. Remember, that up now, the origin of the real world is defined as `[0, 0, 0]` while camera has it's own position `[x, y, z]`. 
+
+In order to transform the real world coordinate system into a camera space, you need 3 things:
+
+* Camera position
+
+    $
+        C
+    $
+
+* Target (what the caera is looking towards)
+
+    $
+        T
+    $
+
+* Up vector (for the real world, which is usually `(0, 1, 0)`)
+
+    $
+        \mathbf{U}_{\text{world}} = [0, 1, 0]
+    $
+
+
+Next, we need to build 3 axes vectors that will define camera space's coordinate system's base axes. As mentioned earlier we need:
+
+* Forward vector (camera direction) <--> `-Z` 
+
+    $
+        \mathbf{F} = \frac{\mathbf{T} - \mathbf{C}}{\|\mathbf{T} - \mathbf{C}\|}
+    $
+
+* Right vector <--> `+X`
+
+    $
+        \mathbf{R} = \frac{\mathbf{F} \times \mathbf{U}_{\text{world}}}{\|\mathbf{F} \times \mathbf{U}_{\text{world}}\|}
+    $
+
+* Camera up vector <--> `+Y`
+
+    $
+        \mathbf{U}_{\text{camera}}  = \mathbf{R} \times \mathbf{F}
+    $
+
+
+
 #### Projection Transformation
 
 Dilemma is simple - we have 3D objects which are represented by triangles where each vertex is defined in 3D space (X, Y, Z) coordinates. The problem is that our screen is 2D, and pixels are usually specified by 2 coordinates [X, Y]. Now, how can we transform 3D points in a way that we could see them on a 2D screen? Lucky for us, we have one special transformation, suited exactly for these kinda situations. Here comes the __projection transformation__.
@@ -255,7 +302,7 @@ Well in this situation the view on your monitor should be something like this:
 Now, since we know the reason for which we need the projection transformation, let's see how we can actually inplement it. Before we start, I have to inform you that we will see some math, but please do not leave this lesson here.
 
 
-#### Mathematical Core Behind Projection Transformation
+#### Mathematical Core and Intuition Behind Projection Transformation
 
 The core problem we are trying to solve is that we want 3D points in camera space to be transformed to 2D coordinates. Again, we need 2D coordinates because we are slowly moving towards a final image that will be see on your screen. 
 
@@ -333,3 +380,7 @@ Do you see the problem? I mean why the simple division by `z` is not linear?
 $
     T(u)+T(v) \neq T(u+v) \rightarrow (1, 1) \neq \left(\frac{1}{2}, \frac{1}{2}\right)
 $
+
+"Hmmm, what can be done to solve this linearity issue? I wonder if a similar problem apeared in the previous lesson, where we wanted to make a translation also linear.". For some of those that remembered the last lesson, we have learned about the homogeneous coordinate system. This coordinate system was great because it allowed us to express translation as a linear operation by introducing another dimension. Remember that our goal is to combine transformations into a single matrix (entity) which could be reused for all objects. 
+
+We can follow the same logic to make the projection transformation linear also. In the previous lesson, we were still dealing with 2D world, so our transformation matrix in homogeneous coordinate system was 3D. Now, since we are transitioning to 3D, the transformation matrix has to be 4D.
