@@ -240,7 +240,7 @@ There are also deeper and much more important reasons on why the view transform 
 
 #### Mathematical Core and Intuition Behind View Transformation
 
-The core problem we are trying to solve with view transformation is that we want to transform the space in such a way that the camera is the origin of this new coordinate system. Remember, that up now, the origin of the real world is defined as `[0, 0, 0]` while camera has it's own position `[x, y, z]`. 
+The core problem we are trying to solve with view transformation is that we want to transform the world space in such a way that the camera is the origin of this new coordinate system. Remember, that up now, the origin of the real world is defined as `[0, 0, 0]` while camera has it's own position `[x, y, z]`. 
 
 In order to transform the real world coordinate system into a camera space, you need 3 things:
 
@@ -283,7 +283,29 @@ Next, we need to build 3 axes vectors that will define camera space's coordinate
         \mathbf{U}_{\text{camera}}  = \mathbf{R} \times \mathbf{F}
     $
 
+Now, before continuing any further, let's just take a small step back and try to think what will the view transformation do. I mean what type of transformations. Remember, that there are 3 basic types of physical transformations: scaling, rotation and translation. Now let's see which of these 3 are needed for the view transformation:
 
+* Scaling - no We do not in any shape or form scale anything. Not a single object in the camera space is going to have a different size than what it used to have.
+* Rotation - yes. Imagine if the camera is rotate 90 degrees on the Z axis. This way the camera up vector is the -X axis of the world space. But, in camera space, the up vector of the camera becomes the Y axis for the camera space. Because of it rotation is needed in view transformation.
+* Translation - yes. Remember, that we want to make the camera position as the origin for the camera space, meaning that cameera position in world space `(x, y, z)` becomes `(0, 0, 0)` in camera space:
+
+    $
+        \overset{\text{world space}}{(x, y, z)} \;\rightarrow\; \overset{\text{camera space}}{(0, 0, 0)}
+    $
+
+Now we know that view transformation is basically comprised of 2 types physical transformations: rotation and translation. Because view transformation has translation ad the fact that we want to express this transformation as a linear operation, we have to visit our good old friend homogeneous coordinate system. This means that the view matrix is going to be 4D instead of 3D.
+
+Here is how the view matrix looks like:
+
+$
+    V =
+    \begin{bmatrix}
+    R_x & R_y & R_z & -\mathbf{R} \cdot \mathbf{C} \\
+    U_x & U_y & U_z & -\mathbf{U} \cdot \mathbf{C} \\
+    - F_x & - F_y & - F_z & \mathbf{F} \cdot \mathbf{C} \\
+    0 & 0 & 0 & 1
+    \end{bmatrix}
+$
 
 #### Projection Transformation
 
