@@ -307,6 +307,62 @@ $
     \end{bmatrix}
 $
 
+For me, when I first saw this matrix was "what is that? Why is it layed the way as it is?". To better understand why the view matrix looks the way it does, it is advised to look at the translation and rotation transformations separately. Because, remember that the view matrix is comprised of of these 2 transformations. Also, remember this one fact, that when the view matrix is being created, first you apply the translation and then the rotation matrices. Do not mistaken it with the model matrix, where vice versa happens (first rotation and only then translation).
+
+Let's take a look at how the translation matrix for the view transformation is going to look like:
+
+$
+    T =
+    \begin{bmatrix}
+        1 & 0 & 0 & -C_x \\
+        0 & 1 & 0 & -C_y \\
+        0 & 0 & 1 & -C_z \\
+        0 & 0 & 0 & 1
+    \end{bmatrix}
+$
+
+One thing to note from the beginning is that we are again in the homogeneous coordinate system (we are in 3D world, but the transformation matrix is 4D). Do not forget translation is not a linear operation, but we want to make it one. Homogeneous coordinate system allows us to achieve this. 
+
+Again, you might go "why is the `-` sign before the camera position?". Well, our goal is to make camera position in world space, the origin of camera space (as I mentioned before). So if the camera is at:
+
+$
+    C \rightarrow (C_x, C_y, C_z)
+$
+
+we want:
+
+$
+    C \rightarrow (0, 0, 0)
+$
+
+In order to achieve this, we need to solve a simple algebra equation. We know the origin coordinates, we know the camera coordinates. The only unknown is what values we need to subtract from camera position in order to get the origin? Let's solve it:
+
+$
+    \begin{aligned}
+        C - X &= (0, 0, 0) \\
+        X &= (0, 0, 0) - C \\
+        X &= (0, 0, 0) - (C_x, C_y, C_z) \\
+        X &= (0 - C_x, 0 - C_y, 0 - C_z) \\
+        X &= (-C_x, -C_y, -C_z) \\
+        X &= -(C_x, C_y, C_z) \\
+        X &= -C
+    \end{aligned}
+$
+
+So now we know why the delta components in the translation matrix have a `-` sign.
+
+Let's now study the rotation part. The rotation trasnformation matrix looks like this:
+
+$
+    R =
+    \begin{bmatrix}
+        R_x & R_y & R_z & 0 \\
+        U_x & U_y & U_z & 0 \\
+        - F_x & - F_y & - F_z & 0 \\
+        0 & 0 & 0 & 1
+    \end{bmatrix}
+$
+
 #### Projection Transformation
 
 Dilemma is simple - we have 3D objects which are represented by triangles where each vertex is defined in 3D space (X, Y, Z) coordinates. The problem is that our screen is 2D, and pixels are usually specified by 2 coordinates [X, Y]. Now, how can we transform 3D points in a way that we could see them on a 2D screen? Lucky for us, we have one special transformation, suited exactly for these kinda situations. Here comes the __projection transformation__.
@@ -321,7 +377,7 @@ Well in this situation the view on your monitor should be something like this:
 
 ![camera](Assets/camera_view_through_monitor.png)
 
-Now, since we know the reason for which we need the projection transformation, let's see how we can actually inplement it. Before we start, I have to inform you that we will see some math, but please do not leave this lesson here.
+Now, since we know the reason for which we need the projection transformation, let's see how we can actually implement it. Before we start, I have to inform you that we will see some math, but please do not leave this lesson here.
 
 
 #### Mathematical Core and Intuition Behind Projection Transformation
