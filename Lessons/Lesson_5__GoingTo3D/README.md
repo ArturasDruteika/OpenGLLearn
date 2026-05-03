@@ -247,19 +247,19 @@ In order to transform the real world coordinate system into a camera space, you 
 * Camera position
 
     $
-        C
+        c
     $
 
 * Target (what the caera is looking towards)
 
     $
-        T
+        t
     $
 
 * Up vector (for the real world, which is usually `(0, 1, 0)`)
 
     $
-        \mathbf{U}_{\text{world}} = [0, 1, 0]
+        u_{\text{world}} = (0, 1, 0)
     $
 
 
@@ -268,19 +268,19 @@ Next, we need to build 3 axes vectors that will define camera space's coordinate
 * Forward vector (camera direction) <--> `-Z` 
 
     $
-        \mathbf{F} = \frac{\mathbf{T} - \mathbf{C}}{\|\mathbf{T} - \mathbf{C}\|}
+        f = \frac{t - c}{\|t - c\|}
     $
 
 * Right vector <--> `+X`
 
     $
-        \mathbf{R} = \frac{\mathbf{F} \times \mathbf{U}_{\text{world}}}{\|\mathbf{F} \times \mathbf{U}_{\text{world}}\|}
+        r = \frac{f \times u_{\text{world}}}{\|f \times u_{\text{world}}\|}
     $
 
 * Camera up vector <--> `+Y`
 
     $
-        \mathbf{U}_{\text{camera}}  = \mathbf{R} \times \mathbf{F}
+        u_{\text{camera}} = r \times f
     $
 
 Now, before continuing any further, let's just take a small step back and try to think what will the view transformation do. I mean what type of transformations. Remember, that there are 3 basic types of physical transformations: scaling, rotation and translation. Now let's see which of these 3 are needed for the view transformation:
@@ -300,10 +300,10 @@ Here is how the view matrix looks like:
 $
     V =
     \begin{bmatrix}
-    R_x & R_y & R_z & -\mathbf{R} \cdot \mathbf{C} \\
-    U_x & U_y & U_z & -\mathbf{U} \cdot \mathbf{C} \\
-    - F_x & - F_y & - F_z & \mathbf{F} \cdot \mathbf{C} \\
-    0 & 0 & 0 & 1
+        r_x & r_y & r_z & -r \cdot c \\
+        u_x & u_y & u_z & -u \cdot c \\
+        - f_x & - f_y & - f_z & f \cdot c \\
+        0 & 0 & 0 & 1
     \end{bmatrix}
 $
 
@@ -314,9 +314,9 @@ Let's take a look at how the translation matrix for the view transformation is g
 $
     T =
     \begin{bmatrix}
-        1 & 0 & 0 & -C_x \\
-        0 & 1 & 0 & -C_y \\
-        0 & 0 & 1 & -C_z \\
+        1 & 0 & 0 & -c_x \\
+        0 & 1 & 0 & -c_y \\
+        0 & 0 & 1 & -c_z \\
         0 & 0 & 0 & 1
     \end{bmatrix}
 $
@@ -326,26 +326,26 @@ One thing to note from the beginning is that we are again in the homogeneous coo
 Again, you might go "why is the `-` sign before the camera position?". Well, our goal is to make camera position in world space, the origin of camera space (as I mentioned before). So if the camera is at:
 
 $
-    C \rightarrow (C_x, C_y, C_z)
+    c \rightarrow (c_x, c_y, c_z)
 $
 
 we want:
 
 $
-    C \rightarrow (0, 0, 0)
+    c \rightarrow (0, 0, 0)
 $
 
 In order to achieve this, we need to solve a simple algebra equation. We know the origin coordinates, we know the camera coordinates. The only unknown is what values we need to subtract from camera position in order to get the origin? Let's solve it:
 
 $
     \begin{aligned}
-        C - X &= (0, 0, 0) \\
-        X &= (0, 0, 0) - C \\
-        X &= (0, 0, 0) - (C_x, C_y, C_z) \\
-        X &= (0 - C_x, 0 - C_y, 0 - C_z) \\
-        X &= (-C_x, -C_y, -C_z) \\
-        X &= -(C_x, C_y, C_z) \\
-        X &= -C
+        c - x &= (0, 0, 0) \\
+        x &= (0, 0, 0) - c \\
+        x &= (0, 0, 0) - (c_x, c_y, c_z) \\
+        x &= (0 - c_x, 0 - c_y, 0 - c_z) \\
+        x &= (-c_x, -c_y, -c_z) \\
+        x &= -(c_x, c_y, c_z) \\
+        x &= -c
     \end{aligned}
 $
 
@@ -356,12 +356,104 @@ Let's now study the rotation part. The rotation trasnformation matrix looks like
 $
     R =
     \begin{bmatrix}
-        R_x & R_y & R_z & 0 \\
-        U_x & U_y & U_z & 0 \\
-        - F_x & - F_y & - F_z & 0 \\
+        r_x & r_y & r_z & 0 \\
+        u_x & u_y & u_z & 0 \\
+        - f_x & - f_y & - f_z & 0 \\
         0 & 0 & 0 & 1
     \end{bmatrix}
 $
+
+This looks a bit harder to understand than the translation matrix (of the view matrix). Since this matrix is also in the homogeneous coordinate system and in order to better understand how the rotation part works in the view transformation, let's first drop the last dimension of the rotation matrix. Now, this matrix looks like this:
+
+$
+    R =
+    \begin{bmatrix}
+        r_x & r_y & r_z \\
+        u_x & u_y & u_z \\
+        - f_x & - f_y & - f_z \\
+    \end{bmatrix}
+$
+
+At the moment, it still looks a bit confusing. One of the weird things I noticed while learning the rotation matrix (which is the transformation component in the view matrix) was that for some reason, the rows of this matrix have basis axis of camera space. My question was, why the basis vectors are now the rows and not columns, I mean in the last lesson I remember that I told you that in math, it is a convention to have columns in the matrix representing the basis vectors of that coordinate system. So why is it that this rotation matrix is [transposed](https://en.wikipedia.org/wiki/Transpose)?
+
+The main idea why the rows instead of columns are the basis vectors in this rotation matrix is because we are trying to transform the world space to local space. Remember, how we had a an object constructed and then we wanted to move it to the world space (in a sense, putting a contstructed object into the scene). What we essentially are doing is moving the object from local space to world space. When an operation like this is done, usually the transformation matrix has basis vectors defined in columns. One critical thing to understand is that camera space is essentially a local space for the camear object. Now, logically thinking, in order to go back from the world space to local space, we can just take the original transformation matrix and apply the inverse of it. In a sense it would look like this:
+
+$
+    M - \text{transformation matrix, local space} \rightarrow \text{world space}\\
+    v_{\text{world}} = M \, v_{\text{local}} \\
+    v_{\text{local}} = M^{-1} \, v_{\text{world}}
+$
+
+That looks pretty reasonable, but our rotation does not look like an inverse, it looks transposed. Yes, but here lies one of the math's hidden beauties. If a transformation is orthogonal, it's inverse is a transposed version of it (the original trasnformation). In order for a trasnformation to be an orthogonal, it needs to preserve angles and lengths, also, it needs to be a linear transformation. Rotation preserves all of these. There is also a reflection trasnformation, but will not be covering that on this lesson. Translation is not linear and scaling literally lengthens or shortens the lines.
+
+Let's look again into the mathematical world to understand why the trasnpose of the rotation matrix is actually an inverse of it:
+
+For orthogonal matrix __Q__ the defining property is:
+
+$
+    I - \text{indentity matrix}
+$
+
+$
+    Q^{T}Q = I
+$
+
+Now let's compare this to the definition of inverse:
+
+$
+    A^{-1}A = I
+$
+
+So if 
+
+$
+    Q^{T}Q = I 
+$
+
+then $Q^T$ is an inverse of $Q$.
+
+Because the view trasnformation essentially transforms world space into a camera space, which is a local space for the camera object, that means that the rotation part of the view matrix is transposed. That is rows in rotation matrix of the view transformation has rows as basis vectors.
+
+Now we have 2 necessary components that comprise a single view matrix. We have translation and rotation matrices. The only thing that is left is we need to multiply them together and we will have a proper view matrix.
+
+$
+    V - \text{view matrix} \\
+    R_{V} - \text{rotation matrix} \\
+    T_{V} - \text{translation matrix} \\
+    r - \text{right vector} \\
+    f - \text{forward vector} \\
+    c - \text{camera position} \\
+$
+
+$
+    R_{V}T_{V} = V \\
+$
+
+$
+    \begin{bmatrix}
+        r_x & r_y & r_z & 0 \\
+        u_x & u_y & u_z & 0 \\
+        - f_x & - f_y & - f_z & 0 \\
+        0 & 0 & 0 & 1
+    \end{bmatrix}
+    \begin{bmatrix}
+        1 & 0 & 0 & -c_x \\
+        0 & 1 & 0 & -c_y \\
+        0 & 0 & 1 & -c_z \\
+        0 & 0 & 0 & 1
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        r_x & r_y & r_z & -r \cdot c \\
+        u_x & u_y & u_z & -u \cdot c \\
+        - f_x & - f_y & - f_z & f \cdot c \\
+        0 & 0 & 0 & 1
+    \end{bmatrix}
+$
+
+If you do not believe that multiplying $R_{V}T_{V}$ produces these values, you can try multiplying it on paper. Hightly suggest that in order so that you could arrive to these results yourselves.
+
+One question you might have is why first translation is applied and only then rotation. I mean in the last lesson I told you that the order of multiplication is $TRS$. But remember, this is only the order if we move from local space to world space. Since view trasnformation transforms world space to local space all the operations also have to be reverted in order. Because of it, we have to first translate the space and only then rotate it.
 
 #### Projection Transformation
 
