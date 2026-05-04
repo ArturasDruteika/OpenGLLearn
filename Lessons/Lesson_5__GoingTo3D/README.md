@@ -218,14 +218,14 @@ $
     \text{Model} \rightarrow \text{View} \rightarrow \text{Projection} \rightarrow \text{NDC} \rightarrow \text{Screen}
 $
 
-Before moving any further, here you can see __NDC__ and __Screen__. I am going to cover these 2 in this or the following lessons. For now, just know that NDC (normalized device coordinate) is resolution or pixel invariant 2D coordinate system. It's range is `[-1, 1]` (both, for X and for Y axes). Screen is the actual pixel coordinates (also 2D, because screen is flat), meaning that when X and Y coordinates are given, they represent the actual pixel position on your monitor screen. 
+Before moving any further, here you can see __NDC__ and __Screen__. I am going to cover these 2 in this or the following lessons. For now, just know that NDC (normalized device coordinate) is resolution or pixel invariant 2D coordinate system. It's range is $(-1, 1)$ (both, for X and for Y axes). Screen is the actual pixel coordinates (also 2D, because screen is flat), meaning that when X and Y coordinates are given, they represent the actual pixel position on your monitor screen. 
 
 We know what a model matrix is, but following it, we can also see our 2 main protagonists of this section. Since __view__ goes right after the model matrix, let's start with it.
 
 
 #### View Transformation
 
-__View Matrix__ is a matrix that transforms world space into camera (view) space. It transforms all objects in the scene in such a way that the camera becomes the origin of the coordinate system and looks along a fixed direction. To help visualize this, imagine a cube placed at position [x, y, z] in world space, and a camera located at `[x_c, y_c, z_c]`. After applying the view matrix, the coordinate system is transformed so that the camera is effectively at `[0, 0, 0]`, and the cube is moved and rotated to a new position `[x_t, y_t, z_t]` relative to the camera. In other words, instead of moving the camera, the entire world is transformed relative 
+__View Matrix__ is a matrix that transforms world space into camera (view) space. It transforms all objects in the scene in such a way that the camera becomes the origin of the coordinate system and looks along a fixed direction. To help visualize this, imagine a cube placed at position [x, y, z] in world space, and a camera located at $(x_c, y_c, z_c)$. After applying the view matrix, the coordinate system is transformed so that the camera is effectively at $(0, 0, 0)$, and the cube is moved and rotated to a new position $(x_t, y_t, z_t)$ relative to the camera. In other words, instead of moving the camera, the entire world is transformed relative 
 to the camera's position and orientation.
 
 What might help you to better understand how a camera view coordinate are how the axis look like. Remember what are camera's forward direction, right and up vectors? Well, these become axes in the camera view coordinate system:
@@ -240,54 +240,54 @@ There are also deeper and much more important reasons on why the view transform 
 
 #### Mathematical Core and Intuition Behind View Transformation
 
-The core problem we are trying to solve with view transformation is that we want to transform the world space in such a way that the camera is the origin of this new coordinate system. Remember, that up now, the origin of the real world is defined as `[0, 0, 0]` while camera has it's own position `[x, y, z]`. 
+The core problem we are trying to solve with view transformation is that we want to transform the world space in such a way that the camera is the origin of this new coordinate system. Remember, that up now, the origin of the real world is defined as $(0, 0, 0)$ while camera has it's own position $(x, y, z)$. 
 
 In order to transform the real world coordinate system into a camera space, you need 3 things:
 
 * Camera position
 
     $
-        c
+        \vec{c}
     $
 
 * Target (what the caera is looking towards)
 
     $
-        t
+        \vec{t}
     $
 
-* Up vector (for the real world, which is usually `(0, 1, 0)`)
+* Up vector (for the real world, which is usually $(0, 1, 0)$)
 
     $
-        u_{\text{world}} = (0, 1, 0)
+        \vec{u}_{\text{world}} = (0, 1, 0)
     $
 
 
 Next, we need to build 3 axes vectors that will define camera space's coordinate system's base axes. As mentioned earlier we need:
 
-* Forward vector (camera direction) <--> `-Z` 
+* Forward vector (camera direction) <--> $-z$
 
     $
-        f = \frac{t - c}{\|t - c\|}
+        \vec{f} = \frac{\vec{t} - \vec{c}}{\|\vec{t} - \vec{c}\|}
     $
 
-* Right vector <--> `+X`
+* Right vector <--> $+x$
 
     $
-        r = \frac{f \times u_{\text{world}}}{\|f \times u_{\text{world}}\|}
+        \vec{r} = \frac{\vec{f} \times \vec{u}_{\text{world}}}{\|\vec{f} \times \vec{u}_{\text{world}}\|}
     $
 
-* Camera up vector <--> `+Y`
+* Camera up vector <--> $+y$
 
     $
-        u_{\text{camera}} = r \times f
+        \vec{u}_{\text{camera}} = \vec{r} \times \vec{f}
     $
 
 Now, before continuing any further, let's just take a small step back and try to think what will the view transformation do. I mean what type of transformations. Remember, that there are 3 basic types of physical transformations: scaling, rotation and translation. Now let's see which of these 3 are needed for the view transformation:
 
 * Scaling - no We do not in any shape or form scale anything. Not a single object in the camera space is going to have a different size than what it used to have.
 * Rotation - yes. Imagine if the camera is rotate 90 degrees on the Z axis. This way the camera up vector is the -X axis of the world space. But, in camera space, the up vector of the camera becomes the Y axis for the camera space. Because of it rotation is needed in view transformation.
-* Translation - yes. Remember, that we want to make the camera position as the origin for the camera space, meaning that cameera position in world space `(x, y, z)` becomes `(0, 0, 0)` in camera space:
+* Translation - yes. Remember, that we want to make the camera position as the origin for the camera space, meaning that cameera position in world space $(x, y, z)$ becomes $(0, 0, 0)$ in camera space:
 
     $
         \overset{\text{world space}}{(x, y, z)} \;\rightarrow\; \overset{\text{camera space}}{(0, 0, 0)}
@@ -300,9 +300,9 @@ Here is how the view matrix looks like:
 $
     V =
     \begin{bmatrix}
-        r_x & r_y & r_z & -r \cdot c \\
-        u_x & u_y & u_z & -u \cdot c \\
-        - f_x & - f_y & - f_z & f \cdot c \\
+        r_x & r_y & r_z & -\vec{r} \cdot \vec{c} \\
+        u_x & u_y & u_z & -\vec{u} \cdot \vec{c} \\
+        - f_x & - f_y & - f_z & \vec{f} \cdot \vec{c} \\
         0 & 0 & 0 & 1
     \end{bmatrix}
 $
@@ -339,13 +339,13 @@ In order to achieve this, we need to solve a simple algebra equation. We know th
 
 $
     \begin{aligned}
-        c - x &= (0, 0, 0) \\
-        x &= (0, 0, 0) - c \\
-        x &= (0, 0, 0) - (c_x, c_y, c_z) \\
-        x &= (0 - c_x, 0 - c_y, 0 - c_z) \\
-        x &= (-c_x, -c_y, -c_z) \\
-        x &= -(c_x, c_y, c_z) \\
-        x &= -c
+        \vec{c} - \vec{x} &= (0, 0, 0) \\
+        \vec{x} &= (0, 0, 0) - \vec{c} \\
+        \vec{x} &= (0, 0, 0) - (c_x, c_y, c_z) \\
+        \vec{x} &= (0 - c_x, 0 - c_y, 0 - c_z) \\
+        \vec{x} &= (-c_x, -c_y, -c_z) \\
+        \vec{x} &= -(c_x, c_y, c_z) \\
+        \vec{x} &= -\vec{c}
     \end{aligned}
 $
 
@@ -380,8 +380,8 @@ The main idea why the rows instead of columns are the basis vectors in this rota
 
 $
     M - \text{transformation matrix, local space} \rightarrow \text{world space}\\
-    v_{\text{world}} = M \, v_{\text{local}} \\
-    v_{\text{local}} = M^{-1} \, v_{\text{world}}
+    \vec{v}_{\text{world}} = M \, \vec{v}_{\text{local}} \\
+    \vec{v}_{\text{local}} = M^{-1} \, \vec{v}_{\text{world}}
 $
 
 That looks pretty reasonable, but our rotation does not look like an inverse, it looks transposed. Yes, but here lies one of the math's hidden beauties. If a transformation is orthogonal, it's inverse is a transposed version of it (the original trasnformation). In order for a trasnformation to be an orthogonal, it needs to preserve angles and lengths, also, it needs to be a linear transformation. Rotation preserves all of these. There is also a reflection trasnformation, but will not be covering that on this lesson. Translation is not linear and scaling literally lengthens or shortens the lines.
@@ -404,7 +404,7 @@ $
     A^{-1}A = I
 $
 
-So if 
+So if:
 
 $
     Q^{T}Q = I 
@@ -418,15 +418,15 @@ Now we have 2 necessary components that comprise a single view matrix. We have t
 
 $
     V - \text{view matrix} \\
-    R_{V} - \text{rotation matrix} \\
-    T_{V} - \text{translation matrix} \\
-    r - \text{right vector} \\
-    f - \text{forward vector} \\
-    c - \text{camera position} \\
+    R - \text{rotation matrix} \\
+    T - \text{translation matrix} \\
+    \vec{r} - \text{right vector} \\
+    \vec{f} - \text{forward vector} \\
+    \vec{c} - \text{camera position} \\
 $
 
 $
-    R_{V}T_{V} = V \\
+    RT = V \\
 $
 
 $
@@ -444,9 +444,9 @@ $
     \end{bmatrix}
     =
     \begin{bmatrix}
-        r_x & r_y & r_z & -r \cdot c \\
-        u_x & u_y & u_z & -u \cdot c \\
-        - f_x & - f_y & - f_z & f \cdot c \\
+        r_x & r_y & r_z & -\vec{r} \cdot \vec{c} \\
+        u_x & u_y & u_z & -\vec{u} \cdot \vec{c} \\
+        - f_x & - f_y & - f_z & \vec{f} \cdot \vec{c} \\
         0 & 0 & 0 & 1
     \end{bmatrix}
 $
@@ -455,9 +455,11 @@ If you do not believe that multiplying $R_{V}T_{V}$ produces these values, you c
 
 One question you might have is why first translation is applied and only then rotation. I mean in the last lesson I told you that the order of multiplication is $TRS$. But remember, this is only the order if we move from local space to world space. Since view trasnformation transforms world space to local space all the operations also have to be reverted in order. Because of it, we have to first translate the space and only then rotate it.
 
+Finally, now we understand what is a view transformation and how to construct it. We know $\frac{1}{2}$ of the transformations needed for this lesson. Next, we have a projection transformation.  
+
 #### Projection Transformation
 
-Dilemma is simple - we have 3D objects which are represented by triangles where each vertex is defined in 3D space (X, Y, Z) coordinates. The problem is that our screen is 2D, and pixels are usually specified by 2 coordinates [X, Y]. Now, how can we transform 3D points in a way that we could see them on a 2D screen? Lucky for us, we have one special transformation, suited exactly for these kinda situations. Here comes the __projection transformation__.
+Dilemma is simple - we have 3D objects which are represented by triangles where each vertex is defined in 3D space $(x, y, z)$ coordinates. The problem is that our screen is 2D, and pixels are usually specified by 2 coordinates $(x, y)$. Now, how can we transform 3D points in a way that we could see them on a 2D screen? Lucky for us, we have one special transformation, suited exactly for these kinda situations. Here comes the __projection transformation__.
 
 __Projection Transformation__ - transforms 3D points in camera (view) space into a form that can be mapped onto a 2D screen. 
 
@@ -485,70 +487,70 @@ $
 which maps a 3D point to a 2D point:
 
 $
-    p = (x, y, z) \;\rightarrow\; p' = (x', y')
+    \vec{p} = (x, y, z) \;\rightarrow\; \vec{p'} = (x', y')
 $
 
-The simplest way to transform 3D points to 2D is to divide `x` and `y` coordinates by the `z` (depth) value. 
+The simplest way to transform 3D points to 2D is to divide `x` and `y` coordinates by the $z$ (depth) value. 
 
 $
     x' = \frac{d \cdot x}{z}, \quad y' = \frac{d \cdot y}{z}
 $
 
-This way we would retain the distance, where once the `z` value is large, the division by `z` would produce a small value. This is all great, but here lies some small problem. The way we divide coordinates by `z` is not considered a linear operation. As you remember from our previous lesson, I stressed the fact that transformations (if possible) should be linear, because this way we can combine multiple operations into a single matrix. You may ask me "why isn't this operation linear?". Remember, a linear transformation is a transformation that satisfies these 2 rules:
+This way we would retain the distance, where once the $z$ value is large, the division by $z$ would produce a small value. This is all great, but here lies some small problem. The way we divide coordinates by $z$ is not considered a linear operation. As you remember from our previous lesson, I stressed the fact that transformations (if possible) should be linear, because this way we can combine multiple operations into a single matrix. You may ask me "why isn't this operation linear?". Remember, a linear transformation is a transformation that satisfies these 2 rules:
 
 1. Additivity:
 
     $
-        T(\mathbf{u} + \mathbf{v}) = T(\mathbf{u}) + T(\mathbf{v})
+        T(\vec{u} + \vec{v}) = T(\vec{u}) + T(\vec{v})
     $
 
 2. Homogeneity:
 
     $
-        T(a\,\mathbf{u}) = a\,T(\mathbf{u})
+        T(a\,\vec{u}) = a\,T(\vec{u})
     $
 
-Let's check the additivy first for the division by `z`:
+Let's check the additivy first for the division by $z$:
 
 $
-    u = (1, 0, 1) \ ; v = (0, 1, 1)
+    \vec{u} = (1, 0, 1) \ ; \vec{v} = (0, 1, 1)
 $
 
-Project `u` and `v` vectors (divide `x` and `y` by `z`):
+Project $\vec{u}$ and $\vec{v}$ vectors (divide $x$ and $y$ by $z$):
 
 $
     \begin{aligned}
-        T(\mathbf{u}) &= T(1,0,1) = \left(\frac{x}{z}, \frac{y}{z}\right) = \left(\frac{1}{1}, \frac{0}{1}\right) = (1,0) \\
-        T(\mathbf{v}) &= T(0,1,1) = \left(\frac{x}{z}, \frac{y}{z}\right) = \left(\frac{0}{1}, \frac{1}{1}\right) = (0,1)
+        T(\vec{u}) &= T(1,0,1) = \left(\frac{x}{z}, \frac{y}{z}\right) = \left(\frac{1}{1}, \frac{0}{1}\right) = (1,0) \\
+        T(\vec{v}) &= T(0,1,1) = \left(\frac{x}{z}, \frac{y}{z}\right) = \left(\frac{0}{1}, \frac{1}{1}\right) = (0,1)
     \end{aligned}
 $
 
 Now let's add:
 
 $
-    T(u)+T(v)=(1,0)+(0,1)=(1,1)
+    T(\vec{u})+T(\vec{v})=(1,0)+(0,1)=(1,1)
 $
 
-So, we have the first result for the `T(u) + T(v) = (1, 1)`. Now wee need to check what the `T(u + v)` will give. 
+So, we have the first result for the $T(\vec{u}) + T(\vec{v}) = (1, 1)$. Now wee need to check what the $T(\vec{u} + \vec{v})$ will give. 
 
 First, let's add the 2 vectors together:
 
 $
-    w = u + v= (1, 0, 1) + (0, 1, 1) = (1, 1, 2)
+    \vec{w} = \vec{u} + \vec{v} = (1, 0, 1) + (0, 1, 1) = (1, 1, 2)
 $
 
 Project the result:
 
 $
     \begin{aligned}
-        T(\mathbf{w}) &= T(1,1,2) = \left(\frac{x}{z}, \frac{y}{z}\right) = \left(\frac{1}{2}, \frac{1}{2}\right) 
+        T(\vec{w}) &= T(1,1,2) = \left(\frac{x}{z}, \frac{y}{z}\right) = \left(\frac{1}{2}, \frac{1}{2}\right) 
     \end{aligned}
 $
 
-Do you see the problem? I mean why the simple division by `z` is not linear?
+Do you see the problem? I mean why the simple division by $z$ is not linear?
 
 $
-    T(u)+T(v) \neq T(u+v) \rightarrow (1, 1) \neq \left(\frac{1}{2}, \frac{1}{2}\right)
+    T(\vec{u}) + T(\vec{v}) \neq T(\vec{u} + \vec{v}) \rightarrow (1, 1) \neq \left(\frac{1}{2}, \frac{1}{2}\right)
 $
 
 "Hmmm, what can be done to solve this linearity issue? I wonder if a similar problem apeared in the previous lesson, where we wanted to make a translation also linear.". For some of those that remembered the last lesson, we have learned about the homogeneous coordinate system. This coordinate system was great because it allowed us to express translation as a linear operation by introducing another dimension. Remember that our goal is to combine transformations into a single matrix (entity) which could be reused for all objects. 
