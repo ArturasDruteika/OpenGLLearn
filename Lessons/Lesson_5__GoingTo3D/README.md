@@ -1,4 +1,4 @@
-# Lesson 5 - Lesson_5__GoingTo3D
+# Lesson 5 - Going to 3D
 
 This lesson is going to be an intro to a 3D renderer. But please, do not get too excited, as we are only going to discuss the basics of 3D world and we will do a simple transition from rendering 2D shapes to 3D. 
 
@@ -25,8 +25,7 @@ These topics (especially anything that has to do with lights) will be left for t
 So, without further ado, let's continue with the lesson.
 
 
----
-### Transition from 2D to 3D world
+## Transition from 2D to 3D world
 
 To be fair, going from 2D to 3D is kind of simple. I am not joking. The only thing that changes in the data that is being loaded to a GPU VRAM is the coordinates component (position). In 2D we had 2 numbers describing where in space the vertex should be placed (X and Y coords). In 3D world, another dimension is needed, which is called the Z dimension. Because of it, instead of 2 numbers, we need 3 numbers to describe the vertex position (X, Y and Z coords). Look at this image bellow:
 
@@ -56,8 +55,7 @@ This graph below clearly demonstrates this:
 To be honest, I do not know what else to talk about 3D real world. The main thing is that coordinates expand to another dimension (Z axis).
 
 
----
-### Camera
+## Camera
 
 For me, the best way to think about camera is like an actual operator that is filming the scene. Imagine, that you have a scene which has some objects placed in it (like tables, chairs and etc.). Now the operator can film the scene from many positions, maybe from the left side, maybe from the right. The operator can film the scene from the bottom or the top side. In other words, the operator can film it from any direction and any distance. The camera produces the visual information (what it captured), thus allowing viewers to see what is happening in that scene. The different position of the camera, produces the different view of the scene.
 
@@ -201,8 +199,7 @@ I hope this image explains everything to you about the aspect ratio.
 Now, that we have went through all the "small" building blocks of the camera, let's go to the "big bolder" topics.
 
 
----
-### Camera Transformations: View and Projection Matrices
+## Camera Transformations: View and Projection Matrices
 
 These 2 remaining topics about the camera are, at least for me, kind of hard to understand. I mean, I remember when I first stumbled on these 2 words and was like "what is that?". Trust me when I say this, but it took me some time to get a good grip on what these things are. This is, probobly, the first time where the notion of "why do I see objects like I do in pure form?" comes to light. First of all, in this section stop thinking anything outside the real world. I mean when I will be explaining these 2 matrices, do not think about no OpenGL or shaders or any other thing related to pixel coloration. Instead, all the time think about the real world (virtual world).
 
@@ -223,9 +220,9 @@ Before moving any further, here you can see __NDC__ and __Screen__. I am going t
 We know what a model matrix is, but following it, we can also see our 2 main protagonists of this section. Since __view__ goes right after the model matrix, let's start with it.
 
 
-#### View Transformation
+### View Transformation
 
-__View Matrix__ is a matrix that transforms world space into camera (view) space. It transforms all objects in the scene in such a way that the camera becomes the origin of the coordinate system and looks along a fixed direction. To help visualize this, imagine a cube placed at position [x, y, z] in world space, and a camera located at $(x_c, y_c, z_c)$. After applying the view matrix, the coordinate system is transformed so that the camera is effectively at $(0, 0, 0)$, and the cube is moved and rotated to a new position $(x_t, y_t, z_t)$ relative to the camera. In other words, instead of moving the camera, the entire world is transformed relative 
+__View Matrix__ is a matrix that transforms world space into camera (view) space. It transforms all objects in the scene in such a way that the camera becomes the origin of the coordinate system and looks along a fixed direction. In a sense, you can think about this transformation as changing the world space to local space, where the local space is relative to the camera. To help you visualize this, imagine a cube placed at position [x, y, z] in world space, and a camera located at $(x_c, y_c, z_c)$. After applying the view matrix, the coordinate system is transformed so that the camera is effectively at $(0, 0, 0)$, and the cube is moved and rotated to a new position $(x_t, y_t, z_t)$ relative to the camera. In other words, instead of moving the camera, the entire world is transformed relative 
 to the camera's position and orientation.
 
 What might help you to better understand how a camera view coordinate are how the axis look like. Remember what are camera's forward direction, right and up vectors? Well, these become axes in the camera view coordinate system:
@@ -238,7 +235,7 @@ The idea of view matrix is kinda simple. You need a view transform in order to m
 
 There are also deeper and much more important reasons on why the view transform is necessary. For example, it mathematically simplifies a lot of the stuff for the GPU. Imagine for a second that you did not use the view transform. In this case, now the GPU has to somehow figure out what is visible and what is not. And how would the GPU do it? Well, in this case, for every object the GPU would have to calculate the camera orientation (because we want to see if the object is visible or not), compute projections differently. We would need all this stuff because, at the end, the clip space essentially tells what objects are in the camera view are and which not. View transformation simplifies a lot of steps, and also, because matrices are amazing, you can combine the view matrix with the projection matrix (which we are going to discuss now).
 
-#### Mathematical Core and Intuition Behind View Transformation
+### Mathematical Core and Intuition Behind View Transformation
 
 The core problem we are trying to solve with view transformation is that we want to transform the world space in such a way that the camera is the origin of this new coordinate system. Remember, that up now, the origin of the real world is defined as $(0, 0, 0)$ while camera has it's own position $(x, y, z)$. 
 
@@ -374,7 +371,7 @@ $
     \end{bmatrix}
 $
 
-At the moment, it still looks a bit confusing. One of the weird things I noticed while learning the rotation matrix (which is the transformation component in the view matrix) was that for some reason, the rows of this matrix have basis axis of camera space. My question was, why the basis vectors are now the rows and not columns, I mean in the last lesson I remember that I told you that in math, it is a convention to have columns in the matrix representing the basis vectors of that coordinate system. So why is it that this rotation matrix is [transposed](https://en.wikipedia.org/wiki/Transpose)?
+One thing to notice from the beginning is that values are logically placed. I mean first row has right vector values, second row has up vector values and the third row has negative forward vector values (remember, positive values go toward the screen). But, at the moment, it still looks a bit confusing. One of the weird things I noticed while learning the rotation matrix (which is the transformation component in the view matrix) was that for some reason, the rows of this matrix have basis axis of camera space. My question was, why the basis vectors are now the rows and not columns, I mean in the last lesson I remember that I told you that in math, it is a convention to have columns in the matrix representing the basis vectors of that coordinate system. So why is it that this rotation matrix is [transposed](https://en.wikipedia.org/wiki/Transpose)?
 
 The main idea why the rows instead of columns are the basis vectors in this rotation matrix is because we are trying to transform the world space to local space. Remember, how we had a an object constructed and then we wanted to move it to the world space (in a sense, putting a contstructed object into the scene). What we essentially are doing is moving the object from local space to world space. When an operation like this is done, usually the transformation matrix has basis vectors defined in columns. One critical thing to understand is that camera space is essentially a local space for the camear object. Now, logically thinking, in order to go back from the world space to local space, we can just take the original transformation matrix and apply the inverse of it. In a sense it would look like this:
 
@@ -457,7 +454,7 @@ One question you might have is why first translation is applied and only then ro
 
 Finally, now we understand what is a view transformation and how to construct it. We know $\frac{1}{2}$ of the transformations needed for this lesson. Next, we have a projection transformation.  
 
-#### Projection Transformation
+### Projection Transformation
 
 Dilemma is simple - we have 3D objects which are represented by triangles where each vertex is defined in 3D space $(x, y, z)$ coordinates. The problem is that our screen is 2D, and pixels are usually specified by 2 coordinates $(x, y)$. Now, how can we transform 3D points in a way that we could see them on a 2D screen? Lucky for us, we have one special transformation, suited exactly for these kinda situations. Here comes the __projection transformation__.
 
@@ -474,7 +471,7 @@ Well in this situation the view on your monitor should be something like this:
 Now, since we know the reason for which we need the projection transformation, let's see how we can actually implement it. Before we start, I have to inform you that we will see some math, but please do not leave this lesson here.
 
 
-#### Mathematical Core and Intuition Behind Projection Transformation
+### Mathematical Core and Intuition Behind Projection Transformation
 
 The core problem we are trying to solve is that we want 3D points in camera space to be transformed to 2D coordinates. Again, we need 2D coordinates because we are slowly moving towards a final image that will be see on your screen. 
 
@@ -556,3 +553,62 @@ $
 "Hmmm, what can be done to solve this linearity issue? I wonder if a similar problem apeared in the previous lesson, where we wanted to make a translation also linear.". For some of those that remembered the last lesson, we have learned about the homogeneous coordinate system. This coordinate system was great because it allowed us to express translation as a linear operation by introducing another dimension. Remember that our goal is to combine transformations into a single matrix (entity) which could be reused for all objects. 
 
 We can follow the same logic to make the projection transformation linear also. In the previous lesson, we were still dealing with 2D world, so our transformation matrix in homogeneous coordinate system was 3D. Now, since we are transitioning to 3D, the transformation matrix has to be 4D.
+
+The projection matrix in homogeneous space looks like this:
+
+$
+    P =
+    \begin{bmatrix}
+        \frac{1}{\tan\left(\frac{fov}{2}\right)\cdot aspect} & 0 & 0 & 0 \\
+        0 & \frac{1}{\tan\left(\frac{fov}{2}\right)} & 0 & 0 \\
+        0 & 0 & \frac{f + n}{n - f} & \frac{2fn}{n - f} \\
+        0 & 0 & -1 & 0
+    \end{bmatrix}
+$
+
+Ok, if view matrix made 0 sense at the beginning, this one looks even worse. But, if you look closely you could kind of see small pattern. The pattern is that this matrix could be seen as 4 separate zones, each consisting of 4 values: 
+
+* top left
+
+    $
+        \begin{bmatrix}
+            \frac{1}{\tan\left(\frac{fov}{2}\right)\cdot aspect} & 0 \\
+            0 & \frac{1}{\tan\left(\frac{fov}{2}\right)}
+        \end{bmatrix}
+    $
+
+* bottom left
+
+    $
+        \begin{bmatrix}
+            0 & 0  \\
+            0 & 0 
+        \end{bmatrix}
+    $
+
+* top right
+
+    $
+        \begin{bmatrix}
+            0 & 0  \\
+            0 & 0 
+        \end{bmatrix}
+    $
+
+* bottom right
+
+    $
+        \begin{bmatrix}
+            \frac{f + n}{n - f} & \frac{2fn}{n - f}  \\
+            -1 & 0 
+        \end{bmatrix}
+    $
+
+Since bottom left and top right have all 0's, we can skip them. We are left with top left and bottom right matrices (maybe a term like a submatrix suits this better).
+
+#### Top Left Matrix
+Top left matrix has a feature that we have seen and that we know from earlier lesson. If a transformation has non 0 values only on the diagonal, then this type of transformation is called scaling. The interesting part is how the scaler values are computed. Let's first analyze the $\tan\left(\frac{fov}{2}\right)$ part. What does it symbolize and why do we use it as denominator?
+
+![tan_fov](Assets/tan_fov.png)
+
+This image should give some intuition on what the $\tan\left(\frac{fov}{2}\right)$ equation means.

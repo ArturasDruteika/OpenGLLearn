@@ -21,7 +21,7 @@ constexpr int WINDOW_WIDTH = 800;
 constexpr int WINDOW_HEIGHT = 800;
 constexpr float BACKGROUND_COLOR[4] = { 0.1f, 0.2f, 0.3f, 1.0f };
 
-constexpr float FOV_DEGREES = 45.0f;
+constexpr float FOV_DEGREES_Y_AXIS = 45.0f;
 constexpr float NEAR_PLANE = 0.1f;
 constexpr float FAR_PLANE = 100.0f;
 
@@ -376,7 +376,7 @@ int main()
             static_cast<float>(g_FramebufferHeight > 0 ? g_FramebufferHeight : 1);
 
         const glm::mat4 projection = glm::perspective(
-            glm::radians(FOV_DEGREES),
+            glm::radians(FOV_DEGREES_Y_AXIS),
             aspectRatio,
             NEAR_PLANE,
             FAR_PLANE
