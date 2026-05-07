@@ -611,4 +611,49 @@ Top left matrix has a feature that we have seen and that we know from earlier le
 
 ![tan_fov](Assets/tan_fov.png)
 
-This image should give some intuition on what the $\tan\left(\frac{fov}{2}\right)$ equation means.
+This image should give some intuition on what the $\tan\left(\frac{fov}{2}\right)$ equation means. 
+
+$
+    \frac{fov}{2} = \frac{\theta}{2} \rightarrow fov = \theta
+$
+
+This equation is equal to:
+
+$
+    \tan\left(\frac{fov}{2}\right) = \frac{top}{near}
+$
+
+The intuition behing this equation, at least to me, is this: imagine you have an infinite (in height) size straight ruler (ruler shows meters). You put this ruler vertically to the ground (perpendicular to the ground) and want to see how much of the ruler is visible through your screen the farther you put it away (putting it farther on the -Z axis). If it is close to the screen, you are only capable of seeing maybe a tens of centemeters. If you put it further, you start seeing meter marks on it. If you move it farther and farther away, the more of the ruler you start to see. But, the distance is also increasing. If the ruler is closer to you (meaning the near plane is closer) the less of it you see, the farther it is, the bigger the distance. But the fov angle stays the same. From this analogy one another interesting thing can be seen. Imagine now that with some $\theta$ (fov angle value), when the ruler is placed $X$ meters away from the screen, the ruler at the top of the screen shows the value of $Y$ meters (symbolizing that the highest value on the ruler visible is $Y$ meters). If you decrease the $\theta$, but still keep the ruler at the same distance, the value of the ruler seen at the top of the screen is also smaller. 
+
+To sum it up:
+
+* Small FOV → small $\tan\left(\frac{fov}{2}\right)$ -> narrow view
+* Large FOV → big $\tan\left(\frac{fov}{2}\right)$ -> wide view
+
+This literally encodes how spread the view frustum is.
+
+The only question about this equation is "why is it in the denominator, meaning $\frac{1}{\tan\left(\frac{fov}{2}\right)}$?". Well, our goal is to put all the projected values in the range of $[-1; 1]$ (NDC space). From this equation:
+
+$
+    \tan\left(\frac{fov}{2}\right) = \frac{top}{near}
+$
+
+we can derrive:
+
+$
+    top = \tan\left(\frac{fov}{2}\right) \cdot near
+$
+
+Visually this would look like this:
+
+```
+        +top
+          |
+          |
+----------0----------  center
+          |
+          |
+        -top
+```
+
+And $top$ can have higher absolute values than $1$. Also, remember that the farther away the object is, the smaller the projected size is on the screen. 
