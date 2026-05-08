@@ -611,49 +611,71 @@ Top left matrix has a feature that we have seen and that we know from earlier le
 
 ![tan_fov](Assets/tan_fov.png)
 
-This image should give some intuition on what the $\tan\left(\frac{fov}{2}\right)$ equation means. 
+The image above shows that (remember the [$tan$](https://en.wikipedia.org/wiki/Trigonometric_functions) rule):
 
 $
-    \frac{fov}{2} = \frac{\theta}{2} \rightarrow fov = \theta
+    t = \text{top} \\
+    n = near
 $
 
-This equation is equal to:
-
 $
-    \tan\left(\frac{fov}{2}\right) = \frac{top}{near}
+    \tan\left(\frac{\theta}{2}\right) = \frac{t}{n}
 $
 
-The intuition behing this equation, at least to me, is this: imagine you have an infinite (in height) size straight ruler (ruler shows meters). You put this ruler vertically to the ground (perpendicular to the ground) and want to see how much of the ruler is visible through your screen the farther you put it away (putting it farther on the -Z axis). If it is close to the screen, you are only capable of seeing maybe a tens of centemeters. If you put it further, you start seeing meter marks on it. If you move it farther and farther away, the more of the ruler you start to see. But, the distance is also increasing. If the ruler is closer to you (meaning the near plane is closer) the less of it you see, the farther it is, the bigger the distance. But the fov angle stays the same. From this analogy one another interesting thing can be seen. Imagine now that with some $\theta$ (fov angle value), when the ruler is placed $X$ meters away from the screen, the ruler at the top of the screen shows the value of $Y$ meters (symbolizing that the highest value on the ruler visible is $Y$ meters). If you decrease the $\theta$, but still keep the ruler at the same distance, the value of the ruler seen at the top of the screen is also smaller. 
-
-To sum it up:
-
-* Small FOV → small $\tan\left(\frac{fov}{2}\right)$ -> narrow view
-* Large FOV → big $\tan\left(\frac{fov}{2}\right)$ -> wide view
-
-This literally encodes how spread the view frustum is.
-
-The only question about this equation is "why is it in the denominator, meaning $\frac{1}{\tan\left(\frac{fov}{2}\right)}$?". Well, our goal is to put all the projected values in the range of $[-1; 1]$ (NDC space). From this equation:
+we can rearrange this equation to be:
 
 $
-    \tan\left(\frac{fov}{2}\right) = \frac{top}{near}
+    \frac{t}{n} = \tan\left(\frac{\theta}{2}\right) \\
+    t = n \cdot \tan\left(\frac{\theta}{2}\right)
 $
 
-we can derrive:
+Now we can express the height (top) in terms of distance from the eyer and the $\tan\left(\frac{\theta}{2}\right)$ value.
+
+If we choose $near$ to be 1, then this equation simplifies to:
 
 $
-    top = \tan\left(\frac{fov}{2}\right) \cdot near
+    \tan\left(\frac{\theta}{2}\right) = t
 $
 
-Visually this would look like this:
+From this, we can logically deduce that if some object has a height of $Y$, the farther it is from the eye, the smaller it's projection is on the screen. Also, from the definition of fov, we can say that the the larger the angle, the smaller the object's projection on the screen is. You can see this clearly on the tree picture (at the top of the lesson). The tree, in both pictures, has the same height, but the different fov makes tree to have the different size on the screen. That is directly affected by this equation:
 
-```
-        +top
-          |
-          |
-----------0----------  center
-          |
-          |
-        -top
-```
+$
+    t = \tan\left(\frac{\theta}{2}\right)
+$
 
-And $top$ can have higher absolute values than $1$. Also, remember that the farther away the object is, the smaller the projected size is on the screen. 
+Now, the above equation basically tells us ___how large the visible region at a distance of 1 is___. This is great, but this number can vary from 0 to infinity. I mean look at this:
+
+$
+    t = \tan\left(\frac{0^\circ}{2}\right) = \tan\left(0^\circ\right) = 0 \\
+    t = \tan\left(\frac{180^\circ}{2}\right) = \tan\left(90^\circ\right) = \infty
+$
+
+<!-- Since numbers can vary from 0 to infinity, we need some sort of containment for it. I mean we need a coordinate system that would be same for everything we want to project on the screen. Another problem is that monitors can have different sizes and also different resolution. So how can we  -->
+
+<!-- Ps. if an object is infinite in size (either on X or Y or Z directions), how do we show it on the screen? I mean how do we know how many fragments should be created if the farther we go the more fragments we need? Remember that infinite objects are dealt by the view frustum (that is why we define near and far planes). If something is out of view frustum's zone, then we clip that object, so essentialy the clip space tells which objects or which object's parts should be clipped from the view.
+
+Remember that clip space
+To solve this we need to remember what the NDC (normalized device coordinates) is. NDC is a coorinate system that is between the clip space and the screen space (pixel coordinates). NDC system range is $[-1; 1]$, meaning that it is screen size agnostinc. On every screen this range will be the same. In later lessons I will talk more about NDC, but now you can know, that this is a kind of "bridge" coordinate system between the projection coordinate system and the pixel space. -->
+
+I will give you an actual example showing how fov affects the height of the object on the screen. Let's take 2 examples: 
+
+1. Small fov: 15&deg;  $\; \; \; \; \; \tan(15^\circ) \approx 0.27$
+2. Large fov: 120&deg; $\; \; \; \tan(12^\circ) \approx 1.73$
+
+Let's plug in these values to this equation $top = \tan\left(\frac{\theta}{2}\right)$:
+
+$
+    f - \text{scaling factor} \\
+$ 
+
+$
+    \text{1. fov = } 15^\circ \\
+    t_1 = \tan\left(\frac{\theta}{2}\right) = \tan\left(\frac{15^\circ}{2}\right) = \tan(7.5^\circ) \approx 0.132 \\
+    f_1 = \frac{1}{t_1} = \frac{1}{0.132} \approx 7.576 \\
+$
+
+$
+    \text{2. fov = } 120^\circ \\
+    t_2 = \tan\left(\frac{\theta}{2}\right) = \tan\left(\frac{120^\circ}{2}\right) = \tan(60^\circ) \approx 1.732 \\
+    f_2 = \frac{1}{t_2} = \frac{1}{1.732} \approx 0.577
+$
