@@ -493,7 +493,7 @@ $
     x' = \frac{d \cdot x}{z}, \quad y' = \frac{d \cdot y}{z}
 $
 
-This way we would retain the distance, where once the $z$ value is large, the division by $z$ would produce a small value. This is all great, but here lies some small problem. The way we divide coordinates by $z$ is not considered a linear operation. As you remember from our previous lesson, I stressed the fact that transformations (if possible) should be linear, because this way we can combine multiple operations into a single matrix. You may ask me "why isn't this operation linear?". Remember, a linear transformation is a transformation that satisfies these 2 rules:
+This way we would retain the distance, where once the $z$ value is large, the division by $z$ would produce a small value. This is all great, but here lies a small problem. The way we divide coordinates by $z$ is not considered a linear operation. As you remember from our previous lesson, I stressed the fact that transformations (if possible) should be linear, because this way we can combine multiple operations into a single matrix. You may ask me "why isn't this operation linear?". Remember, a linear transformation is a transformation that satisfies these 2 rules:
 
 1. Additivity:
 
@@ -566,7 +566,7 @@ $
     \end{bmatrix}
 $
 
-Ok, if view matrix made 0 sense at the beginning, this one looks even worse. But, if you look closely you could kind of see small pattern. The pattern is that this matrix could be seen as 4 separate zones, each consisting of 4 values: 
+Ok, if view matrix made 0 sense at the beginning, this one looks even worse. But, if you look closely you could kind of see a small pattern. The pattern is that this matrix could be seen as 4 separate zones, each consisting of 4 values: 
 
 * top left
 
@@ -604,7 +604,7 @@ Ok, if view matrix made 0 sense at the beginning, this one looks even worse. But
         \end{bmatrix}
     $
 
-Since bottom left and top right have all 0's, we can skip them. We are left with top left and bottom right matrices (maybe a term like a submatrix suits this better).
+Since bottom left and top right have all 0's, we can skip them, because they will cancel the values that will be multiplied with them. We are left with top left and bottom right matrices (maybe a term like a submatrix suits this better).
 
 #### Top Left Matrix
 Top left matrix has a feature that we have seen and that we know from earlier lesson. If a transformation has non 0 values only on the diagonal, then this type of transformation is called scaling. The interesting part is how the scaler values are computed. Let's first analyze the $\tan\left(\frac{fov}{2}\right)$ part. What does it symbolize and why do we use it as denominator?
@@ -679,3 +679,7 @@ $
     t_2 = \tan\left(\frac{\theta}{2}\right) = \tan\left(\frac{120^\circ}{2}\right) = \tan(60^\circ) \approx 1.732 \\
     f_2 = \frac{1}{t_2} = \frac{1}{1.732} \approx 0.577
 $
+
+So, $f_1$ gives us 7.57, that means if an object has a height of $x$ units, then after multiplying it with this scaling factor that object's height on the screen would be $7.576 \cdot x$ in height. 
+
+Let's take a practical example. There are many different resolutions, but for this example let's take mine. My laptop's resolution is 1920 x 1200, a pretty common nowadays. This means, that my monitor has 1200 pixels in height. If we have an object in real world that has a size of 300 units (imagine that the object) and if our FOV is $120^\circ$, then we would need $7.576 \cdot 300 = 2272.8$ pixels to display this object's full height. 
