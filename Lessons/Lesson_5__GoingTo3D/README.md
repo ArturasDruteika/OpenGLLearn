@@ -650,13 +650,6 @@ $
     t = \tan\left(\frac{180^\circ}{2}\right) = \tan\left(90^\circ\right) = \infty
 $
 
-<!-- Since numbers can vary from 0 to infinity, we need some sort of containment for it. I mean we need a coordinate system that would be same for everything we want to project on the screen. Another problem is that monitors can have different sizes and also different resolution. So how can we  -->
-
-<!-- Ps. if an object is infinite in size (either on X or Y or Z directions), how do we show it on the screen? I mean how do we know how many fragments should be created if the farther we go the more fragments we need? Remember that infinite objects are dealt by the view frustum (that is why we define near and far planes). If something is out of view frustum's zone, then we clip that object, so essentialy the clip space tells which objects or which object's parts should be clipped from the view.
-
-Remember that clip space
-To solve this we need to remember what the NDC (normalized device coordinates) is. NDC is a coorinate system that is between the clip space and the screen space (pixel coordinates). NDC system range is $[-1; 1]$, meaning that it is screen size agnostinc. On every screen this range will be the same. In later lessons I will talk more about NDC, but now you can know, that this is a kind of "bridge" coordinate system between the projection coordinate system and the pixel space. -->
-
 I will give you an actual example showing how fov affects the height of the object on the screen. Let's take 2 examples: 
 
 1. Small fov: 15&deg;  $\; \; \; \; \; \tan(15^\circ) \approx 0.27$
@@ -680,6 +673,8 @@ $
     f_2 = \frac{1}{t_2} = \frac{1}{1.732} \approx 0.577
 $
 
-So, $f_1$ gives us 7.57, that means if an object has a height of $x$ units, then after multiplying it with this scaling factor that object's height on the screen would be $7.576 \cdot x$ in height. 
+The $f_1$ and $f_2$ are the __scaling factors__. This factor essentailly tells how much should an object be scaled (magnified). At this stage, we still have no knowledge about screen or pixels, so the notion that this directly tells anything about the pixels like how many pixels this object is going to take is false. You can also say that scaling factor tells how scaled an object looks like on a projected space for a given $fov$. That's it. Do now overthing about pixels, do not think about "this object is of size $x$, so if scaling factor is $f$, then the object will have $x'$ amount of pixels.". No no, remove these ideas from your head and only think about the fact that this is just a scaling factor for a projected space.
 
-Let's take a practical example. There are many different resolutions, but for this example let's take mine. My laptop's resolution is 1920 x 1200, a pretty common nowadays. This means, that my monitor has 1200 pixels in height. If we have an object in real world that has a size of 300 units (imagine that the object) and if our FOV is $120^\circ$, then we would need $7.576 \cdot 300 = 2272.8$ pixels to display this object's full height. 
+We are missing one important thing from the top left matrix. Why does the first element of the matrix have a $aspect$ multiplier in the $\frac{1}{\tan\left(\frac{fov}{2}\right)\cdot aspect}$ equation? 
+
+From earlier, we know that $\frac{1}{\tan\left(\frac{fov}{2}\right)}$ gives the scaling factor, but the $aspect$ term appears only in the first entry of the matrix (element $P[0][0]$).
