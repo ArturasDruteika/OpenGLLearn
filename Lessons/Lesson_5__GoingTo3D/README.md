@@ -607,7 +607,14 @@ Ok, if view matrix made 0 sense at the beginning, this one looks even worse. But
 Since bottom left and top right have all 0's, we can skip them, because they will cancel the values that will be multiplied with them. We are left with top left and bottom right matrices (maybe a term like a submatrix suits this better).
 
 #### Top Left Matrix
-Top left matrix has a feature that we have seen and that we know from earlier lesson. If a transformation has non 0 values only on the diagonal, then this type of transformation is called scaling. The interesting part is how the scaler values are computed. Let's first analyze the $\tan\left(\frac{fov}{2}\right)$ part. What does it symbolize and why do we use it as denominator?
+
+The top-left part of the projection matrix has a feature we have already seen before. If a transformation matrix contains non-zero values only on its diagonal, then that transformation represents scaling.
+
+The interesting part is understanding how these scaling values are computed. Let's first analyze the following expression:
+
+$
+    \tan\left(\frac{fov}{2}\right)
+$
 
 ![tan_fov](Assets/tan_fov.png)
 
@@ -634,14 +641,10 @@ Now we can express the height (top) in terms of distance from the eyer and the $
 If we choose $near$ to be 1, then this equation simplifies to:
 
 $
-    \tan\left(\frac{\theta}{2}\right) = t
-$
-
-From this, we can logically deduce that if some object has a height of $Y$, the farther it is from the eye, the smaller it's projection is on the screen. Also, from the definition of fov, we can say that the the larger the angle, the smaller the object's projection on the screen is. You can see this clearly on the tree picture (at the top of the lesson). The tree, in both pictures, has the same height, but the different fov makes tree to have the different size on the screen. That is directly affected by this equation:
-
-$
     t = \tan\left(\frac{\theta}{2}\right)
 $
+
+This is an extremely important result. It tells us how large the visible half-height of the camera frustum is at distance 1. From this, we can logically deduce that if some object has a height of $Y$, the farther it is from the eye, the smaller it's projection is on the screen. Also, from the definition of __fov__, we can say that the the larger the angle, the smaller the object's projection on the screen is. You can see this clearly on the tree picture (at the top of the lesson). The tree, in both pictures, has the same height, but the different fov makes tree to have the different size on the screen. That is directly affected by this equation.
 
 Now, the above equation basically tells us ___how large the visible region at a distance of 1 is___. This is great, but this number can vary from 0 to infinity. I mean look at this:
 
@@ -650,7 +653,9 @@ $
     t = \tan\left(\frac{180^\circ}{2}\right) = \tan\left(90^\circ\right) = \infty
 $
 
-I will give you an actual example showing how fov affects the height of the object on the screen. Let's take 2 examples: 
+Usually to prevent the infinities, we hardcode that choosing an angle of 180&deg; is prohibited.
+
+I will give you an actual example showing how $fov$ affects the height proportion of the object on the screen. Let's take 2 examples: 
 
 1. Small fov: 15&deg;  $\; \; \; \; \; \tan(15^\circ) \approx 0.27$
 2. Large fov: 120&deg; $\; \; \; \tan(12^\circ) \approx 1.73$
@@ -673,8 +678,122 @@ $
     f_2 = \frac{1}{t_2} = \frac{1}{1.732} \approx 0.577
 $
 
-The $f_1$ and $f_2$ are the __scaling factors__. This factor essentailly tells how much should an object be scaled (magnified). At this stage, we still have no knowledge about screen or pixels, so the notion that this directly tells anything about the pixels like how many pixels this object is going to take is false. You can also say that scaling factor tells how scaled an object looks like on a projected space for a given $fov$. That's it. Do now overthing about pixels, do not think about "this object is of size $x$, so if scaling factor is $f$, then the object will have $x'$ amount of pixels.". No no, remove these ideas from your head and only think about the fact that this is just a scaling factor for a projected space.
+The $f_1$ and $f_2$ values are the **projection scaling factors**. These factors determine how strongly projected coordinates are magnified or shrunk for a given $fov$.
 
-We are missing one important thing from the top left matrix. Why does the first element of the matrix have a $aspect$ multiplier in the $\frac{1}{\tan\left(\frac{fov}{2}\right)\cdot aspect}$ equation? 
+At this stage, we still have no notion of screens or pixels. Because of that, it would be incorrect to think that this factor directly tells us how many pixels an object will occupy on the screen. The scaling factor only affects how coordinates are scaled in projected space.
 
-From earlier, we know that $\frac{1}{\tan\left(\frac{fov}{2}\right)}$ gives the scaling factor, but the $aspect$ term appears only in the first entry of the matrix (element $P[0][0]$).
+Another important thing to understand is why the scaling factor is the inverse:
+
+$
+    \frac{1}{top}
+$
+
+The intuition is actually very simple. The larger the visible region is, the more we must shrink coordinates in order to fit that region into normalized device coordinates (NDC). Likewise, the smaller the visible region is, the more we must magnify coordinates.
+
+Remember that many rendering parameters can change dynamically:
+- object positions,
+- camera position,
+- field of view,
+- near and far planes.
+
+However, one thing always remains constant: normalized device coordinates. After projection and perspective division, visible coordinates must fit into the fixed range:
+
+$
+    [-1,1]
+$
+
+This means:
+
+- a small $fov$ produces a small visible region, so coordinates must be magnified more strongly,
+- a large $fov$ produces a large visible region, so coordinates must be shrunk.
+
+That is exactly why the projection matrix uses:
+
+$
+    \frac{1}{\tan\left(\frac{\theta}{2}\right)}
+$
+
+You should not think:
+
+$
+    \text{"object size} = x
+    \Rightarrow
+    \text{screen pixels} = f \cdot x"
+$
+
+At this point, there is still no final screen-space conversion. The scaling factor simply controls how zoomed-in or zoomed-out the projection is in projected space.
+
+Why Does the Matrix Use Aspect Ratio? The top-left part of the projection matrix contains the following term:
+
+$
+    \frac{1}{\tan\left(\frac{fov}{2}\right)\cdot aspect}
+$
+
+A natural question arises: Why is the `aspect` ratio included only in the horizontal scaling term?
+The answer is simple: monitors are usually rectangular, not square.
+
+The aspect ratio is defined as:
+
+$
+    aspect = \frac{width}{height}
+$
+
+For example, a monitor with resolution:
+
+$
+    1920 \times 1200
+$
+
+has an aspect ratio of:
+
+$
+    aspect = \frac{1920}{1200} = 1.6
+$
+
+meaning that the screen is 1.6 times wider than it is tall. The `fov` value in the projection matrix usually represents the **vertical field of view**. From earlier, we already know that:
+
+$
+    \frac{1}{\tan\left(\frac{\theta}{2}\right)}
+$
+
+gives the vertical projection scaling factor. However, once the vertical scaling factor is known, we can compute the horizontal scaling factor using the aspect ratio. The horizontal scaling becomes:
+
+$
+    f_x = \frac{f_y}{aspect}
+$
+
+or equivalently:
+
+$
+    f_x =
+    \frac{1}
+    {\tan\left(\frac{\theta}{2}\right)\cdot aspect}
+$
+
+#### Why Divide by Aspect?
+
+The intuition is very important.
+
+A wider screen means that:
+- more world space should be visible horizontally,
+- therefore horizontal coordinates must be scaled less aggressively.
+
+If the aspect ratio were not included:
+- circles would appear stretched,
+- squares would become rectangles,
+- the image would look distorted.
+
+The aspect ratio correction ensures that projection remains geometrically correct for non-square screens.
+
+#### Intuition
+
+You can think about it like this:
+
+- the vertical `fov` determines how tall the visible camera region is,
+- the aspect ratio determines how wide that visible region should become.
+
+A larger aspect ratio:
+- increases horizontal visible space,
+- therefore decreases horizontal scaling.
+
+That is exactly why the aspect ratio appears in the denominator.
