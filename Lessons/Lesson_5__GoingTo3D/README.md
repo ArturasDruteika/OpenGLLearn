@@ -209,10 +209,10 @@ $
     \text{Local} \;\rightarrow\; \text{Scaling} \;\rightarrow\; \text{Rotation} \;\rightarrow\; \text{Translation} \;\rightarrow\; \text{Model}
 $
 
-Well, somewhat the same logic can be applie here:
+Well, somewhat the same logic can be applie here (the following represent different coordinat systems):
 
 $
-    \text{Model} \rightarrow \text{View} \rightarrow \text{Projection} \rightarrow \text{NDC} \rightarrow \text{Screen}
+    \text{Model} \rightarrow \text{View} \rightarrow \text{Clip (Projection)} \rightarrow \text{NDC} \rightarrow \text{Screen}
 $
 
 Before moving any further, here you can see __NDC__ and __Screen__. I am going to cover these 2 in this or the following lessons. For now, just know that NDC (normalized device coordinate) is resolution or pixel invariant 2D coordinate system. It's range is $(-1, 1)$ (both, for X and for Y axes). Screen is the actual pixel coordinates (also 2D, because screen is flat), meaning that when X and Y coordinates are given, they represent the actual pixel position on your monitor screen. 
@@ -644,7 +644,7 @@ $
     t = \tan\left(\frac{\theta}{2}\right)
 $
 
-This is an extremely important result. It tells us how large the visible half-height of the camera frustum is at distance 1. From this, we can logically deduce that if some object has a height of $Y$, the farther it is from the eye, the smaller it's projection is on the screen. Also, from the definition of __fov__, we can say that the the larger the angle, the smaller the object's projection on the screen is. You can see this clearly on the tree picture (at the top of the lesson). The tree, in both pictures, has the same height, but the different fov makes tree to have the different size on the screen. That is directly affected by this equation.
+This is an extremely important result. It tells us how large the visible half-height of the camera frustum is at distance 1. From this, we can see that increasing the field of view increases the size of the visible region. A larger visible region means more world space fits inside the camera frustum, causing objects to appear smaller in projected space. A smaller field of view produces the opposite effect and behaves similarly to a zoomed-in camera. Also, from the definition of __fov__, we can say that the the larger the angle, the smaller the object's projection on the screen is. You can see this clearly on the tree picture (at the top of the lesson). The tree, in both pictures, has the same height, but the different fov makes tree to have the different size on the screen. That is directly affected by this equation.
 
 Now, the above equation basically tells us ___how large the visible region at a distance of 1 is___. This is great, but this number can vary from 0 to infinity. I mean look at this:
 
@@ -658,7 +658,7 @@ Usually to prevent the infinities, we hardcode that choosing an angle of 180&deg
 I will give you an actual example showing how $fov$ affects the height proportion of the object on the screen. Let's take 2 examples: 
 
 1. Small fov: 15&deg;  $\; \; \; \; \; \tan(15^\circ) \approx 0.27$
-2. Large fov: 120&deg; $\; \; \; \tan(12^\circ) \approx 1.73$
+2. Large fov: 120&deg; $\; \; \; \tan(120^\circ) \approx 1.73$
 
 Let's plug in these values to this equation $top = \tan\left(\frac{\theta}{2}\right)$:
 
@@ -765,9 +765,8 @@ $
 or equivalently:
 
 $
-    f_x =
-    \frac{1}
-    {\tan\left(\frac{\theta}{2}\right)\cdot aspect}
+    f_x = f_y \cdot \frac{height}{width}\\
+    f_x = \frac{1} {\tan\left(\frac{\theta}{2}\right)\cdot aspect}
 $
 
 #### Why Divide by Aspect?
@@ -797,3 +796,7 @@ A larger aspect ratio:
 - therefore decreases horizontal scaling.
 
 That is exactly why the aspect ratio appears in the denominator.
+
+To sum it up, we now understand what type of transformation does the top left matrix do. The goal of this transformation is to apply scale X and Y coordinates of the input vector by scaling factors respectively.
+
+#### Bottom Right Matrix
