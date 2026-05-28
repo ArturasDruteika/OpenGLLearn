@@ -800,3 +800,134 @@ That is exactly why the aspect ratio appears in the denominator.
 To sum it up, we now understand what type of transformation does the top left matrix do. The goal of this transformation is to apply scale X and Y coordinates of the input vector by scaling factors respectively.
 
 #### Bottom Right Matrix
+
+Even though I said that the original projection transformation matrix should be look at as 4 different matrices, for this (bottom right) one, it is better to look at it as rows. Instead of looking at it as this:
+
+$
+    \begin{bmatrix}
+        \frac{f + n}{n - f} & \frac{2fn}{n - f}  \\
+        -1 & 0 
+    \end{bmatrix}
+$
+
+look at it as rows:
+
+$
+    \begin{bmatrix}
+        0 & 0 & \frac{f + n}{n - f} & \frac{2fn}{n - f}  \\
+        0 & 0 & -1 & 0 
+    \end{bmatrix}
+$
+
+This way, each entry in a separate each row represents a different component **(x, y, z, w)** that it is transforming.
+
+I suggest to start from the bottom row, since it only has 1 value of interest (others are 0):
+
+$
+    \begin{bmatrix}
+        0 & 0 & -1 & 0 
+    \end{bmatrix}
+$
+
+Each element transforms a unique component:
+
+$
+    \begin{bmatrix}
+        0^x & 0^y & -1^z & 0^w 
+    \end{bmatrix}
+$
+
+Keep in mind that this row is transforming not the original vector, but that vector which is in view space. Because of it, components $[x, y, z, w]$ are components in view space.
+
+Let's take this example: there is a vector in view space, and a projection matrix 4th row (imagine that this row is just another vector):
+
+$
+    \vec{v_{\text{view}}} \text{ - vector in view space} \\
+    \vec{w_{\text{clip}}} \text{ - clip value in clip space} \\
+    \vec{p} \text{ - projection matrix's 4th row }
+$
+
+$
+    \vec{v_{\text{view}}} = [x, y, z, w] \\
+    \vec{p} = [0, 0, -1, 0]
+$
+
+Let's see how will $\vec{v}$ change in the clip space:
+
+$
+    \vec{w_{\text{clip}}} = \vec{p} \cdot \vec{v_{\text{view}}} = -z
+$
+
+Now we have a proof that a clip value is equal to $-z$. Now let's go a bit forward with it:
+
+$
+    \vec{v_{\text{view}}} \text{ - vector in view space} \\
+    \vec{v_{\text{clip}}} \text{ - vector in clip space} \\
+    P \text{ - projection matrix} \\
+$
+
+$    
+    \vec{v_{\text{view}}} = [x, y, z, w]\\
+    P =
+    \begin{bmatrix}
+        \frac{1}{\tan\left(\frac{fov}{2}\right)\cdot aspect} & 0 & 0 & 0 \\
+        0 & \frac{1}{\tan\left(\frac{fov}{2}\right)} & 0 & 0 \\
+        0 & 0 & \frac{f + n}{n - f} & \frac{2fn}{n - f} \\
+        0 & 0 & -1 & 0
+    \end{bmatrix}
+$
+
+$
+    \vec{v_{\text{clip}}} = P \cdot \vec{v_{\text{view}}} = [x', y', z', w']
+$
+
+Since $w'$ is a value in clip space --> $w' = -z$ thus:
+
+$
+    \vec{v_{\text{clip}}} = [x', y', z', -z]
+$
+
+What comes next? Well, to understand it better, let's look back at all the trasnformations that happen in the rendering saga:
+
+$
+    \text{Model Space}
+    \rightarrow
+    \text{World Space}
+    \rightarrow
+    \text{View Space}
+    \rightarrow
+    \text{Clip Space}
+    \xrightarrow{\text{Perspective Divide}}
+    \text{NDC}
+    \rightarrow
+    \text{Viewport Transform}
+    \rightarrow
+    \text{Screen Space}
+$
+
+The next step after clip space is the **perspective divide**. The essence and goal of the perspective divide is pretty intuitive and clear. 
+
+**Perpsective divide** transforms the vector in clip space to a vector in NDC space. An example of how it works:
+
+$
+    \vec{v_{\text{clip}}} = [x_\text{clip}, y_\text{clip}, z_\text{clip}, w_\text{clip}] \\
+    \vec{v_{\text{ndc}}} = [x_\text{ndc}, y_\text{ndc}, z_\text{ndc}]
+$
+
+$
+    x_\text{ndc} = \frac{x_\text{clip}}{w_\text{clip}} \\
+    y_\text{ndc} = \frac{y_\text{clip}}{w_\text{clip}} \\
+    y_\text{ndc} = \frac{z_\text{clip}}{w_\text{clip}} \\
+$
+
+If we replace the $w_\text{clip}$ with $-z_\text{view}$, we get:
+
+$
+    x_\text{ndc} = \frac{x_\text{clip}}{-z_\text{view}} \\
+    y_\text{ndc} = \frac{y_\text{clip}}{-z_\text{view}} \\
+    y_\text{ndc} = \frac{z_\text{clip}}{-z_\text{view}} \\
+$
+
+Also, one key thing to remember is that up to now, many transformations we did were linear, but perspective divide is not a linear operation, since (as shown before) division by a value is does not satisfy the additivity rule.
+
+This was a kind of long explanation on meaning and intuition on what is the 4-th row in the projection transform. The goal of the $[0, 0, -1, 0]$ row is to create a clip space $w_\text{clip}$ value that is actually $-z\text{view}$, and this value is used as a denominator for the transformation from clip space to NDC. The transformation that transforms the vector from clip space to NDC space is called perspective divide.
