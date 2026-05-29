@@ -220,6 +220,7 @@ Before moving any further, here you can see __NDC__ and __Screen__. I am going t
 We know what a model matrix is, but following it, we can also see our 2 main protagonists of this section. Since __view__ goes right after the model matrix, let's start with it.
 
 
+---
 ### View Transformation
 
 __View Matrix__ is a matrix that transforms world space into camera (view) space. It transforms all objects in the scene in such a way that the camera becomes the origin of the coordinate system and looks along a fixed direction. In a sense, you can think about this transformation as changing the world space to local space, where the local space is relative to the camera. To help you visualize this, imagine a cube placed at position [x, y, z] in world space, and a camera located at $(x_c, y_c, z_c)$. After applying the view matrix, the coordinate system is transformed so that the camera is effectively at $(0, 0, 0)$, and the cube is moved and rotated to a new position $(x_t, y_t, z_t)$ relative to the camera. In other words, instead of moving the camera, the entire world is transformed relative 
@@ -454,6 +455,7 @@ One question you might have is why first translation is applied and only then ro
 
 Finally, now we understand what is a view transformation and how to construct it. We know $\frac{1}{2}$ of the transformations needed for this lesson. Next, we have a projection transformation.  
 
+---
 ### Projection Transformation
 
 Dilemma is simple - we have 3D objects which are represented by triangles where each vertex is defined in 3D space $(x, y, z)$ coordinates. The problem is that our screen is 2D, and pixels are usually specified by 2 coordinates $(x, y)$. Now, how can we transform 3D points in a way that we could see them on a 2D screen? Lucky for us, we have one special transformation, suited exactly for these kinda situations. Here comes the __projection transformation__.
@@ -566,55 +568,79 @@ $
     \end{bmatrix}
 $
 
-Ok, if view matrix made 0 sense at the beginning, this one looks even worse. But, if you look closely you could kind of see a small pattern. The pattern is that this matrix could be seen as 4 separate zones, each consisting of 4 values: 
+Ok, if view matrix made 0 sense at the beginning, this one looks even worse. Remember, that the projection transformation transforms a vector from view space to clip space:
 
-* top left
+$
+    \vec{v_\text{view}} = [x_\text{view}, y_\text{view}, z_\text{view}, w_\text{view}] \text{ - vector in view space} \\
+    \vec{v_\text{clip}} = [x_\text{clip}, y_\text{clip}, z_\text{clip}, w_\text{clip}] \text{ - vector in clip space} \\
+    P \text{ - projection transformation matrix}
+$
 
-    $
-        \begin{bmatrix}
-            \frac{1}{\tan\left(\frac{fov}{2}\right)\cdot aspect} & 0 \\
-            0 & \frac{1}{\tan\left(\frac{fov}{2}\right)}
-        \end{bmatrix}
-    $
+$
+    \vec{v_\text{clip}} = P \cdot \vec{v_\text{view}}
+$
 
-* bottom left
+I think that the best way to understand this matrix is to look at it by each row individually, since each row trasnforms a single component in the input vector. Let's see how it works:
 
-    $
-        \begin{bmatrix}
-            0 & 0  \\
-            0 & 0 
-        \end{bmatrix}
-    $
-
-* top right
+* 1-st row
 
     $
         \begin{bmatrix}
-            0 & 0  \\
-            0 & 0 
+            \frac{1}{\tan\left(\frac{fov}{2}\right)\cdot aspect} & 0 & 0 & 0 \\
         \end{bmatrix}
+        \xrightarrow{\text{transforms}} x_\text{view} \rightarrow x_\text{clip}
     $
 
-* bottom right
+* 2-nd row
 
     $
         \begin{bmatrix}
-            \frac{f + n}{n - f} & \frac{2fn}{n - f}  \\
-            -1 & 0 
+            0 & \frac{1}{\tan\left(\frac{fov}{2}\right)} & 0 & 0 \\
         \end{bmatrix}
+        \xrightarrow{\text{transforms}} y_\text{view} \rightarrow y_\text{clip}
     $
 
-Since bottom left and top right have all 0's, we can skip them, because they will cancel the values that will be multiplied with them. We are left with top left and bottom right matrices (maybe a term like a submatrix suits this better).
+* 3-rd row
 
-#### Top Left Matrix
+    $
+        \begin{bmatrix}
+            0 & 0 & \frac{f + n}{n - f} & \frac{2fn}{n - f} \\
+        \end{bmatrix}
+        \xrightarrow{\text{transforms}} z_\text{view} \rightarrow z_\text{clip}
+    $
 
-The top-left part of the projection matrix has a feature we have already seen before. If a transformation matrix contains non-zero values only on its diagonal, then that transformation represents scaling.
+* 4-th row
 
-The interesting part is understanding how these scaling values are computed. Let's first analyze the following expression:
+    $
+        \begin{bmatrix}
+            0 & 0 & -1 & 0 \\
+        \end{bmatrix}
+        \xrightarrow{\text{transforms}} w_\text{view} \rightarrow w_\text{clip}
+    $
+
+Let's go one by one and understand why and how they transform their respective components.
+
+### 1-st row
+
+The 1-st row of the projection matrix has only a single non 0 element. That means that for the $x_\text{clip}$ the result will be:
+
+$
+    x_\text{clip} = \frac{1}{\tan\left(\frac{fov}{2}\right)\cdot aspect} \cdot x_\text{view}
+$
+
+Since we understand how $x_\text{clip}$ is computed, let's dive deeper into the meaning of the:
+
+$
+    \frac{1}{\tan\left(\frac{fov}{2}\right)\cdot aspect}
+$
+
+To understand it better, we have disect this expression into even smaller parts. Let's start from:
 
 $
     \tan\left(\frac{fov}{2}\right)
 $
+
+What is the meaning of this and why is it the way it is? Why is it the denominator?
 
 ![tan_fov](Assets/tan_fov.png)
 
@@ -799,29 +825,24 @@ That is exactly why the aspect ratio appears in the denominator.
 
 To sum it up, we now understand what type of transformation does the top left matrix do. The goal of this transformation is to apply scale X and Y coordinates of the input vector by scaling factors respectively.
 
-#### Bottom Right Matrix
 
-Even though I said that the original projection transformation matrix should be look at as 4 different matrices, for this (bottom right) one, it is better to look at it as rows. Instead of looking at it as this:
+### 2-nd row
 
-$
-    \begin{bmatrix}
-        \frac{f + n}{n - f} & \frac{2fn}{n - f}  \\
-        -1 & 0 
-    \end{bmatrix}
-$
-
-look at it as rows:
+Second row of the projection transformation is:
 
 $
     \begin{bmatrix}
-        0 & 0 & \frac{f + n}{n - f} & \frac{2fn}{n - f}  \\
-        0 & 0 & -1 & 0 
+        0 & \frac{1}{\tan\left(\frac{fov}{2}\right)} & 0 & 0 \\
     \end{bmatrix}
 $
 
-This way, each entry in a separate each row represents a different component **(x, y, z, w)** that it is transforming.
+This is probobly the easiest to explain, since it is almost identical to the 1-st row, just without the $aspect$ term. We do not need the $aspect$ to get the $y_\text{clip}$ because remember, that $fov$ is defined as the vertical angle (not the horizontal). So our vertical scaling factor does not require to be further adjusted according to the aspect.
 
-I suggest to start from the bottom row, since it only has 1 value of interest (others are 0):
+### 4-th row
+
+I suggest to understand this row first, because it is easier and more intuitive from the remaining 2 rows.
+
+The 4-th row is:
 
 $
     \begin{bmatrix}
@@ -931,3 +952,15 @@ $
 Also, one key thing to remember is that up to now, many transformations we did were linear, but perspective divide is not a linear operation, since (as shown before) division by a value is does not satisfy the additivity rule.
 
 This was a kind of long explanation on meaning and intuition on what is the 4-th row in the projection transform. The goal of the $[0, 0, -1, 0]$ row is to create a clip space $w_\text{clip}$ value that is actually $-z\text{view}$, and this value is used as a denominator for the transformation from clip space to NDC. The transformation that transforms the vector from clip space to NDC space is called perspective divide.
+
+Now we can go to the last group of elements in the projection matrix, which will complete our journey through the projection transformation intricacies and reasons on why is it the way it is.
+
+
+### 3rd row
+
+$    
+    \begin{bmatrix}
+        0 & 0 & \frac{f + n}{n - f} & \frac{2fn}{n - f}
+    \end{bmatrix}
+$
+
