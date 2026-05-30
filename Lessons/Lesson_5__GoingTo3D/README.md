@@ -964,3 +964,20 @@ $
     \end{bmatrix}
 $
 
+Before we continue with the explanation on why this row is the way it is, let's first get the intuition and what problem is the 3-rd row solving.
+
+As we remember:
+
+* 1-st row scales $x$ according to a scaling factor and an aspect
+* 2-nd row scales $y$ according to a scaling factor
+* 4-th row calculates $w_\text{clip}$, which, as we remember is $-z_\text{view}$
+
+The question that remains is: what should we do with the z component after the projection transformation?
+
+To understand the essence of this transformation, let's look back at the NDC space. NDC range (for all components or axes) is $[-1; 1]$. Also, remember that a vertex is only going to be visible if it's coordinates satisfy this expression:
+
+$
+    -w_\text{clip} \leq x_\text{clip} \leq w_\text{clip} \\
+    -w_\text{clip} \leq y_\text{clip} \leq w_\text{clip} \\
+    -w_\text{clip} \leq z_\text{clip} \leq w_\text{clip}
+$
