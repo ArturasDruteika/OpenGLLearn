@@ -495,6 +495,18 @@ $
     x' = \frac{d \cdot x}{z}, \quad y' = \frac{d \cdot y}{z}
 $
 
+The $d$ is for the camera zoom (we will cover it in this section). For simplicity, we can set:
+
+$
+    d = 1
+$
+
+This makes :
+
+$
+    x' = \frac{x}{z}, \quad y' = \frac{y}{z}
+$
+
 This way we would retain the distance, where once the $z$ value is large, the division by $z$ would produce a small value. This is all great, but here lies a small problem. The way we divide coordinates by $z$ is not considered a linear operation. As you remember from our previous lesson, I stressed the fact that transformations (if possible) should be linear, because this way we can combine multiple operations into a single matrix. You may ask me "why isn't this operation linear?". Remember, a linear transformation is a transformation that satisfies these 2 rules:
 
 1. Additivity:
@@ -864,7 +876,7 @@ Let's take this example: there is a vector in view space, and a projection matri
 
 $
     \vec{v_{\text{view}}} \text{ - vector in view space} \\
-    \vec{w_{\text{clip}}} \text{ - clip value in clip space} \\
+    w_{\text{clip}} \text{ - clip value in clip space} \\
     \vec{p} \text{ - projection matrix's 4th row }
 $
 
@@ -873,10 +885,10 @@ $
     \vec{p} = [0, 0, -1, 0]
 $
 
-Let's see how will $\vec{v}$ change in the clip space:
+Let's see how will $\vec{v}$ change in the cslip space:
 
 $
-    \vec{w_{\text{clip}}} = \vec{p} \cdot \vec{v_{\text{view}}} = -z
+    w_{\text{clip}} = \vec{p} \cdot \vec{v_{\text{view}}} = -z
 $
 
 Now we have a proof that a clip value is equal to $-z$. Now let's go a bit forward with it:
@@ -949,9 +961,17 @@ $
     y_\text{ndc} = \frac{z_\text{clip}}{-z_\text{view}} \\
 $
 
+Does this equation remind you of something? Remember the:
+
+$
+    x' = \frac{x}{z}, \quad y' = \frac{y}{z}
+$
+
+This is the simplest way to project something onto a 2D screen from 3D world. Doesn't the 3 above equation look similar to this one? That is the essence of the 3-rd row in the projection transformation. You get the divisor for that is projecting x and y coords onto 2D screen.
+
 Also, one key thing to remember is that up to now, many transformations we did were linear, but perspective divide is not a linear operation, since (as shown before) division by a value is does not satisfy the additivity rule.
 
-This was a kind of long explanation on meaning and intuition on what is the 4-th row in the projection transform. The goal of the $[0, 0, -1, 0]$ row is to create a clip space $w_\text{clip}$ value that is actually $-z\text{view}$, and this value is used as a denominator for the transformation from clip space to NDC. The transformation that transforms the vector from clip space to NDC space is called perspective divide.
+This was a kind of long explanation on meaning and intuition on what is the 4-th row in the projection transform. The goal of the $[0, 0, -1, 0]$ row is to create a clip space $w_\text{clip}$ value that is actually $-z_\text{view}$, and this value is used as a denominator for the transformation from clip space to NDC. The transformation that transforms the vector from clip space to NDC space is called perspective divide.
 
 Now we can go to the last group of elements in the projection matrix, which will complete our journey through the projection transformation intricacies and reasons on why is it the way it is.
 
@@ -974,10 +994,32 @@ As we remember:
 
 The question that remains is: what should we do with the z component after the projection transformation?
 
-To understand the essence of this transformation, let's look back at the NDC space. NDC range (for all components or axes) is $[-1; 1]$. Also, remember that a vertex is only going to be visible if it's coordinates satisfy this expression:
+To understand the essence of this transformation, let's look back at the NDC space. NDC range (for all components or axes) is $[-1; 1]$. Also, there is a new concept we have to learn that is part of the clip space. Remember, that the clip space is the place where we can see which vertices in the view frustum are kept and which are clipped? I have told this before, but I think that I never have given a proper explanation on how to know which vertices are visible and which not.
+
+The important rule to understand is this one:
 
 $
     -w_\text{clip} \leq x_\text{clip} \leq w_\text{clip} \\
     -w_\text{clip} \leq y_\text{clip} \leq w_\text{clip} \\
     -w_\text{clip} \leq z_\text{clip} \leq w_\text{clip}
 $
+
+These 3 equations essentially tell which vertices are visible. If all 3 components of a vertex satisfy each of the equation, then this vertex is visible. If only a single one is not in this range, i.e. $[-w_\text{clip}; w_\text{clip}]$, then the vertexz is going to be clipped (we are not going to see that vertex on our screen).
+
+How does this come into play with the 3-rd row of the transformation matrix? Well, these 3 equations have 4 unique terms: $x_\text{clip}, y_\text{clip}, z_\text{clip}, w_\text{clip}$. We know what 3 of them actually are (i.e.: $x_\text{clip}, y_\text{clip}, w_\text{clip}$). To remind you what these are:
+
+* $x_\text{clip} = \frac{1}{\tan\left(\frac{fov}{2}\right) \cdot aspect} \cdot x_\text{view} = \frac{x_\text{view}}{\tan\left(\frac{fov}{2}\right) \cdot aspect}$
+* $y_\text{clip} = \frac{1}{\tan\left(\frac{fov}{2}\right)} \cdot y_\text{view} = \frac{y_\text{view}}{\tan\left(\frac{fov}{2}\right)}$
+* $w_{\text{clip}} = -1 \cdot z_{\text{view}} = -z_\text{view}$
+
+The last remaining unknown term is $z_\text{clip}$.
+
+The goal of:
+
+$    
+    \begin{bmatrix}
+        0 & 0 & \frac{f + n}{n - f} & \frac{2fn}{n - f}
+    \end{bmatrix}
+$
+
+is to transform the $z_\text{view}$ so that the $z_\text{clip}$ $near$ would have a value of -1 and the $far$ would have a value of +1.
