@@ -1023,3 +1023,30 @@ $
 $
 
 is to transform the $z_\text{view}$ so that the $z_\text{clip}$ $near$ would have a value of -1 and the $far$ would have a value of +1.
+
+The space that we are moving towards is the NDC, but we still are in the view space and in between view and NDC there is a clip space. We still have one major problem that we need to solve which is that in view space the z axis is still not scaled. Remember that in NDC the range is [-1; 1], but in view the $near$ and the $far$ planes can have whatever values you have set. For example:
+
+$
+    near = 1.5 \\
+    far = 25
+$
+
+Now, if we have a vertex at position $[x, y, 10.7]$ we can know that this vertex is in the range of $[1.5; 25]$, but how to express the same stuff in NDC?
+
+What we want is this:
+
+$
+    near \rightarrow -1 \\
+    far \rightarrow +1
+$
+
+To be even more precise the above equation is kind of wrong, because, the z axis for the view space is actualy a -z axis since the camera forward direction points forward, but due to the rendering convention, the positive values go outside the camera forward. So the above equations should be replaced like this:
+
+$
+    -near \rightarrow -1 \\
+    -far \rightarrow +1
+$
+
+What the 3rd row of the projection trasnformation does is it helps us to achieve this. In a sense, it allows us to transform any z coordinate such that.
+
+One of the questions I had when learning why the 3rd row is neccessary was "why can't we just multiply the z vaue by some constant that would naturally scale everything?". 
