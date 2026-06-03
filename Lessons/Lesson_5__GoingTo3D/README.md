@@ -1047,6 +1047,122 @@ $
     -far \rightarrow +1
 $
 
-What the 3rd row of the projection trasnformation does is it helps us to achieve this. In a sense, it allows us to transform any z coordinate such that.
+What the 3rd row of the projection transformation does is it helps us to achieve this. In a sense, it allows us to transform any z coordinate such that the it will be placed somewhere where the $near$ is equat to $-1$ and $far$ is equal to $+1$.
 
-One of the questions I had when learning why the 3rd row is neccessary was "why can't we just multiply the z vaue by some constant that would naturally scale everything?". 
+On paper it seems pretty understandable:
+
+$
+    \begin{aligned}
+        &z_\text{clip} = 0 \cdot x_\text{view} + 0 \cdot y_\text{view} + \frac{f + n}{n - f} \cdot z_\text{view} + \frac{2fn}{n - f} \cdot w_\text{view} \\ 
+        &z_\text{clip} = \frac{f + n}{n - f} \cdot z_\text{view} + \frac{2fn}{n - f} \cdot w_\text{view}
+    \end{aligned}
+$
+
+But, as with other rows, we need to have an intuition, we need to understand why this row is the way it is (why it has these values).
+
+First thing we need to know is that the projection transformation is responsible for 3 things:
+
+1. Scale $x$ and $y$ coordinates according to scaling factor
+2. Map the depth range: $[-n; -f] \rightarrow [-1; 1]$
+3. Calculate the clip value
+
+Because of these 3 rules, the mapping process (2-nd point) must be a linear operation. In mathematics, the simples linear scaling operation is:
+
+$
+    x' = a \cdot x + b
+$
+
+At first I did not understand why is this a way to scale things, but let's analyze how it works.
+
+Let's use the rendering example, where we want to make $near \rightarrow -1$ and $far \rightarrow +1$:
+
+Let's say that:
+
+$
+    n - near \\
+    f - far
+$
+
+$
+    n = -2 \\
+    f = -50
+$
+
+Now we have 2 equations we need to solve:
+
+$
+    n' = a \cdot n + b \rightarrow -1 = a \cdot -2 + b \rightarrow -1 = -2a + b\\
+    f' = a \cdot f + b \rightarrow +1 = a \cdot -50 + b \rightarrow -1 = -50a + b
+$
+
+This is a simple linear equation with 2 unknowns. Since we have 2 equations, we can solve it:
+
+1) Subtract the first equation from the second:
+
+    $
+        \begin{aligned}
+            1 - (-1) &= (-50a + b) - (-2a + b) \\
+            2 &= -50a + b + 2a - b \\
+            2 &= -48a \\
+            a &= \frac{2}{-48} \\
+            a &= -\frac{1}{24}
+        \end{aligned}
+    $
+
+2) Subtract the first equation from the second:
+
+    $
+        \begin{aligned}
+            -1 &= -2a + b \\
+            -1 &= -2\left(-\frac{1}{24}\right) + b \\
+            -1 &= \frac{2}{24} + b \\
+            -1 &= \frac{1}{12} + b \\
+            b &= -1 - \frac{1}{12} \\
+            b &= -\frac{12}{12} - \frac{1}{12} \\
+            b &= -\frac{13}{12}
+        \end{aligned}
+    $
+
+Nice, we have 2 unknowns solved:
+
+$
+    \begin{aligned}
+        a = -\frac{1}{24} \\
+        b = -\frac{13}{12}
+    \end{aligned}
+$
+
+Nice, now if we want to see where any other number on this new scaled version would fall to, we can just apply this linear operation:
+
+$
+    \begin{aligned}
+        x' = -\frac{1}{24} \cdot x + \left(-\frac{13}{12}\right)
+    \end{aligned}
+$
+
+Let's test it with a number that is in between -2 and -50. -26 seems to be 24 units from -2 and 24 units from -50. This means that if we apply this linear trasnformation it should have a value of 0, since it is in between. Let's look:
+
+$
+    \begin{aligned}
+        x' &= -\frac{1}{24} \cdot (-26) + \left(-\frac{13}{12}\right) \\
+        x' &= \frac{26}{24} - \frac{13}{12} \\
+        x' &= \frac{13}{12} - \frac{13}{12} \\
+        x' &= 0
+    \end{aligned}
+$
+
+Now we know how to scale space. This is what we were looking for, but how does 3-rd row do it? Well, what if I told you that you can look into this row like this:
+
+$
+    \begin{bmatrix}
+        0 & 0 & A & B
+    \end{bmatrix}
+$
+
+P.s. you see capital letters because it is the convention in math to use capital letter for coefficiants in matrices. Since 3-r row is part of a matrix, I will be using capital letters for A and B.
+
+Look at that, we have this:
+
+$
+    z_\text{clip} = A \cdot z_\text{view} + B 
+$
