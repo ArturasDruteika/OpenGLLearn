@@ -1166,3 +1166,25 @@ Look at that, we have this:
 $
     z_\text{clip} = A \cdot z_\text{view} + B 
 $
+
+We can expand $A$ and $B$ with their respective values from the 3rd row:
+
+$
+    \begin{aligned}
+        &A = \frac{f + n}{n - f} \\
+        &B = \frac{2fn}{n - f} \cdot w_\text{view} \\
+        &z_\text{clip} = \frac{f + n}{n - f} \cdot z_\text{view} + \frac{2fn}{n - f} \cdot w_\text{view}
+    \end{aligned}
+$
+
+At this point, although we do not understand what do the $A$ and $B$ values mean, we can understand the big picture. We know that the 3-rd row is just a plain and simple linear equation which allows us to scale any $z_\text{view}$ coordinate.
+
+But, as with everything in these lessons, we cannot stop with just $A$ and $B$, we have to understand why they are the way they are. Now I will try to explain and give intuition on why:
+
+$
+    \begin{aligned}
+        &A = \frac{f + n}{n - f} \\
+        &B = \frac{2fn}{n - f} \cdot w_\text{view} \\
+    \end{aligned}
+$
+
