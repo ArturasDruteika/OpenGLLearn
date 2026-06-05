@@ -1179,12 +1179,47 @@ $
 
 At this point, although we do not understand what do the $A$ and $B$ values mean, we can understand the big picture. We know that the 3-rd row is just a plain and simple linear equation which allows us to scale any $z_\text{view}$ coordinate.
 
-But, as with everything in these lessons, we cannot stop with just $A$ and $B$, we have to understand why they are the way they are. Now I will try to explain and give intuition on why:
+But, as with everything in these lessons, we cannot stop with just $A$ and $B$, we have to understand why they are the way they are. I will try to explain all the reasons and give you the intuition on why:
 
 $
     \begin{aligned}
         &A = \frac{f + n}{n - f} \\
         &B = \frac{2fn}{n - f} \cdot w_\text{view} \\
+    \end{aligned}
+$
+
+First of all, we have to remember that we want to move from view space to NDC. During this "transition" we will have to go through the perspective divide operation which is:
+
+$
+    \begin{aligned}
+        &z_\text{ndc} = \frac{z_\text{clip}}{-z_\text{view}}
+    \end{aligned}
+$
+
+Now let's substitute all As and Bs into it:
+
+$
+    \begin{aligned}
+        &z_\text{ndc} = (A \cdot z_\text{view} + B)  \cdot \frac{1}{-z_\text{view}} \\
+        &z_\text{ndc} = \frac{A \cdot z_\text{view}}{-z_\text{view}} + \frac{B}{z_\text{view}} \\
+        &z_\text{ndc} = -A + \frac{B}{z_\text{view}}
+    \end{aligned}
+$
+
+Right now this equation does not make any sense, but please keep it inside your heads, because it will be very import soon.
+
+Right now, we still have 0 intuition on A and B, let's focus on them. From a simple linear eqution form:
+
+$
+    z_\text{clip} = a \cdot z_\text{view} + b
+$
+
+we know that $a$ is a scaler for $x$ and $b$ is just a bias, meaning how much shift should be applied to a transformed value. Because of it, we can look ath this:
+
+$
+    \begin{aligned}
+        &A = \frac{f + n}{n - f} \text{ --- scaler for } x \\
+        &B = \frac{2fn}{n - f} \cdot w_\text{view} \text { --- bias for } x'
     \end{aligned}
 $
 
