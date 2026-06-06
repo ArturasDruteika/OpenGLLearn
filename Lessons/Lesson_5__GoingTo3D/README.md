@@ -1014,15 +1014,7 @@ How does this come into play with the 3-rd row of the transformation matrix? Wel
 
 The last remaining unknown term is $z_\text{clip}$.
 
-The goal of:
-
-$    
-    \begin{bmatrix}
-        0 & 0 & \frac{f + n}{n - f} & \frac{2fn}{n - f}
-    \end{bmatrix}
-$
-
-is to transform the $z_\text{view}$ so that the $z_\text{clip}$ $near$ would have a value of -1 and the $far$ would have a value of +1.
+The purpose of the 3-rd row is to help construct a $z_\text{clip}$ value which, after the perspective divide, maps the view-space depth range $[−near;−far]$ into the NDC depth range $[−1;1]$.
 
 The space that we are moving towards is the NDC, but we still are in the view space and in between view and NDC there is a clip space. We still have one major problem that we need to solve which is that in view space the z axis is still not scaled. Remember that in NDC the range is [-1; 1], but in view the $near$ and the $far$ planes can have whatever values you have set. For example:
 
@@ -1223,3 +1215,86 @@ $
     \end{aligned}
 $
 
+Now here comes the fun part. In order to understand $A$ and $B$ we have to derrive them from the conditions we already know and want to acheive. First of all we have:
+
+$
+    z_\text{view} = n = near \\
+    z_\text{clip} = -1
+$
+
+and:
+
+$
+    z_\text{view} = f = far \\
+    z_\text{clip} = -1
+$
+
+Therefore:
+
+$
+    \begin{aligned}
+        & \frac{A(-n) + B}{n} = -1 : \text{multiply by } n\\
+        & -An + B = -n : \text{add }An\\
+        & B = n(A - 1)
+    \end{aligned}
+$
+
+and:
+
+$
+    \begin{aligned}
+        & \frac{A(-f) + B}{f} = 1 : \text{multiply by } f\\
+        & -Af + B = f : \text{add }Af\\
+        & B = f(A + 1)
+    \end{aligned}
+$
+
+Solve for $A$:
+
+$
+    \begin{aligned}
+        & n(A - 1) = f(A + 1) \\
+        & nA - n = fA + f \\
+        & nA - fA = n + f \\
+        & A(n - f) = n + f \\
+        & A = \frac{n + f}{n - f}
+    \end{aligned}
+$
+
+Solve for B:
+
+$
+    \begin{aligned}
+        & B = n(A - 1) \\
+        & B = n \left(\frac{n + f}{n - f} - 1\right) \\
+        & B = n \left(\frac{f + n - (n - f)}{n - f} \right) \\
+        & B = n \left(\frac{2f}{n - f} \right) \\
+        & B = \frac{2fn}{n - f}
+    \end{aligned}
+$
+
+There we have it. We mathematically derrived why:
+
+$
+    \begin{aligned}
+        & A = \frac{n + f}{n - f} \\sss
+        & B = \frac{2fn}{n - f}
+    \end{aligned}
+$
+
+Let's get back to this equation:
+
+$
+    \begin{aligned}
+        z_\text{ndc} = -A + \frac{B}{z_\text{view}}
+    \end{aligned}
+$
+
+and substitute $A$ and $B$ values:
+
+$
+    \begin{aligned}
+        & z_{\text{ndc}} = -\frac{n + f}{n - f} + \frac{\frac{2fn}{n - f}}{z_{\text{view}}} \\
+        &
+    \end{aligned}
+$
