@@ -472,6 +472,21 @@ Well in this situation the view on your monitor should be something like this:
 
 Now, since we know the reason for which we need the projection transformation, let's see how we can actually implement it. Before we start, I have to inform you that we will see some math, but please do not leave this lesson here.
 
+This graph shows the flow of how 3D becomes 2D on the screen:
+
+$
+    \text{3D} \rightarrow \text{Projection Transformation} \rightarrow \text{2D}
+$
+
+But, this is not entirely true. What I mean by it is that the previous projection definition is partially true. In rendering projection transformation does not magically transform 3D space into 2D. What it does is it transforms the view space into clip space.
+
+In reality the 3D to 2D transformation happens in these steps:
+
+$
+    \text{View Space} \rightarrow \text{Projection Transformation} \rightarrow \text{Clip Space} \rightarrow \text{Perspective Divide} \rightarrow \text{NDC} \rightarrow \text{Viewport Transform} \rightarrow \text{Screen Space}
+$
+
+Nonetheless, projection transformation is an integral part in this whole chain of steps. Without this step, we could not know which values shuld be clipped, or in other words: which vertices are visible and which not.
 
 ### Mathematical Core and Intuition Behind Projection Transformation
 
@@ -1039,9 +1054,9 @@ $
     -far \rightarrow +1
 $
 
-What the 3rd row of the projection transformation does is it helps us to achieve this. In a sense, it allows us to transform any z coordinate such that the it will be placed somewhere where the $near$ is equat to $-1$ and $far$ is equal to $+1$.
+The 3-rd row itself does not transform $z_\text{view}$ into a space where $near$ is -1 and $far$ is 1. It constructs a $z_\text{clip}$ value which will be used in the perspective divide step which produces $z_\text{ndc}$. Only $z_\text{ndc}$ is where the $near$ is -1 and $far$ is 1. Do not forget or mix these concepts (I am telling you this because I was the one who for a long time thought that $z_\text{clip}$ is the value where $near$ is -1 and $far$ is 1). 
 
-On paper it seems pretty understandable:
+Let's look how 3-rd row transforms the $z_\text{view}$ into $z_\text{clip}$. On paper it seems pretty understandable:
 
 $
     \begin{aligned}
@@ -1055,8 +1070,8 @@ But, as with other rows, we need to have an intuition, we need to understand why
 First thing we need to know is that the projection transformation is responsible for 3 things:
 
 1. Scale $x$ and $y$ coordinates according to scaling factor
-2. Map the depth range: $[-n; -f] \rightarrow [-1; 1]$
-3. Calculate the clip value
+2. Calculate the clip value
+3. Calculating the $z_\text{clip}$ value.
 
 Because of these 3 rules, the mapping process (2-nd point) must be a linear operation. In mathematics, the simples linear scaling operation is:
 
@@ -1093,11 +1108,11 @@ This is a simple linear equation with 2 unknowns. Since we have 2 equations, we 
 
     $
         \begin{aligned}
-            1 - (-1) &= (-50a + b) - (-2a + b) \\
-            2 &= -50a + b + 2a - b \\
-            2 &= -48a \\
-            a &= \frac{2}{-48} \\
-            a &= -\frac{1}{24}
+            & 1 - (-1) = (-50a + b) - (-2a + b) \\
+            & 2 = -50a + b + 2a - b \\
+            & 2 = -48a \\
+            & a = \frac{2}{-48} \\
+            & a = -\frac{1}{24}
         \end{aligned}
     $
 
@@ -1143,7 +1158,7 @@ $
     \end{aligned}
 $
 
-Now we know how to scale space. This is what we were looking for, but how does 3-rd row do it? Well, what if I told you that you can look into this row like this:
+Now we know how to scale space. This is what we were looking for, but how does 3-rd row helps us to achieve that? Well, what if I told you that you can look into this row like this:
 
 $
     \begin{bmatrix}
@@ -1206,7 +1221,7 @@ $
     z_\text{clip} = a \cdot z_\text{view} + b
 $
 
-we know that $a$ is a scaler for $x$ and $b$ is just a bias, meaning how much shift should be applied to a transformed value. Because of it, we can look ath this:
+we know that $a$ is a scaler for $x$ and $b$ is just a bias, meaning how much shift should be applied to a transformed value. Because of it, we can look at this:
 
 $
     \begin{aligned}
@@ -1277,7 +1292,7 @@ There we have it. We mathematically derrived why:
 
 $
     \begin{aligned}
-        & A = \frac{n + f}{n - f} \\sss
+        & A = \frac{n + f}{n - f} \\
         & B = \frac{2fn}{n - f}
     \end{aligned}
 $
@@ -1290,11 +1305,24 @@ $
     \end{aligned}
 $
 
-and substitute $A$ and $B$ values:
+This equation is doing 2 things:
+
+1. Scales the z value according to $[-1; 1]$ with respective $A$ and $B$ coefficients
+2. Does the perspective divide
+
+After this operation, now our z value is transformed in such way that far away objects look smaller. Also, the value is scaled, which is what the NDC space requires.
+
+What I want you to understand about the 3-rd row is that it only calculates the $z_\text{clip}$ value which is an intermediate. In clip space you still would not be able to see if farther objects look smaller. For this effect to work we need divide the $z_\text{clip}$ by $w_\text{clip}$:
 
 $
     \begin{aligned}
-        & z_{\text{ndc}} = -\frac{n + f}{n - f} + \frac{\frac{2fn}{n - f}}{z_{\text{view}}} \\
-        &
+        & z_\text{ndc} = \frac{z_\text{clip}}{w_\text{clip}} \\
+        & z_\text{ndc} = \frac{z_\text{clip}}{-z_\text{view}}
     \end{aligned}
 $
+
+### Resume on Projection Transformation
+
+Finally, we have reached the ending on the mathematical meaning of projection transformation. 
+
+Understand that projection transformation in itself is just an intermediate step for the perspective divide.
