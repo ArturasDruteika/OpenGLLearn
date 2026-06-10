@@ -478,15 +478,50 @@ $
     \text{3D} \rightarrow \text{Projection Transformation} \rightarrow \text{2D}
 $
 
-But, this is not entirely true. What I mean by it is that the previous projection definition is partially true. In rendering projection transformation does not magically transform 3D space into 2D. What it does is it transforms the view space into clip space.
-
-In reality the 3D to 2D transformation happens in these steps:
+This is where the projection transformation is responsible for in real world. In rendering, it is a bit different. In rendering the 3D to 2D transformation happens in these steps:
 
 $
     \text{View Space} \rightarrow \text{Projection Transformation} \rightarrow \text{Clip Space} \rightarrow \text{Perspective Divide} \rightarrow \text{NDC} \rightarrow \text{Viewport Transform} \rightarrow \text{Screen Space}
 $
 
-Nonetheless, projection transformation is an integral part in this whole chain of steps. Without this step, we could not know which values shuld be clipped, or in other words: which vertices are visible and which not.
+As you can see, here projection transformation only is one of many steps in transforming 3D coordinates to 2D, which could mean pixels on our monitor screen. In rendering, projection transformation trasnforms view space to clip space (aka. projection space).
+
+Before we continue any further, I want to say that to understand projection transformation properly I recommend understanding what is NDC (normalized device coordinates) and what is clip space. Why I suggest it? Because I think that there are 2 reasons why it will help you overall:
+
+1. Understanding NDC space let's you understand the purpose of projection trasnformation way simpler than before
+2. NDC space overall is far easier to understand and wrap your head around it than projection
+3. Even though clip space is a bit harder than NDC, it is still way easier than projection matrix
+
+
+### NDC
+
+**NDC (normalized device coordinates)** is a coordinate system where each axis has a range of $[-1; 1]$. It exists because there must be some screen size independant coordinate system, so that monitors with different sizes could correctly display vertex positions. 
+
+A clear example is imagine 2 different size monitors:
+
+1. Monitor A: size 500 x 500
+2. Monitor B: size 700 x 400
+
+Following a common ground, if there is a sphere that is in the center of the screen, that would mean that on monitor A it would be at coordinates [250; 250], but on monitor B it would be at [350; 200]. Do you see the problem? NDC exists exactly to solve this issue. 
+
+What it serves for is if we have a coordinate system that is monitor size independant, then we can say that the same sphere in the NDC space is [0; 0]. Then internally a graphics API handles monitor size positions, so that any size monitor could display the sphere on exactly the same place. To be even more precise, it is not the monitor screen, but the viewport of graphics API (remember the GLFW window).
+
+
+### Clip Space
+
+**Clip Space** is a coordinate system which essentially tells which vertices are visible and which not. To be more technical, clip space where the GPU decides what is inside camera's view and what should be clipple away. Remember the car and the window example in lesson 2.
+
+To know which vertices will be visible and which not, remember this rule:
+
+$
+    -w_\text{clip} \leq x_\text{clip} \leq w_\text{clip} \\
+    -w_\text{clip} \leq y_\text{clip} \leq w_\text{clip} \\
+    -w_\text{clip} \leq z_\text{clip} \leq w_\text{clip}
+$
+
+A vertex is visible only and only if these 3 conditions are true. If at least one of these fail, the vertex is clipped and will not be visible in the final image.
+
+Also, remember that the clip space still has a shape of $[D + 1; D + 1]$ where $D$ is the number of dimensions in real world. That means that clip space is homogeneous coordinate system.
 
 ### Mathematical Core and Intuition Behind Projection Transformation
 
