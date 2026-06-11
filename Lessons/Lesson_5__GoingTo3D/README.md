@@ -495,16 +495,27 @@ Before we continue any further, I want to say that to understand projection tran
 
 ### NDC
 
-**NDC (normalized device coordinates)** is a coordinate system where each axis has a range of $[-1; 1]$. It exists because there must be some screen size independant coordinate system, so that monitors with different sizes could correctly display vertex positions. 
+**NDC (normalized device coordinates)** is a coordinate system where each axis has a range of $[-1; 1]$. It exists because there must be some GLFW window size independant coordinate system, so that GLFW window with different sizes could correctly display vertex positions. 
 
 A clear example is imagine 2 different size monitors:
 
-1. Monitor A: size 500 x 500
-2. Monitor B: size 700 x 400
+1. GLFW window A: size 400 x 800
+2. GLFW window B: size 800 x 400
 
-Following a common ground, if there is a sphere that is in the center of the screen, that would mean that on monitor A it would be at coordinates [250; 250], but on monitor B it would be at [350; 200]. Do you see the problem? NDC exists exactly to solve this issue. 
+Following a common ground, if there is a sphere that is in the center of the GLFW window, that would mean that on window A it would be at coordinates [200; 400], but on window B it would be at [400; 200]. How to define what is center for GLFW window space which is different in size? Look at the 2 images below:
 
-What it serves for is if we have a coordinate system that is monitor size independant, then we can say that the same sphere in the NDC space is [0; 0]. Then internally a graphics API handles monitor size positions, so that any size monitor could display the sphere on exactly the same place. To be even more precise, it is not the monitor screen, but the viewport of graphics API (remember the GLFW window).
+1. Image size: 400 x 800
+    
+    ![400x800](Assets/400x800.png)
+
+2. Image size:  800 x 400
+
+    ![400x800](Assets/800x400.png)
+
+
+Do you see the problem? NDC exists exactly to solve this issue. 
+
+What it serves for is if we have a coordinate system that is GLFW window size independant, then we can say that the same sphere in the NDC space is [0; 0]. Then internally a graphics API handles GLFW window size positions, so that any size GLFW window could display the sphere on exactly the same place.
 
 
 ### Clip Space
@@ -522,6 +533,15 @@ $
 A vertex is visible only and only if these 3 conditions are true. If at least one of these fail, the vertex is clipped and will not be visible in the final image.
 
 Also, remember that the clip space still has a shape of $[D + 1; D + 1]$ where $D$ is the number of dimensions in real world. That means that clip space is homogeneous coordinate system.
+
+Another fact worth mentioning is do not mistake clip space with NDC range. I have done this myself where for some time I was thinking that clip space has also a range of $[-1; 1]$. That is wrong. This is NDC's range, clip space do not have bounds.
+
+
+### Perspective Divide
+
+We understand what is clip space and what is NDC space, now we need to understand what is the operation that turns one to the other.
+
+**Perspective divide** is a special operation which goal is to transform clip space to NDC space. 
 
 ### Mathematical Core and Intuition Behind Projection Transformation
 
