@@ -541,7 +541,25 @@ Another fact worth mentioning is do not mistake clip space with NDC range. I hav
 
 We understand what is clip space and what is NDC space, now we need to understand what is the operation that turns one to the other.
 
-**Perspective divide** is a special operation which goal is to transform clip space to NDC space. 
+**Perspective divide** is a special operation which goal is to transform clip space to NDC space. This step creates a perspective effect where the distant objects appear to be smaller, than nearby ones.
+
+This operation is very simple:
+
+$
+    x_\text{ndc} = \frac{x_\text{clip}}{w_\text{clip}} \\
+    y_\text{ndc} = \frac{y_\text{clip}}{w_\text{clip}} \\
+    y_\text{ndc} = \frac{z_\text{clip}}{w_\text{clip}} \\
+$
+
+$x$, $y$, $z$ coordinates are divided by a $w_\text{clip}$ value.
+
+One important thing to understand about perspective divide is the fact that this operation is not linear. Up to here, all transformations were linear (model, view, projection).
+
+
+### Resume: NDC, Clip Space, Perspective Divide
+
+I think that it is great that now we understnad what happens before and after the projection transformation, because it will be easier to understand the essence of it once I start explaining it. The projection transformation, in my opinion, is the hardest real world transformation to explain because a lot of it, at first, does not make sense. Just know that the goal of perspective transformation in rendering is to create clip space values, which after perspective divide produce values which lie in the NDC space.
+
 
 ### Mathematical Core and Intuition Behind Projection Transformation
 
@@ -562,7 +580,10 @@ $
 The simplest way to transform 3D points to 2D is to divide `x` and `y` coordinates by the $z$ (depth) value. 
 
 $
-    x' = \frac{d \cdot x}{z}, \quad y' = \frac{d \cdot y}{z}
+    \begin{aligned}
+        x' = \frac{d \cdot x}{z} \\
+        y' = \frac{d \cdot y}{z}
+    \end{aligned}
 $
 
 The $d$ is for the camera zoom (we will cover it in this section). For simplicity, we can set:
@@ -574,10 +595,15 @@ $
 This makes :
 
 $
-    x' = \frac{x}{z}, \quad y' = \frac{y}{z}
+    \begin{aligned}
+        & x' = \frac{x}{z}, \quad \\
+        & y' = \frac{y}{z}
+    \end{aligned}
 $
 
-This way we would retain the distance, where once the $z$ value is large, the division by $z$ would produce a small value. This is all great, but here lies a small problem. The way we divide coordinates by $z$ is not considered a linear operation. As you remember from our previous lesson, I stressed the fact that transformations (if possible) should be linear, because this way we can combine multiple operations into a single matrix. You may ask me "why isn't this operation linear?". Remember, a linear transformation is a transformation that satisfies these 2 rules:
+This way we would retain the distance, where once the $z$ value is large, the division by $z$ would produce a small value. Also, do you notice, that these equations are the same as the perspective divide? That is why I wanted to explain those topics first, because now we understand this equation.
+
+This is all great, but here lies a small problem. The way we divide coordinates by $z$ is not considered a linear operation. As you remember from our previous lesson, I stressed the fact that transformations (if possible) should be linear, because this way we can combine multiple operations into a single matrix. You may ask me "why isn't this operation linear?". Remember, a linear transformation is a transformation that satisfies these 2 rules:
 
 1. Additivity:
 
