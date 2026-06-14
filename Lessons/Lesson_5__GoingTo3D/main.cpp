@@ -18,7 +18,7 @@
 constexpr int OPENGL_MAJOR_VERSION = 4;
 constexpr int OPENGL_MINOR_VERSION = 4;
 constexpr int WINDOW_WIDTH = 800;
-constexpr int WINDOW_HEIGHT = 400;
+constexpr int WINDOW_HEIGHT = 800;
 constexpr float BACKGROUND_COLOR[4] = { 0.1f, 0.2f, 0.3f, 1.0f };
 
 constexpr float FOV_DEGREES_Y_AXIS = 45.0f;
@@ -26,8 +26,8 @@ constexpr float NEAR_PLANE = 0.1f;
 constexpr float FAR_PLANE = 100.0f;
 
 // Global changable parameters
-int g_FramebufferWidth = WINDOW_WIDTH;
-int g_FramebufferHeight = WINDOW_HEIGHT;
+int g_framebufferWidth = WINDOW_WIDTH;
+int g_framebufferHeight = WINDOW_HEIGHT;
 
 
 struct Vertex
@@ -87,8 +87,8 @@ glm::mat4 CreateScale3D(const glm::vec3& scale)
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height)
 {
-    g_FramebufferWidth = width;
-    g_FramebufferHeight = height;
+    g_framebufferWidth = width;
+    g_framebufferHeight = height;
 
     glViewport(0, 0, width, height);
 }
@@ -183,8 +183,8 @@ int main()
         return -1;
     }
 
-    glfwGetFramebufferSize(pWindow, &g_FramebufferWidth, &g_FramebufferHeight);
-    glViewport(0, 0, g_FramebufferWidth, g_FramebufferHeight);
+    glfwGetFramebufferSize(pWindow, &g_framebufferWidth, &g_framebufferHeight);
+    glViewport(0, 0, g_framebufferWidth, g_framebufferHeight);
 
     // Pyramid is comprised of 5 vertices
     const glm::vec3 top = { 0.0f, 0.35f, 0.0f };
@@ -372,8 +372,8 @@ int main()
         glBindVertexArray(vao);
 
         const float aspectRatio =
-            static_cast<float>(g_FramebufferWidth) /
-            static_cast<float>(g_FramebufferHeight > 0 ? g_FramebufferHeight : 1);
+            static_cast<float>(g_framebufferWidth) /
+            static_cast<float>(g_framebufferHeight > 0 ? g_framebufferHeight : 1);
 
         const glm::mat4 projection = glm::perspective(
             glm::radians(FOV_DEGREES_Y_AXIS),

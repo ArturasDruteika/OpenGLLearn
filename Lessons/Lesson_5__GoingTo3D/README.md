@@ -1407,3 +1407,165 @@ $
 Finally, we have reached the ending on the mathematical meaning of projection transformation. 
 
 Understand that projection transformation in itself is just an intermediate step for the perspective divide.
+
+
+## Code
+
+The hard part, aka. the theoretical part is finished. Let's go section by section while I keep explaining them. 
+
+
+### Constants
+
+```C++
+constexpr int OPENGL_MAJOR_VERSION = 4;
+constexpr int OPENGL_MINOR_VERSION = 4;
+constexpr int WINDOW_WIDTH = 800;
+constexpr int WINDOW_HEIGHT = 400;
+constexpr float BACKGROUND_COLOR[4] = { 0.1f, 0.2f, 0.3f, 1.0f };
+
+constexpr float FOV_DEGREES_Y_AXIS = 45.0f;
+constexpr float NEAR_PLANE = 0.1f;
+constexpr float FAR_PLANE = 100.0f;
+
+// Global changable parameters
+int g_framebufferWidth = WINDOW_WIDTH;
+int g_framebufferHeight = WINDOW_HEIGHT;
+```
+
+Not a lot of stuff to discuss here, mainly keep an eye on these 3 constants:
+
+```C++
+constexpr float FOV_DEGREES_Y_AXIS = 45.0f;
+constexpr float NEAR_PLANE = 0.1f;
+constexpr float FAR_PLANE = 100.0f;
+```
+
+In this lesson (and maybe a few later lessons) we will FOV, near and far planes as constants. In this lessons I decided to make these constants because our end goal is a static frame of a 3D pyramid.
+
+
+### Structs and Functions
+
+```C++
+struct Vertex
+{
+    glm::vec3 position;
+    glm::vec4 color;
+};
+```
+
+Since vertices are objects which can have componenets, like positions, colors and, later, normals and etc., we need to create a seaparate struct for it with all those componenets as members for it. This way it will be easier to manage verticies in the future. 
+
+```C++
+glm::mat4 CreateRotationX3D(float angleInRadians);
+glm::mat4 CreateRotationY3D(float angleInRadians);
+glm::mat4 CreateRotationZ3D(float angleInRadians);
+glm::mat4 CreateScale3D(const glm::vec3& scale);
+```
+
+These functions serve the same purpose as they did in lesson 4. The only difference is that these functions are suited to work in 3D environment.
+
+```C++
+void framebufferSizeCallback(GLFWwindow* window, int width, int height);
+int CompileShader(const std::string& source, unsigned int shaderID);
+unsigned int CreateShaderProgram(const std::string& vertexSource, const std::string& fragmentSource);
+```
+
+These functions are exactly the same as in the previous lessons.
+
+
+### int main()
+
+```C++
+    // Pyramid is comprised of 5 vertices
+    const glm::vec3 top = { 0.0f, 0.35f, 0.0f };
+    const glm::vec3 frontLeft = { -0.25f, -0.25f, 0.25f };
+    const glm::vec3 frontRight = { 0.25f, -0.25f, 0.25f };
+    const glm::vec3 backLeft = { -0.25f, -0.25f, -0.25f };
+    const glm::vec3 backRight = { 0.25f, -0.25f, -0.25f };
+
+    // Each side of the pyramid will have it's own unique color
+    const glm::vec4 neonBlue1 = { 0.0f, 0.3f, 0.8f, 1.0f };
+    const glm::vec4 neonBlue2 = { 0.0f, 0.7f, 1.0f, 1.0f };
+    const glm::vec4 neonGreen = { 0.2f, 1.0f, 0.2f, 1.0f };
+    const glm::vec4 neonPurple = { 0.8f, 0.0f, 1.0f, 1.0f };
+    const glm::vec4 baseBlue = { 0.0f, 0.4f, 0.8f, 1.0f };
+    const glm::vec4 basePurple = { 0.4f, 0.0f, 0.8f, 1.0f };
+
+    const std::vector<Vertex> vertices =
+    {
+        // Front face
+        { top, neonBlue1 },        // 0: top
+        { frontLeft, neonBlue2 },  // 1: front-left
+        { frontRight, neonBlue2 }, // 2: front-right
+
+        // Right face
+        { top, neonGreen },        // 3: top
+        { frontRight, neonGreen }, // 4: front-right
+        { backRight, neonGreen },  // 5: back-right
+
+        // Back face
+        { top, neonPurple },       // 6: top
+        { backRight, neonPurple }, // 7: back-right
+        { backLeft, neonPurple },  // 8: back-left
+
+        // Left face
+        { top, neonBlue2 },        // 9: top
+        { backLeft, neonBlue1 },   // 10: back-left
+        { frontLeft, neonBlue1 },  // 11: front-left
+
+        // Base face - square
+        { frontLeft, baseBlue },    // 12: front-left
+        { backLeft, baseBlue },     // 13: back-left
+        { backRight, basePurple },  // 14: back-right
+        { frontRight, basePurple }  // 15: front-right
+    };
+```
+
+A pyramid has 5 vertices: 1 top and 4 comprising the base. Since we are in 3D, each vertex position is comprised of 3 numbers (x, y, z). Also, notice, that each vertex is defined in local space (local to pyramid itself).
+
+Colors for this lesson were chosen such that yo ucould visually see that a frame is showing a 3D pyramid. Since we still have no way to rotate, zoom in / out the view, I had to think of a way to use colors which would indicate that an objects is actually a 3D object.
+
+Vertices vector is the simplest way in how can we group 5 pyramid vertices into a single entity (vector). In later lessons, I would suggest using not a standalone vector, but an OOP (object oriented programming) approach, where every single shape would have it's own class or a struct.
+
+The goal of this code block is to construct a vector which contains all 5 vertices that define a single pyramid, where each vertex has a postion and a collor assigned to it.
+
+
+### VAO VBO Setup
+
+```C++
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(
+        GL_ARRAY_BUFFER,
+        static_cast<GLsizeiptr>(vertices.size() * sizeof(Vertex)),
+        vertices.data(),
+        GL_STATIC_DRAW
+    );
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glBufferData(
+        GL_ELEMENT_ARRAY_BUFFER,
+        static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned int)),
+        indices.data(),
+        GL_STATIC_DRAW
+    );
+
+    glVertexAttribPointer(
+        0,
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+        sizeof(Vertex),
+        reinterpret_cast<void*>(offsetof(Vertex, position))
+    );
+    glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(
+        1,
+        4,
+        GL_FLOAT,
+        GL_FALSE,
+        sizeof(Vertex),
+        reinterpret_cast<void*>(offsetof(Vertex, color))
+    );
+    glEnableVertexAttribArray(1);
+```
