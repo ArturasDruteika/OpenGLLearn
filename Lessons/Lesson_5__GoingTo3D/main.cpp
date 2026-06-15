@@ -322,14 +322,21 @@ int main()
         return -1;
     }
 
+    // Angles
     const float rotationAngleX = glm::radians(-20.0f);
     const float rotationAngleY = glm::radians(35.0f);
     const float rotationAngleZ = glm::radians(0.0f);
-    const glm::vec3 scale = { 1.4f, 1.4f, 1.4f };
+    
+    // Camera position and up direction
+    const glm::vec3 baseCameraPosition = { 0.0f, 0.0f, 2.5f };
+    const glm::vec3 baseCameraUp = { 0.0f, 1.0f, 0.0f };
 
+    // Rotation matrices
     const glm::mat4 rotateX3D = CreateRotationX3D(rotationAngleX);
     const glm::mat4 rotateY3D = CreateRotationY3D(rotationAngleY);
     const glm::mat4 rotateZ3D = CreateRotationZ3D(rotationAngleZ);
+
+    const glm::vec3 scale = { 1.4f, 1.4f, 1.4f };
     const glm::mat4 scale3D = CreateScale3D(scale);
 
     // Rotation matrix multiplication sequence rule: R = Ry * Rx * Rz
@@ -338,8 +345,6 @@ int main()
 
     const glm::mat4 cameraRotation3D = rotateY3D * rotateX3D * rotateZ3D;
     const glm::mat4 inverseRotation3D = glm::transpose(cameraRotation3D);
-    const glm::vec3 baseCameraPosition = { 0.0f, 0.0f, 2.5f };
-    const glm::vec3 baseCameraUp = { 0.0f, 1.0f, 0.0f };
 
     const glm::vec3 cameraPosition = glm::vec3(inverseRotation3D * glm::vec4(baseCameraPosition, 1.0f));
     const glm::vec3 cameraUp = glm::normalize(glm::vec3(inverseRotation3D * glm::vec4(baseCameraUp, 0.0f)));

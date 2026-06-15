@@ -1569,3 +1569,95 @@ The goal of this code block is to construct a vector which contains all 5 vertic
     );
     glEnableVertexAttribArray(1);
 ```
+
+Kepp an eye that now for the buffer size and stride use `Vertex` struct. This just shows, why having a single entity struct for vertex helps us to manage code easier. Instead of doing:
+
+```C++
+glBufferData(
+    GL_ARRAY_BUFFER,
+    static_cast<GLsizeiptr>(vertices.size() * sizeof(glm::vec3) + vertices.size() * sizeof(glm::vec4)),
+    vertices.data(),
+    GL_STATIC_DRAW
+);
+```
+
+we can use `Vertex` struct directly:
+
+```C++
+static_cast<GLsizeiptr>(vertices.size() * sizeof(Vertex))
+```
+
+Other than this, all other ioerations are explained in the previous lessons.
+
+
+### Shaders
+
+```C++
+    std::string vertexShaderSource;
+    std::string fragmentShaderSource;
+
+    std::filesystem::path vertexShaderPath = "shaders/vertex.glsl";
+    std::filesystem::path fragmentShaderPath = "shaders/fragment.glsl";
+
+    try
+    {
+        vertexShaderSource = Orion::Utils::FileOperations::LoadFileAsString(vertexShaderPath);
+        fragmentShaderSource = Orion::Utils::FileOperations::LoadFileAsString(fragmentShaderPath);
+    }
+    catch (const std::exception& exception)
+    {
+        spdlog::error("Failed to load shader files: {}", exception.what());
+        glDeleteVertexArrays(1, &vao);
+        glDeleteBuffers(1, &vbo);
+        glDeleteBuffers(1, &ebo);
+        glfwDestroyWindow(pWindow);
+        glfwTerminate();
+        return -1;
+    }
+
+    unsigned int shaderProgram = CreateShaderProgram(vertexShaderSource, fragmentShaderSource);
+    if (shaderProgram == 0)
+    {
+        glDeleteVertexArrays(1, &vao);
+        glDeleteBuffers(1, &vbo);
+        glDeleteBuffers(1, &ebo);
+        glfwDestroyWindow(pWindow);
+        glfwTerminate();
+        return -1;
+    }
+```
+
+Also, the same piece if code that we have seen in the previous lessons. No need to talk about this again.
+
+
+### Camera
+
+``` C++
+// Angles
+const float rotationAngleX = glm::radians(-20.0f);
+const float rotationAngleY = glm::radians(35.0f);
+const float rotationAngleZ = glm::radians(0.0f);
+
+// Camera position and up direction
+const glm::vec3 baseCameraPosition = { 0.0f, 0.0f, 2.5f };
+const glm::vec3 baseCameraUp = { 0.0f, 1.0f, 0.0f };
+
+// Rotation matrices
+const glm::mat4 rotateX3D = CreateRotationX3D(rotationAngleX);
+const glm::mat4 rotateY3D = CreateRotationY3D(rotationAngleY);
+const glm::mat4 rotateZ3D = CreateRotationZ3D(rotationAngleZ);
+
+const glm::mat4 cameraRotation3D = rotateY3D * rotateX3D * rotateZ3D;
+const glm::mat4 inverseRotation3D = glm::transpose(cameraRotation3D);
+
+const glm::vec3 cameraPosition = glm::vec3(inverseRotation3D * glm::vec4(baseCameraPosition, 1.0f));
+const glm::vec3 cameraUp = glm::normalize(glm::vec3(inverseRotation3D * glm::vec4(baseCameraUp, 0.0f)));
+
+const glm::mat4 view = glm::lookAt(
+    cameraPosition,
+    glm::vec3(0.0f, 0.0f, 0.0f),
+    cameraUp
+);
+```
+
+This is the first piece of code that actualy is new to us. This is what we need in order to correctly create a view matrix, which is going to be used later for the MVP matrix.
