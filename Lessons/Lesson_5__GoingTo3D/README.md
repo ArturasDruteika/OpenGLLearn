@@ -1661,3 +1661,26 @@ const glm::mat4 view = glm::lookAt(
 ```
 
 This is the first piece of code that actualy is new to us. This is what we need in order to correctly create a view matrix, which is going to be used later for the MVP matrix.
+
+Let's analyze block by block:
+
+```C++
+// Angles
+const float rotationAngleX = glm::radians(-20.0f);
+const float rotationAngleY = glm::radians(35.0f);
+const float rotationAngleZ = glm::radians(0.0f);
+```
+
+Here we are telling how camera is rotated in 3D environment. Here, forget about camera postiion, it should not bother you because we are performing a camera rotation in camera local space. When we create camera and while we still have not added not rotations to the camera the camera basis vectors point like this:
+
+* Camera Right (X axis): (1, 0, 0)
+* Camera Up (Y axis): (0, 1, 0)
+* Camera Forward (-Z axis): (0, 0, 1)
+
+If we change camera rotation:
+
+* rotation along X axis --> change right axis
+* rotation along Y axis --> change forward axis
+* rotation along Z axis --> change up axis
+
+Notice an important feature that changing rotation along the Y axis changes not the up vector but the forward and changing rotation along the Z axis changes not the forward but the up vector. This is an important feature where a lot of beginners make mistakes.
