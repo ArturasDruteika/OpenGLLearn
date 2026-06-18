@@ -819,7 +819,9 @@ At this stage, we still have no notion of screens or pixels. Because of that, it
 Another important thing to understand is why the scaling factor is the inverse:
 
 $
-    \frac{1}{top}
+    \begin{aligned} 
+        \frac{1}{top}
+    \end{aligned} 
 $
 
 The intuition is actually very simple. The larger the visible region is, the more we must shrink coordinates in order to fit that region into normalized device coordinates (NDC). Likewise, the smaller the visible region is, the more we must magnify coordinates.
@@ -860,7 +862,9 @@ At this point, there is still no final screen-space conversion. The scaling fact
 Why Does the Matrix Use Aspect Ratio? The top-left part of the projection matrix contains the following term:
 
 $
-    \frac{1}{\tan\left(\frac{fov}{2}\right)\cdot aspect}
+    \begin{aligned} 
+        \frac{1}{\tan\left(\frac{fov}{2}\right)\cdot aspect}
+    \end{aligned} 
 $
 
 A natural question arises: Why is the `aspect` ratio included only in the horizontal scaling term?
@@ -869,7 +873,9 @@ The answer is simple: monitors are usually rectangular, not square.
 The aspect ratio is defined as:
 
 $
-    aspect = \frac{width}{height}
+    \begin{aligned} 
+        aspect = \frac{width}{height}
+    \end{aligned} 
 $
 
 For example, a monitor with resolution:
@@ -881,26 +887,34 @@ $
 has an aspect ratio of:
 
 $
-    aspect = \frac{1920}{1200} = 1.6
+    \begin{aligned} 
+        aspect = \frac{1920}{1200} = 1.6
+    \end{aligned} 
 $
 
 meaning that the screen is 1.6 times wider than it is tall. The `fov` value in the projection matrix usually represents the **vertical field of view**. From earlier, we already know that:
 
 $
-    \frac{1}{\tan\left(\frac{\theta}{2}\right)}
+    \begin{aligned} 
+        \frac{1}{\tan\left(\frac{\theta}{2}\right)}
+    \end{aligned} 
 $
 
 gives the vertical projection scaling factor. However, once the vertical scaling factor is known, we can compute the horizontal scaling factor using the aspect ratio. The horizontal scaling becomes:
 
 $
-    f_x = \frac{f_y}{aspect}
+    \begin{aligned} 
+        f_x = \frac{f_y}{aspect}
+    \end{aligned} 
 $
 
 or equivalently:
 
 $
-    f_x = f_y \cdot \frac{height}{width}\\
-    f_x = \frac{1} {\tan\left(\frac{\theta}{2}\right)\cdot aspect}
+    \begin{aligned} 
+        & f_x = f_y \cdot \frac{height}{width}\\
+        & f_x = \frac{1} {\tan\left(\frac{\theta}{2}\right)\cdot aspect}
+    \end{aligned} 
 $
 
 #### Why Divide by Aspect?
@@ -1104,8 +1118,18 @@ These 3 equations essentially tell which vertices are visible. If all 3 componen
 
 How does this come into play with the 3-rd row of the transformation matrix? Well, these 3 equations have 4 unique terms: $x_\text{clip}, y_\text{clip}, z_\text{clip}, w_\text{clip}$. We know what 3 of them actually are (i.e.: $x_\text{clip}, y_\text{clip}, w_\text{clip}$). To remind you what these are:
 
-* $x_\text{clip} = \frac{1}{\tan\left(\frac{fov}{2}\right) \cdot aspect} \cdot x_\text{view} = \frac{x_\text{view}}{\tan\left(\frac{fov}{2}\right) \cdot aspect}$
-* $y_\text{clip} = \frac{1}{\tan\left(\frac{fov}{2}\right)} \cdot y_\text{view} = \frac{y_\text{view}}{\tan\left(\frac{fov}{2}\right)}$
+* 
+    $
+        \begin{aligned} 
+        x_\text{clip} = \frac{1}{\tan\left(\frac{fov}{2}\right) \cdot aspect} \cdot x_\text{view} = \frac{x_\text{view}}{\tan\left(\frac{fov}{2}\right) \cdot aspect} 
+        \end{aligned} 
+    $
+* 
+    $
+        \begin{aligned} 
+            y_\text{clip} = \frac{1}{\tan\left(\frac{fov}{2}\right)} \cdot y_\text{view} = \frac{y_\text{view}}{\tan\left(\frac{fov}{2}\right)}
+        \end{aligned} 
+    $
 * $w_{\text{clip}} = -1 \cdot z_{\text{view}} = -z_\text{view}$
 
 The last remaining unknown term is $z_\text{clip}$.
@@ -1664,6 +1688,9 @@ This is the first piece of code that actualy is new to us. This is what we need 
 
 Let's analyze block by block:
 
+
+#### Rotations Around Axes
+
 ```C++
 // Angles
 const float rotationAngleX = glm::radians(-20.0f);
@@ -1679,8 +1706,63 @@ Here we are telling how camera is rotated in 3D environment. Here, forget about 
 
 If we change camera rotation:
 
-* rotation along X axis --> change right axis
-* rotation along Y axis --> change forward axis
-* rotation along Z axis --> change up axis
+* rotation along X axis --> changes forward and up axes
+* rotation along Y axis --> changes right and forward axes
+* rotation along Z axis --> change right and up axes
 
-Notice an important feature that changing rotation along the Y axis changes not the up vector but the forward and changing rotation along the Z axis changes not the forward but the up vector. This is an important feature where a lot of beginners make mistakes.
+Think about this intuitively, look straight (forward vector: -z axis), so that your top of the head would point up (up vector: y axis) and extend your arm to the right of you (right vector: x axis). Now rotate your body around your extended arm, or to be precise, rotate in such a way that arm keeps pointing to the right. While doing so, you keep your right arm intact, but your forward and up vectors start to chage. If you rotated your body $90^\circ$, so that you would look directly into the floor and your head would point where you eyes pointed before, that would mean that your right vector is still the same, but your forward and up vectors changed.
+
+You can try to do the same experiment by rotating yourself around forward and up directions and see how each rotations change what. Also, you could try to combine rotations, where first you rotate around x axis, then around -z and etc. But while performing these "experiments" please remember the rotations rule, where first you rotate around X axis, then around Y and only then around the Z axis.
+
+I hope this image elaborates a little more:
+
+![camera_rotations_around_different_axes](Assets/camera_rotations_around_different_axes.png)
+
+#### Rotation Matrices
+
+```C++
+// Rotation matrices
+const glm::mat4 rotateX3D = CreateRotationX3D(rotationAngleX);
+const glm::mat4 rotateY3D = CreateRotationY3D(rotationAngleY);
+const glm::mat4 rotateZ3D = CreateRotationZ3D(rotationAngleZ);
+```
+
+Remember that when we apply rotations, that essentially means that we are rotating the entirety of the camera's local space. That means, that we are rotating space itself. And if you remember, rotation is a transformation. Because rotation is a transformation, in order to represent it we need matrices.
+
+In the previous lesson I showed you how 2D rotation matrices look like, but now we are dealing with a 3D space. In 3D the rotation matrices look like this:
+
+* Rotation alongside X axis:
+
+    $
+        R_x(\theta)=
+        \begin{bmatrix}
+        1 & 0 & 0 & 0 \\
+        0 & \cos\theta & -\sin\theta & 0 \\
+        0 & \sin\theta & \cos\theta & 0 \\
+        0 & 0 & 0 & 1
+        \end{bmatrix}
+    $
+
+* Rotation alongside Y axis:
+
+    $
+        R_y(\theta)=
+        \begin{bmatrix}
+        \cos\theta & 0 & \sin\theta & 0 \\
+        0 & 1 & 0 & 0 \\
+        -\sin\theta & 0 & \cos\theta & 0 \\
+        0 & 0 & 0 & 1
+        \end{bmatrix}
+    $
+
+* Rotation alongside -Z axis:
+
+    $
+        R_z(\theta)=
+        \begin{bmatrix}
+        \cos\theta & -\sin\theta & 0 & 0 \\
+        \sin\theta & \cos\theta & 0 & 0 \\
+        0 & 0 & 1 & 0 \\
+        0 & 0 & 0 & 1
+        \end{bmatrix}
+    $
