@@ -343,7 +343,7 @@ int main()
     // Keep the same final framing, but apply this transform to the camera instead of the model.
     const glm::mat4 model = scale3D;
 
-    const glm::mat4 cameraRotation3D = rotateY3D * rotateX3D * rotateZ3D;
+    const glm::mat4 cameraRotation3D = rotateZ3D * rotateY3D * rotateX3D;
     const glm::mat4 inverseRotation3D = glm::transpose(cameraRotation3D);
 
     const glm::vec3 cameraPosition = glm::vec3(inverseRotation3D * glm::vec4(baseCameraPosition, 1.0f));

@@ -1725,6 +1725,8 @@ I hope this image elaborates a little more:
 const glm::mat4 rotateX3D = CreateRotationX3D(rotationAngleX);
 const glm::mat4 rotateY3D = CreateRotationY3D(rotationAngleY);
 const glm::mat4 rotateZ3D = CreateRotationZ3D(rotationAngleZ);
+
+const glm::mat4 cameraRotation3D = rotateZ3D * rotateY3D * rotateX3D;
 ```
 
 Remember that when we apply rotations, that essentially means that we are rotating the entirety of the camera's local space. That means, that we are rotating space itself. And if you remember, rotation is a transformation. Because rotation is a transformation, in order to represent it we need matrices.
@@ -1734,11 +1736,11 @@ In the previous lesson I showed you how 2D rotation matrices look like, but now 
 * Rotation alongside X axis:
 
     $
-        R_x(\theta)=
+        R_x(\theta_x)=
         \begin{bmatrix}
         1 & 0 & 0 & 0 \\
-        0 & \cos\theta & -\sin\theta & 0 \\
-        0 & \sin\theta & \cos\theta & 0 \\
+        0 & \cos\theta_x & -\sin\theta_x & 0 \\
+        0 & \sin\theta_x & \cos\theta_x & 0 \\
         0 & 0 & 0 & 1
         \end{bmatrix}
     $
@@ -1746,11 +1748,11 @@ In the previous lesson I showed you how 2D rotation matrices look like, but now 
 * Rotation alongside Y axis:
 
     $
-        R_y(\theta)=
+        R_y(\theta_y)=
         \begin{bmatrix}
-        \cos\theta & 0 & \sin\theta & 0 \\
+        \cos\theta_y & 0 & \sin\theta_y & 0 \\
         0 & 1 & 0 & 0 \\
-        -\sin\theta & 0 & \cos\theta & 0 \\
+        -\sin\theta_y & 0 & \cos\theta_y & 0 \\
         0 & 0 & 0 & 1
         \end{bmatrix}
     $
@@ -1758,11 +1760,29 @@ In the previous lesson I showed you how 2D rotation matrices look like, but now 
 * Rotation alongside -Z axis:
 
     $
-        R_z(\theta)=
+        R_z(\theta_z)=
         \begin{bmatrix}
-        \cos\theta & -\sin\theta & 0 & 0 \\
-        \sin\theta & \cos\theta & 0 & 0 \\
+        \cos\theta_z & -\sin\theta_z & 0 & 0 \\
+        \sin\theta_z & \cos\theta_z & 0 & 0 \\
         0 & 0 & 1 & 0 \\
         0 & 0 & 0 & 1
         \end{bmatrix}
     $
+
+Again, the intuition and the reason why these matrices look the way they do can be found by wathcing [this video](https://www.youtube.com/watch?v=Ta8cKqltPfU). On this video, it is only discussed about 2D matrices, but realize one thing, that a rotation around a specific axis transforms the remaining 2 axes. That is why if you look at these matrices, you can notice that the axis, along which we apply rotation, does not transform. 
+
+For example, if we look at the matrix for the rotation along the Y axis. You can see, that the second row does not transform the Y coordinates of a vector at all. Same for other axis for other rotations.
+
+Since we have rotations in matrix form, we can now combine them into a single entity.
+
+```C++
+const glm::mat4 cameraRotation3D = rotateZ3D * rotateY3D * rotateX3D;
+```
+
+`cameraRotation3D` is has all the rotations "encoded" into itself. Also, notice the order of multiplications, it really matters. Remember that when combining matrices, you have to look from the right side to know which operation happens first. So in this case:
+
+1. Apply X rotation
+2. Apply Y rotation
+3. Apply Z rotation
+
+
