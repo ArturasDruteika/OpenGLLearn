@@ -1671,7 +1671,7 @@ const glm::mat4 rotateX3D = CreateRotationX3D(rotationAngleX);
 const glm::mat4 rotateY3D = CreateRotationY3D(rotationAngleY);
 const glm::mat4 rotateZ3D = CreateRotationZ3D(rotationAngleZ);
 
-const glm::mat4 cameraRotation3D = rotateY3D * rotateX3D * rotateZ3D;
+const glm::mat4 cameraRotation3D =  rotateZ3D * rotateY3D * rotateX3D;
 const glm::mat4 inverseRotation3D = glm::transpose(cameraRotation3D);
 
 const glm::vec3 cameraPosition = glm::vec3(inverseRotation3D * glm::vec4(baseCameraPosition, 1.0f));
@@ -1691,6 +1691,20 @@ Let's analyze block by block:
 
 #### Rotations Around Axes
 
+There are 2 types of possible camera rotations in rendering:
+
+1. Rotate camera itself
+2. Rotate camera around a point
+
+Lets's discuss first discuss the case where the camera is rotated itself. A quick disclairmer, the code part of this lesson in for when the camera is rotated around a specific point, but in order to understand it better we will leave it for later. 
+
+I also want to say that both types of camera rotations are very useful in rendering. Rotating camera itself allows looking in all directions at specific camera position, but rotating camera around an object allows to inspect that object from all angles.
+
+Just remember, that a lot of the camera code from this lesson works in both cases, so for explaining rotations for camera itself, I will use code from this lesson. Let's start.
+
+
+#### Rotating Camera Itself
+
 ```C++
 // Angles
 const float rotationAngleX = glm::radians(-20.0f);
@@ -1698,11 +1712,11 @@ const float rotationAngleY = glm::radians(35.0f);
 const float rotationAngleZ = glm::radians(0.0f);
 ```
 
-Here we are telling how camera is rotated in 3D environment. Here, forget about camera postiion, it should not bother you because we are performing a camera rotation in camera local space. When we create camera and while we still have not added not rotations to the camera the camera basis vectors point like this:
+Here we are telling how camera is rotated in 3D environment. Here, forget about camera postion, it should not bother you because we are performing a camera rotation in camera local space. When we create camera and while we still have not added not rotations to the camera the camera basis vectors point like this:
 
 * Camera Right (X axis): (1, 0, 0)
 * Camera Up (Y axis): (0, 1, 0)
-* Camera Forward (-Z axis): (0, 0, 1)
+* Camera Forward (-Z axis): (0, 0, -1)
 
 If we change camera rotation:
 
@@ -1712,7 +1726,7 @@ If we change camera rotation:
 
 Think about this intuitively, look straight (forward vector: -z axis), so that your top of the head would point up (up vector: y axis) and extend your arm to the right of you (right vector: x axis). Now rotate your body around your extended arm, or to be precise, rotate in such a way that arm keeps pointing to the right. While doing so, you keep your right arm intact, but your forward and up vectors start to chage. If you rotated your body $90^\circ$, so that you would look directly into the floor and your head would point where you eyes pointed before, that would mean that your right vector is still the same, but your forward and up vectors changed.
 
-You can try to do the same experiment by rotating yourself around forward and up directions and see how each rotations change what. Also, you could try to combine rotations, where first you rotate around x axis, then around -z and etc. But while performing these "experiments" please remember the rotations rule, where first you rotate around X axis, then around Y and only then around the Z axis.
+You can try to do the same experiment by rotating yourself around forward and up directions and see how each rotations change what. Also, you could try to combine rotations, where first you rotate around x axis, then around -z and etc. But while performing these "experiments" please remember the rotations rule, where first you rotate around X axis, then around Y and only then around the Z axis. This is not a super strict rule, but a guideline, because it is a convention to rotate in this order $\theta_x \rightarrow \theta_y \rightarrow \theta_z$.
 
 I hope this image elaborates a little more:
 
@@ -1769,7 +1783,7 @@ In the previous lesson I showed you how 2D rotation matrices look like, but now 
         \end{bmatrix}
     $
 
-Again, the intuition and the reason why these matrices look the way they do can be found by wathcing [this video](https://www.youtube.com/watch?v=Ta8cKqltPfU). On this video, it is only discussed about 2D matrices, but realize one thing, that a rotation around a specific axis transforms the remaining 2 axes. That is why if you look at these matrices, you can notice that the axis, along which we apply rotation, does not transform. 
+Again, the intuition and the reason why these matrices look the way they do can be found by watching [this video](https://www.youtube.com/watch?v=Ta8cKqltPfU). On this video, it is only discussed about 2D matrices, but realize one thing, that a rotation around a specific axis transforms the remaining 2 axes. That is why if you look at these matrices, you can notice that the axis, along which we apply rotation, does not transform. 
 
 For example, if we look at the matrix for the rotation along the Y axis. You can see, that the second row does not transform the Y coordinates of a vector at all. Same for other axis for other rotations.
 
@@ -1785,4 +1799,17 @@ const glm::mat4 cameraRotation3D = rotateZ3D * rotateY3D * rotateX3D;
 2. Apply Y rotation
 3. Apply Z rotation
 
+#### Rotating Camera Around an Object
 
+First, I want to show you what I mean by camera rotating around an object:
+
+![camera_rotation_around_origin](Assets/camera_rotation_around_origin.png)
+
+The second type of camera rotation code, for the most part, is kind of the same, but the ending is a bit different. We know what rotation matrices do, but let's investigate this part one more time:
+
+```C++
+const glm::mat4 cameraRotation3D = rotateZ3D * rotateY3D * rotateX3D;
+const glm::mat4 inverseRotation3D = glm::transpose(cameraRotation3D);
+```
+
+We know what does the `cameraRotation3D` do, but what about the `inverseRotation3D`? 
