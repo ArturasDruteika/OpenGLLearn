@@ -209,9 +209,9 @@ int main()
         { frontRight, neonBlue2 }, // 2: front-right
 
         // Right face
-        { top, neonGreen },        // 3: top
+        { top, neonBlue1 },        // 3: top
         { frontRight, neonGreen }, // 4: front-right
-        { backRight, neonGreen },  // 5: back-right
+        { backRight, neonBlue2 },  // 5: back-right
 
         // Back face
         { top, neonPurple },       // 6: top
@@ -323,8 +323,8 @@ int main()
     }
 
     // Angles
-    const float rotationAngleX = glm::radians(-20.0f);
-    const float rotationAngleY = glm::radians(35.0f);
+    const float rotationAngleX = glm::radians(20.0f);
+    const float rotationAngleY = glm::radians(-35.0f);
     const float rotationAngleZ = glm::radians(0.0f);
     
     // Camera position and up direction
@@ -344,10 +344,9 @@ int main()
     const glm::mat4 model = scale3D;
 
     const glm::mat4 cameraRotation3D = rotateZ3D * rotateY3D * rotateX3D;
-    const glm::mat4 inverseRotation3D = glm::transpose(cameraRotation3D);
 
-    const glm::vec3 cameraPosition = glm::vec3(inverseRotation3D * glm::vec4(baseCameraPosition, 1.0f));
-    const glm::vec3 cameraUp = glm::normalize(glm::vec3(inverseRotation3D * glm::vec4(baseCameraUp, 0.0f)));
+    const glm::vec3 cameraPosition = glm::vec3(cameraRotation3D * glm::vec4(baseCameraPosition, 1.0f));
+    const glm::vec3 cameraUp = glm::normalize(glm::vec3(cameraRotation3D * glm::vec4(baseCameraUp, 0.0f)));
 
     const glm::mat4 view = glm::lookAt(
         cameraPosition,
