@@ -322,19 +322,52 @@ int main()
         return -1;
     }
 
-    // Angles
-    const float rotationAngleX = glm::radians(20.0f);
-    const float rotationAngleY = glm::radians(-35.0f);
-    const float rotationAngleZ = glm::radians(0.0f);
-    
-    // Camera position and up direction
+    // Camera local angles
+    const float cameraRotationAngleX = glm::radians(5.0f);   // pitch
+    const float cameraRotationAngleY = glm::radians(-5.0f);   // yaw
+    const float cameraRotationAngleZ = glm::radians(90.0f);  // roll
+
+    // Camera orbit angles around origin
+    const float orbitRotationAngleX = glm::radians(20.0f);
+    const float orbitRotationAngleY = glm::radians(-35.0f);
+    const float orbitRotationAngleZ = glm::radians(0.0f);
+
+    // Camera base transform
     const glm::vec3 baseCameraPosition = { 0.0f, 0.0f, 2.5f };
+    const glm::vec3 baseCameraForward = { 0.0f, 0.0f, -1.0f };
     const glm::vec3 baseCameraUp = { 0.0f, 1.0f, 0.0f };
 
-    // Rotation matrices
-    const glm::mat4 rotateX3D = CreateRotationX3D(rotationAngleX);
-    const glm::mat4 rotateY3D = CreateRotationY3D(rotationAngleY);
-    const glm::mat4 rotateZ3D = CreateRotationZ3D(rotationAngleZ);
+    // Camera local rotation matrices
+    const glm::mat4 cameraRotateX3D = CreateRotationX3D(cameraRotationAngleX);
+    const glm::mat4 cameraRotateY3D = CreateRotationY3D(cameraRotationAngleY);
+    const glm::mat4 cameraRotateZ3D = CreateRotationZ3D(cameraRotationAngleZ);
+
+    // Camera orbit rotation matrices
+    const glm::mat4 orbitRotateX3D = CreateRotationX3D(orbitRotationAngleX);
+    const glm::mat4 orbitRotateY3D = CreateRotationY3D(orbitRotationAngleY);
+    const glm::mat4 orbitRotateZ3D = CreateRotationZ3D(orbitRotationAngleZ);
+
+    // Local camera rotation: X first, then Y, then Z
+    const glm::mat4 cameraRotation3D = cameraRotateZ3D * cameraRotateY3D * cameraRotateX3D;
+
+    // Orbit rotation: X first, then Y, then Z
+    const glm::mat4 orbitRotation3D = orbitRotateZ3D * orbitRotateY3D * orbitRotateX3D;
+
+    // 1. Move camera around origin
+    const glm::vec3 cameraPosition = glm::vec3(orbitRotation3D * glm::vec4(baseCameraPosition, 1.0f));
+
+    // 2. Apply orbit rotation to base direction, then apply camera local rotation
+    const glm::mat4 finalCameraRotation3D = orbitRotation3D * cameraRotation3D;
+
+    const glm::vec3 cameraForward = glm::normalize(glm::vec3(finalCameraRotation3D * glm::vec4(baseCameraForward, 0.0f)));
+
+    const glm::vec3 cameraUp = glm::normalize(glm::vec3(finalCameraRotation3D * glm::vec4(baseCameraUp, 0.0f)));
+
+    const glm::mat4 view = glm::lookAt(
+        cameraPosition,
+        cameraPosition + cameraForward,
+        cameraUp
+    );
 
     const glm::vec3 scale = { 1.4f, 1.4f, 1.4f };
     const glm::mat4 scale3D = CreateScale3D(scale);
@@ -342,17 +375,6 @@ int main()
     // Rotation matrix multiplication sequence rule: R = Ry * Rx * Rz
     // Keep the same final framing, but apply this transform to the camera instead of the model.
     const glm::mat4 model = scale3D;
-
-    const glm::mat4 cameraRotation3D = rotateZ3D * rotateY3D * rotateX3D;
-
-    const glm::vec3 cameraPosition = glm::vec3(cameraRotation3D * glm::vec4(baseCameraPosition, 1.0f));
-    const glm::vec3 cameraUp = glm::normalize(glm::vec3(cameraRotation3D * glm::vec4(baseCameraUp, 0.0f)));
-
-    const glm::mat4 view = glm::lookAt(
-        cameraPosition,
-        glm::vec3(0.0f, 0.0f, 0.0f),
-        cameraUp
-    );
 
     int mvpLocation = glGetUniformLocation(shaderProgram, "u_mvp");
     if (mvpLocation == -1)

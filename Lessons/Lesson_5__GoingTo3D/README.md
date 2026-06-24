@@ -1805,11 +1805,6 @@ First, I want to show you what I mean by camera rotating around an object:
 
 ![camera_rotation_around_origin](Assets/camera_rotation_around_origin.png)
 
-The second type of camera rotation code, for the most part, is kind of the same, but the ending is a bit different. We know what rotation matrices do, but let's investigate this part one more time:
+The rotation of camera around a point isn't conceptually very different from rotating camera itself. You still have to define angles in all 3 rotations, but now those angles are defined relative to the object you rotate camera around and not to camera itself. Before, angles were defined in camera space, now angles are defined for the world space. So the expression "rotate camera 30 degrees around X axis" means that rotation from the object's perspective. Remember that and if the same sentence comes up, first, ask yourself "is it the camera itself going to be rotated, or is the camera going to be rotated around an object?". 
 
-```C++
-const glm::mat4 cameraRotation3D = rotateZ3D * rotateY3D * rotateX3D;
-const glm::mat4 inverseRotation3D = glm::transpose(cameraRotation3D);
-```
-
-We know what does the `cameraRotation3D` do, but what about the `inverseRotation3D`? 
+Imagine a simple situation. You stand next to a brand ynew car. In this example the car is the object of reference and your head (i.e. your eyes) is the camera. If the camera would be rotated itself, that would mean that you just turn your head around, if the camera is rotated around an object, that would mean that you go around that car.
