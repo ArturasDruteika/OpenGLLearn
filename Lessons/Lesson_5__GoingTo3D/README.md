@@ -1657,29 +1657,50 @@ Also, the same piece if code that we have seen in the previous lessons. No need 
 ### Camera
 
 ``` C++
-// Angles
-const float rotationAngleX = glm::radians(-20.0f);
-const float rotationAngleY = glm::radians(35.0f);
-const float rotationAngleZ = glm::radians(0.0f);
+// Camera local angles
+const float cameraRotationAngleX = glm::radians(5.0f);   // pitch
+const float cameraRotationAngleY = glm::radians(-5.0f);   // yaw
+const float cameraRotationAngleZ = glm::radians(90.0f);  // roll
 
-// Camera position and up direction
+// Camera orbit angles around origin
+const float orbitRotationAngleX = glm::radians(20.0f);
+const float orbitRotationAngleY = glm::radians(-35.0f);
+const float orbitRotationAngleZ = glm::radians(0.0f);
+
+// Camera base transform
 const glm::vec3 baseCameraPosition = { 0.0f, 0.0f, 2.5f };
+const glm::vec3 baseCameraForward = { 0.0f, 0.0f, -1.0f };
 const glm::vec3 baseCameraUp = { 0.0f, 1.0f, 0.0f };
 
-// Rotation matrices
-const glm::mat4 rotateX3D = CreateRotationX3D(rotationAngleX);
-const glm::mat4 rotateY3D = CreateRotationY3D(rotationAngleY);
-const glm::mat4 rotateZ3D = CreateRotationZ3D(rotationAngleZ);
+// Camera local rotation matrices
+const glm::mat4 cameraRotateX3D = CreateRotationX3D(cameraRotationAngleX);
+const glm::mat4 cameraRotateY3D = CreateRotationY3D(cameraRotationAngleY);
+const glm::mat4 cameraRotateZ3D = CreateRotationZ3D(cameraRotationAngleZ);
 
-const glm::mat4 cameraRotation3D =  rotateZ3D * rotateY3D * rotateX3D;
-const glm::mat4 inverseRotation3D = glm::transpose(cameraRotation3D);
+// Camera orbit rotation matrices
+const glm::mat4 orbitRotateX3D = CreateRotationX3D(orbitRotationAngleX);
+const glm::mat4 orbitRotateY3D = CreateRotationY3D(orbitRotationAngleY);
+const glm::mat4 orbitRotateZ3D = CreateRotationZ3D(orbitRotationAngleZ);
 
-const glm::vec3 cameraPosition = glm::vec3(inverseRotation3D * glm::vec4(baseCameraPosition, 1.0f));
-const glm::vec3 cameraUp = glm::normalize(glm::vec3(inverseRotation3D * glm::vec4(baseCameraUp, 0.0f)));
+// Local camera rotation: X first, then Y, then Z
+const glm::mat4 cameraRotation3D = cameraRotateZ3D * cameraRotateY3D * cameraRotateX3D;
+
+// Orbit rotation: X first, then Y, then Z
+const glm::mat4 orbitRotation3D = orbitRotateZ3D * orbitRotateY3D * orbitRotateX3D;
+
+// 1. Move camera around origin
+const glm::vec3 cameraPosition = glm::vec3(orbitRotation3D * glm::vec4(baseCameraPosition, 1.0f));
+
+// 2. Apply orbit rotation to base direction, then apply camera local rotation
+const glm::mat4 finalCameraRotation3D = orbitRotation3D * cameraRotation3D;
+
+const glm::vec3 cameraForward = glm::normalize(glm::vec3(finalCameraRotation3D * glm::vec4(baseCameraForward, 0.0f)));
+
+const glm::vec3 cameraUp = glm::normalize(glm::vec3(finalCameraRotation3D * glm::vec4(baseCameraUp, 0.0f)));
 
 const glm::mat4 view = glm::lookAt(
     cameraPosition,
-    glm::vec3(0.0f, 0.0f, 0.0f),
+    cameraPosition + cameraForward,
     cameraUp
 );
 ```
@@ -1689,40 +1710,48 @@ This is the first piece of code that actualy is new to us. This is what we need 
 Let's analyze block by block:
 
 
-#### Rotations Around Axes
+#### Camera Rotations
 
-There are 2 types of possible camera rotations in rendering:
+In rendering, there are 2 ways of how to interpret the camera rotation:
 
 1. Rotate camera itself
-2. Rotate camera around a point
+2. Rotate camera around a point (orbiting)
 
-Lets's discuss first discuss the case where the camera is rotated itself. A quick disclairmer, the code part of this lesson in for when the camera is rotated around a specific point, but in order to understand it better we will leave it for later. 
-
-I also want to say that both types of camera rotations are very useful in rendering. Rotating camera itself allows looking in all directions at specific camera position, but rotating camera around an object allows to inspect that object from all angles.
-
-Just remember, that a lot of the camera code from this lesson works in both cases, so for explaining rotations for camera itself, I will use code from this lesson. Let's start.
+Lets's discuss first discuss the case where the camera is rotated itself. 
 
 
 #### Rotating Camera Itself
 
 ```C++
-// Angles
-const float rotationAngleX = glm::radians(-20.0f);
-const float rotationAngleY = glm::radians(35.0f);
-const float rotationAngleZ = glm::radians(0.0f);
+// Camera local angles
+const float cameraRotationAngleX = glm::radians(5.0f);   // pitch
+const float cameraRotationAngleY = glm::radians(-5.0f);   // yaw
+const float cameraRotationAngleZ = glm::radians(90.0f);  // roll
 ```
 
-Here we are telling how camera is rotated in 3D environment. Here, forget about camera postion, it should not bother you because we are performing a camera rotation in camera local space. When we create camera and while we still have not added not rotations to the camera the camera basis vectors point like this:
+Here we are defining the way camera is rotated around it's own axes. Forget about camera postion, it should not bother you because we are performing a camera rotation in camera local space. 
+
+In camera space (local space for camera) the basis vectors (X, Y, Z) point like this (again, it is a cnvention and not a strict rule):
 
 * Camera Right (X axis): (1, 0, 0)
 * Camera Up (Y axis): (0, 1, 0)
 * Camera Forward (-Z axis): (0, 0, -1)
 
-If we change camera rotation:
+This is the most default, basic camera there can be. It has no rotations. The camera position has no affect to this type of camera rotations. It does not matter, if you decide to define rotations before or after assigning a camera it's starting position. The fact of the matter is that once you have a camera, at some point in time you will start wanting to rotate it for many reasons, like looking up, down, left, right, tiltilng your head on your shoulder, combining up and right, or left and down. 
 
-* rotation along X axis --> changes forward and up axes
-* rotation along Y axis --> changes right and forward axes
-* rotation along Z axis --> change right and up axes
+To be able to do this, you have to define rotations in 3D space, for example:
+
+* $\theta_x$
+* $\theta_y$
+* $\theta_z$
+
+A natural question that poped into my head, when I first was learning these rotations was: "how to understand what a rotation alongsinde a specific axis feels like?". For a person, who was not exposed to rotations, the sentence "rotate around axis ..." feels confusing.
+
+A general rule for rotating around a specific axis is that the basis vector for that axis, after rotation, does not change. What do I mean by that? If we change a camera rotation:
+
+* along X axis --> changes forward and up axes
+* along Y axis --> changes right and forward axes
+* along Z axis --> change right and up axes
 
 Think about this intuitively, look straight (forward vector: -z axis), so that your top of the head would point up (up vector: y axis) and extend your arm to the right of you (right vector: x axis). Now rotate your body around your extended arm, or to be precise, rotate in such a way that arm keeps pointing to the right. While doing so, you keep your right arm intact, but your forward and up vectors start to chage. If you rotated your body $90^\circ$, so that you would look directly into the floor and your head would point where you eyes pointed before, that would mean that your right vector is still the same, but your forward and up vectors changed.
 
@@ -1732,15 +1761,13 @@ I hope this image elaborates a little more:
 
 ![camera_rotations_around_different_axes](Assets/camera_rotations_around_different_axes.png)
 
-#### Rotation Matrices
+#### Camera Rotation Matrices
 
 ```C++
-// Rotation matrices
-const glm::mat4 rotateX3D = CreateRotationX3D(rotationAngleX);
-const glm::mat4 rotateY3D = CreateRotationY3D(rotationAngleY);
-const glm::mat4 rotateZ3D = CreateRotationZ3D(rotationAngleZ);
-
-const glm::mat4 cameraRotation3D = rotateZ3D * rotateY3D * rotateX3D;
+// Camera local rotation matrices
+const glm::mat4 cameraRotateX3D = CreateRotationX3D(cameraRotationAngleX);
+const glm::mat4 cameraRotateY3D = CreateRotationY3D(cameraRotationAngleY);
+const glm::mat4 cameraRotateZ3D = CreateRotationZ3D(cameraRotationAngleZ);
 ```
 
 Remember that when we apply rotations, that essentially means that we are rotating the entirety of the camera's local space. That means, that we are rotating space itself. And if you remember, rotation is a transformation. Because rotation is a transformation, in order to represent it we need matrices.
@@ -1783,21 +1810,61 @@ In the previous lesson I showed you how 2D rotation matrices look like, but now 
         \end{bmatrix}
     $
 
-Again, the intuition and the reason why these matrices look the way they do can be found by watching [this video](https://www.youtube.com/watch?v=Ta8cKqltPfU). On this video, it is only discussed about 2D matrices, but realize one thing, that a rotation around a specific axis transforms the remaining 2 axes. That is why if you look at these matrices, you can notice that the axis, along which we apply rotation, does not transform. 
+Again, the intuition and the reason why these matrices look the way they do can be found by watching [this video](https://www.youtube.com/watch?v=Ta8cKqltPfU). On this video, it is only discussed about 2D matrices, but realize one thing, a rotation around a specific axis transforms the remaining 2 axes. That is why if you look at these matrices, you can notice that the axis, along which we apply rotation, does not transform it's basis vector. 
 
 For example, if we look at the matrix for the rotation along the Y axis. You can see, that the second row does not transform the Y coordinates of a vector at all. Same for other axis for other rotations.
 
 Since we have rotations in matrix form, we can now combine them into a single entity.
 
 ```C++
-const glm::mat4 cameraRotation3D = rotateZ3D * rotateY3D * rotateX3D;
+// Local camera rotation: X first, then Y, then Z
+const glm::mat4 cameraRotation3D = cameraRotateZ3D * cameraRotateY3D * cameraRotateX3D;
 ```
+
+This `cameraRotation3D` in reality looks like this:
+
+$
+    R
+    =
+    \begin{bmatrix}
+    \cos(\theta_z)\cos(\theta_y)
+    &
+    \cos(\theta_z)\sin(\theta_y)\sin(\theta_x) - \sin(\theta_z)\cos(\theta_x)
+    &
+    \cos(\theta_z)\sin(\theta_y)\cos(\theta_x) + \sin(\theta_z)\sin(\theta_x)
+    &
+    0
+    \\
+    \sin(\theta_z)\cos(\theta_y)
+    &
+    \sin(\theta_z)\sin(\theta_y)\sin(\theta_x) + \cos(\theta_z)\cos(\theta_x)
+    &
+    \sin(\theta_z)\sin(\theta_y)\cos(\theta_x) - \cos(\theta_z)\sin(\theta_x)
+    &
+    0
+    \\
+    -\sin(\theta_y)
+    &
+    \cos(\theta_y)\sin(\theta_x)
+    &
+    \cos(\theta_y)\cos(\theta_x)
+    &
+    0
+    \\
+    0 & 0 & 0 & 1
+    \end{bmatrix}
+$
+
+Looks pretty complex, but I still suggest looking at it as separate x, y, z transformation matrices.
 
 `cameraRotation3D` is has all the rotations "encoded" into itself. Also, notice the order of multiplications, it really matters. Remember that when combining matrices, you have to look from the right side to know which operation happens first. So in this case:
 
 1. Apply X rotation
 2. Apply Y rotation
 3. Apply Z rotation
+
+That is essentially it in terms of camera rotations around itself. Again, remember, that this type of rotation does not affect camera's postion in world space.
+
 
 #### Rotating Camera Around an Object
 
