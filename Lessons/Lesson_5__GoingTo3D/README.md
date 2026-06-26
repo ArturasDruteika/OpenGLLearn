@@ -1058,23 +1058,29 @@ $
 $
 
 $
-    x_\text{ndc} = \frac{x_\text{clip}}{w_\text{clip}} \\
-    y_\text{ndc} = \frac{y_\text{clip}}{w_\text{clip}} \\
-    y_\text{ndc} = \frac{z_\text{clip}}{w_\text{clip}} \\
+    \begin{aligned}
+        x_\text{ndc} = \frac{x_\text{clip}}{w_\text{clip}} \\
+        y_\text{ndc} = \frac{y_\text{clip}}{w_\text{clip}} \\
+        y_\text{ndc} = \frac{z_\text{clip}}{w_\text{clip}} \\
+    \end{aligned}
 $
 
 If we replace the $w_\text{clip}$ with $-z_\text{view}$, we get:
 
 $
-    x_\text{ndc} = \frac{x_\text{clip}}{-z_\text{view}} \\
-    y_\text{ndc} = \frac{y_\text{clip}}{-z_\text{view}} \\
-    y_\text{ndc} = \frac{z_\text{clip}}{-z_\text{view}} \\
+    \begin{aligned}
+        x_\text{ndc} = \frac{x_\text{clip}}{-z_\text{view}} \\
+        y_\text{ndc} = \frac{y_\text{clip}}{-z_\text{view}} \\
+        y_\text{ndc} = \frac{z_\text{clip}}{-z_\text{view}} \\
+    \end{aligned}
 $
 
 Does this equation remind you of something? Remember the:
 
 $
-    x' = \frac{x}{z}, \quad y' = \frac{y}{z}
+    \begin{aligned}
+        x' = \frac{x}{z}, \quad y' = \frac{y}{z}
+    \end{aligned}
 $
 
 This is the simplest way to project something onto a 2D screen from 3D world. Doesn't the 3 above equation look similar to this one? That is the essence of the 3-rd row in the projection transformation. You get the divisor for that is projecting x and y coords onto 2D screen.
@@ -1761,6 +1767,91 @@ I hope this image elaborates a little more:
 
 ![camera_rotations_around_different_axes](Assets/camera_rotations_around_different_axes.png)
 
+A question remains about what is a positive and negative rotation? To answer, we have to go back the hand rules. To know what is positive and negative direction for axis, use a left hand rule.
+
+Left hand rule tells us that in order to know what is positive and negative direction, first extend your thumb in the same direction the axis the camera is about to be rotate around, the curl the remaining fingers. The direction of curled fingers is the positive rotation direction on that axis. 
+
+If it happens that the person that is reading this does not have a left hand, I will specify the positive directions in the text format:
+
+* X axis: positive - up, negative - down
+* Y axis: positive - left, negative - right
+* Z axis: positive - tilting head on you left shoulder, negative - tilting your head on the right shoulder
+
+I will give you an actual example of camera rotations in our 3D world with a pyramid. First, let's see how the code would be changed to achieve that:
+
+```C++
+// Camera local angles
+const float cameraRotationAngleX = glm::radians(0.0f);   // pitch
+const float cameraRotationAngleY = glm::radians(0.0f);   // yaw
+const float cameraRotationAngleZ = glm::radians(0.0f);  // roll
+
+// Camera base transform
+const glm::vec3 baseCameraPosition = { 0.0f, 0.0f, 2.5f };
+const glm::vec3 baseCameraForward = { 0.0f, 0.0f, -1.0f };
+const glm::vec3 baseCameraUp = { 0.0f, 1.0f, 0.0f };
+
+// Camera local rotation matrices
+const glm::mat4 cameraRotateX3D = CreateRotationX3D(cameraRotationAngleX);
+const glm::mat4 cameraRotateY3D = CreateRotationY3D(cameraRotationAngleY);
+const glm::mat4 cameraRotateZ3D = CreateRotationZ3D(cameraRotationAngleZ);
+
+// Local camera rotation: X first, then Y, then Z
+const glm::mat4 cameraRotation3D = cameraRotateZ3D * cameraRotateY3D * cameraRotateX3D;
+
+const glm::vec3 cameraForward = glm::normalize(glm::vec3(cameraRotation3D * glm::vec4(baseCameraForward, 0.0f)));
+const glm::vec3 cameraUp = glm::normalize(glm::vec3(cameraRotation3D * glm::vec4(baseCameraUp, 0.0f)));
+
+const glm::mat4 view = glm::lookAt(
+    baseCameraPosition,
+    cameraForward,
+    cameraUp
+);
+```
+
+As you can see, I have removed everything regarding orbital rotations from this example.
+
+If we set all the rotation angles as 0, this is the default view we would get:
+
+![pyramid__x_0__y_0__z_0](Assets/pyramid__x_0__y_0__z_0.png)
+
+Now let's look, how each rotation would change the way we view the pyramid. Again, remember, that all of these rotations do not change the camera position at all. Positions stays constant.
+
+Without further edue:
+
+* X: $30^\circ$, Y: $0^\circ$, Z: $00^\circ$
+
+    ![pyramid__x_30__y_0__z_0](Assets/pyramid__x_30__y_0__z_0.png)
+
+* X: $-30^\circ$, Y: $00^\circ$, Z: $0^\circ$
+
+    ![pyramid__x_-30__y_0__z_0](Assets/pyramid__x_-30__y_0__z_0.png)
+
+* X: $0^\circ$, Y: $30^\circ$, Z: $0^\circ$
+
+    ![pyramid__x_0__y_30__z_0](Assets/pyramid__x_0__y_30__z_0.png)
+
+* X: $0^\circ$, Y: $-30^\circ$, Z: $0^\circ$
+
+    ![pyramid__x_0__y_-30__z_0](Assets/pyramid__x_0__y_-30__z_0.png)
+
+* X: $0^\circ$, Y: $0^\circ$, Z: $90^\circ$
+
+    ![pyramid__x_0__y_0__z_90](Assets/pyramid__x_0__y_0__z_90.png)
+
+* X: $0^\circ$, Y: $0^\circ$, Z: $-90^\circ$
+
+    ![pyramid__x_0__y_0__z_-90](Assets/pyramid__x_0__y_0__z_-90.png)
+
+* X: $30^\circ$, Y: $-30^\circ$, Z: $0^\circ$
+
+    ![pyramid__x_30__y_-30__z_0](Assets/pyramid__x_30__y_-30__z_0.png)
+
+* X: $30^\circ$, Y: $-30^\circ$, Z: $180^\circ$
+
+    ![pyramid__x_30__y_-30__z_180](Assets/pyramid__x_30__y_-30__z_180.png)
+
+As you can see, you can combine the rotations also, pretty easily also. But, as I say over and over again, remember to follow the sequence of rotation matrices multiplication order. If you, from day 1, decided to rotate x the y then z, keep it that way, and do not mix this later on.
+
 #### Camera Rotation Matrices
 
 ```C++
@@ -1866,12 +1957,19 @@ Looks pretty complex, but I still suggest looking at it as separate x, y, z tran
 That is essentially it in terms of camera rotations around itself. Again, remember, that this type of rotation does not affect camera's postion in world space.
 
 
+#### Example of Only a Camera Rotation
+
+```C++
+
+```
+
+
 #### Rotating Camera Around an Object
 
 First, I want to show you what I mean by camera rotating around an object:
 
 ![camera_rotation_around_origin](Assets/camera_rotation_around_origin.png)
 
-The rotation of camera around a point isn't conceptually very different from rotating camera itself. You still have to define angles in all 3 rotations, but now those angles are defined relative to the object you rotate camera around and not to camera itself. Before, angles were defined in camera space, now angles are defined for the world space. So the expression "rotate camera 30 degrees around X axis" means that rotation from the object's perspective. Remember that and if the same sentence comes up, first, ask yourself "is it the camera itself going to be rotated, or is the camera going to be rotated around an object?". 
+The rotation of camera around a point isn't conceptually very different from rotating camera itself. You still have to define angles in all 3 rotations, but now those angles are defined relative to the object you rotate the camera around and not to the camera itself. Before, angles were defined in camera space, now angles are defined for the world space. So the expression "rotate camera 30 degrees around X axis" means that rotation from the object's perspective. Remember that and if the same sentence comes up, first, ask yourself "is it the camera itself going to be rotated, or is the camera going to be rotated around an object?". 
 
 Imagine a simple situation. You stand next to a brand ynew car. In this example the car is the object of reference and your head (i.e. your eyes) is the camera. If the camera would be rotated itself, that would mean that you just turn your head around, if the camera is rotated around an object, that would mean that you go around that car.

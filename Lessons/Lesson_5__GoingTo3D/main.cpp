@@ -162,7 +162,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, OPENGL_MINOR_VERSION);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    std::string windowName = "3D Pyramid With EBO";
+    std::string windowName = "3D Pyramid";
 
     GLFWwindow* pWindow = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, windowName.c_str(), nullptr, nullptr);
     if (!pWindow)
