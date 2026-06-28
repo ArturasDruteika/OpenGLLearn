@@ -1777,40 +1777,7 @@ If it happens that the person that is reading this does not have a left hand, I 
 * Y axis: positive - left, negative - right
 * Z axis: positive - tilting head on you left shoulder, negative - tilting your head on the right shoulder
 
-I will give you an actual example of camera rotations in our 3D world with a pyramid. First, let's see how the code would be changed to achieve that:
-
-```C++
-// Camera local angles
-const float cameraRotationAngleX = glm::radians(0.0f);   // pitch
-const float cameraRotationAngleY = glm::radians(0.0f);   // yaw
-const float cameraRotationAngleZ = glm::radians(0.0f);  // roll
-
-// Camera base transform
-const glm::vec3 baseCameraPosition = { 0.0f, 0.0f, 2.5f };
-const glm::vec3 baseCameraForward = { 0.0f, 0.0f, -1.0f };
-const glm::vec3 baseCameraUp = { 0.0f, 1.0f, 0.0f };
-
-// Camera local rotation matrices
-const glm::mat4 cameraRotateX3D = CreateRotationX3D(cameraRotationAngleX);
-const glm::mat4 cameraRotateY3D = CreateRotationY3D(cameraRotationAngleY);
-const glm::mat4 cameraRotateZ3D = CreateRotationZ3D(cameraRotationAngleZ);
-
-// Local camera rotation: X first, then Y, then Z
-const glm::mat4 cameraRotation3D = cameraRotateZ3D * cameraRotateY3D * cameraRotateX3D;
-
-const glm::vec3 cameraForward = glm::normalize(glm::vec3(cameraRotation3D * glm::vec4(baseCameraForward, 0.0f)));
-const glm::vec3 cameraUp = glm::normalize(glm::vec3(cameraRotation3D * glm::vec4(baseCameraUp, 0.0f)));
-
-const glm::mat4 view = glm::lookAt(
-    baseCameraPosition,
-    cameraForward,
-    cameraUp
-);
-```
-
-As you can see, I have removed everything regarding orbital rotations from this example.
-
-If we set all the rotation angles as 0, this is the default view we would get:
+Here is the visualization of positive and negative rotations. If we set all the rotation angles as 0, this is the default view we would get:
 
 ![pyramid__x_0__y_0__z_0](Assets/pyramid__x_0__y_0__z_0.png)
 
@@ -1852,7 +1819,49 @@ Without further edue:
 
 As you can see, you can combine the rotations also, pretty easily also. But, as I say over and over again, remember to follow the sequence of rotation matrices multiplication order. If you, from day 1, decided to rotate x the y then z, keep it that way, and do not mix this later on.
 
-#### Camera Rotation Matrices
+I will give you an actual example of camera rotations in our 3D world with a pyramid. First, let's see how the code would be changed to achieve that:
+
+```C++
+// Camera local angles
+const float cameraRotationAngleX = glm::radians(15.0f);  // pitch
+const float cameraRotationAngleY = glm::radians(15.0f);  // yaw
+const float cameraRotationAngleZ = glm::radians(45.0f);  // roll
+
+// Camera base transform
+const glm::vec3 baseCameraPosition = { 0.0f, 0.0f, 2.5f };
+const glm::vec3 baseCameraForward = { 0.0f, 0.0f, -1.0f };
+const glm::vec3 baseCameraUp = { 0.0f, 1.0f, 0.0f };
+
+// Camera local rotation matrices
+const glm::mat4 cameraRotateX3D = CreateRotationX3D(cameraRotationAngleX);
+const glm::mat4 cameraRotateY3D = CreateRotationY3D(cameraRotationAngleY);
+const glm::mat4 cameraRotateZ3D = CreateRotationZ3D(cameraRotationAngleZ);
+
+// Local camera rotation: X first, then Y, then Z
+const glm::mat4 cameraRotation3D = cameraRotateZ3D * cameraRotateY3D * cameraRotateX3D;
+
+const glm::vec3 cameraForward = glm::normalize(glm::vec3(cameraRotation3D * glm::vec4(baseCameraForward, 0.0f)));
+const glm::vec3 cameraUp = glm::normalize(glm::vec3(cameraRotation3D * glm::vec4(baseCameraUp, 0.0f)));
+
+const glm::mat4 view = glm::lookAt(
+    baseCameraPosition,
+    cameraForward,
+    cameraUp
+);
+```
+
+This piece of code can be separated into smaller chunks. So let's analyze those chunks one by one.
+
+First, we have angles definitions:
+
+```C++
+// Camera local angles
+const float cameraRotationAngleX = glm::radians(15.0f);  // pitch
+const float cameraRotationAngleY = glm::radians(15.0f);  // yaw
+const float cameraRotationAngleZ = glm::radians(45.0f);  // roll
+```
+
+As I said earlier, we need to define the angles. Then we have camera rotation transformation matrices:
 
 ```C++
 // Camera local rotation matrices
@@ -1957,19 +1966,16 @@ Looks pretty complex, but I still suggest looking at it as separate x, y, z tran
 That is essentially it in terms of camera rotations around itself. Again, remember, that this type of rotation does not affect camera's postion in world space.
 
 
-#### Example of Only a Camera Rotation
-
-```C++
-
-```
-
-
-#### Rotating Camera Around an Object
+#### Rotating Camera Around an Object - Orbiting
 
 First, I want to show you what I mean by camera rotating around an object:
 
 ![camera_rotation_around_origin](Assets/camera_rotation_around_origin.png)
 
-The rotation of camera around a point isn't conceptually very different from rotating camera itself. You still have to define angles in all 3 rotations, but now those angles are defined relative to the object you rotate the camera around and not to the camera itself. Before, angles were defined in camera space, now angles are defined for the world space. So the expression "rotate camera 30 degrees around X axis" means that rotation from the object's perspective. Remember that and if the same sentence comes up, first, ask yourself "is it the camera itself going to be rotated, or is the camera going to be rotated around an object?". 
+The rotation of camera around a point isn't conceptually very different from rotating camera itself. You still have to define angles on all 3 axes, but now those angles are defined relative to the object you rotate the camera around and not to the camera itself. When we wanted to rotate the camera itself, we defined angles in camera space, now angles are defined a bit different. We cannot say that orbital angles are defined in model space, because we are rotating camera around a specified point in space. Because of it, camera orbital angles are defined in that point's (around which the camera is rotating) local space.
+
+I know it sounds weird, I mean the idea that some specified point in space, even if that point is an empty space, can have it's own local space. But this is one of those beauties of math.
+
+So the expression "rotate camera 30 degrees around X axis" means that rotation from the object's perspective. Remember that and if the same sentence comes up, first, ask yourself "is it the camera itself going to be rotated, or is the camera going to be rotated around an object?". 
 
 Imagine a simple situation. You stand next to a brand ynew car. In this example the car is the object of reference and your head (i.e. your eyes) is the camera. If the camera would be rotated itself, that would mean that you just turn your head around, if the camera is rotated around an object, that would mean that you go around that car.
