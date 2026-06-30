@@ -1979,3 +1979,42 @@ I know it sounds weird, I mean the idea that some specified point in space, even
 So the expression "rotate camera 30 degrees around X axis" means that rotation from the object's perspective. Remember that and if the same sentence comes up, first, ask yourself "is it the camera itself going to be rotated, or is the camera going to be rotated around an object?". 
 
 Imagine a simple situation. You stand next to a brand ynew car. In this example the car is the object of reference and your head (i.e. your eyes) is the camera. If the camera would be rotated itself, that would mean that you just turn your head around, if the camera is rotated around an object, that would mean that you go around that car.
+
+As with camera rotations, now I will show how each rotation changes the view of our pyramid. 
+
+Here is the visualization of positive and negative rotations. If we set all the rotation angles as 0, this is the default view we would get:
+
+![pyramid__x_0__y_0__z_0](Assets/pyramid__x_0__y_0__z_0.png)
+
+Now let's look, how each rotation would change the way we view the pyramid. Again, remember, that all of these rotations do not change the camera position at all. Positions stays constant.
+
+Without further edue:
+
+* X: $30^\circ$, Y: $0^\circ$, Z: $00^\circ$
+
+    ![pyramid__x_30__y_0__z_0](Assets/orbit__x_30__y_0__z_0.png)
+
+* X: $-30^\circ$, Y: $00^\circ$, Z: $0^\circ$
+
+    ![pyramid__x_-30__y_0__z_0](Assets/orbit__x_-30__y_0__z_0.png)
+
+* X: $0^\circ$, Y: $30^\circ$, Z: $0^\circ$
+
+    ![pyramid__x_0__y_30__z_0](Assets/orbit__x_0__y_30__z_0.png)
+
+* X: $0^\circ$, Y: $-30^\circ$, Z: $0^\circ$
+
+    ![pyramid__x_0__y_-30__z_0](Assets/orbit__x_0__y_-30__z_0.png)
+
+* X: $0^\circ$, Y: $0^\circ$, Z: $90^\circ$
+
+    ![pyramid__x_0__y_0__z_90](Assets/orbit__x_0__y_0__z_90.png)
+
+* X: $0^\circ$, Y: $0^\circ$, Z: $-90^\circ$
+
+    ![pyramid__x_0__y_0__z_-90](Assets/orbit__x_0__y_0__z_-90.png)
+
+There are 2 interesting things that can be noticed from orbital rotations:
+
+1. Rotations around X and Y axes positive and negative directions seem different than when the camera was rotated itself
+2. Rotations around Z axes are the same as when camera was rotated itself
