@@ -1785,37 +1785,16 @@ Now let's look, how each rotation would change the way we view the pyramid. Agai
 
 Without further edue:
 
-* X: $30^\circ$, Y: $0^\circ$, Z: $00^\circ$
-
-    ![pyramid__x_30__y_0__z_0](Assets/pyramid__x_30__y_0__z_0.png)
-
-* X: $-30^\circ$, Y: $00^\circ$, Z: $0^\circ$
-
-    ![pyramid__x_-30__y_0__z_0](Assets/pyramid__x_-30__y_0__z_0.png)
-
-* X: $0^\circ$, Y: $30^\circ$, Z: $0^\circ$
-
-    ![pyramid__x_0__y_30__z_0](Assets/pyramid__x_0__y_30__z_0.png)
-
-* X: $0^\circ$, Y: $-30^\circ$, Z: $0^\circ$
-
-    ![pyramid__x_0__y_-30__z_0](Assets/pyramid__x_0__y_-30__z_0.png)
-
-* X: $0^\circ$, Y: $0^\circ$, Z: $90^\circ$
-
-    ![pyramid__x_0__y_0__z_90](Assets/pyramid__x_0__y_0__z_90.png)
-
-* X: $0^\circ$, Y: $0^\circ$, Z: $-90^\circ$
-
-    ![pyramid__x_0__y_0__z_-90](Assets/pyramid__x_0__y_0__z_-90.png)
-
-* X: $30^\circ$, Y: $-30^\circ$, Z: $0^\circ$
-
-    ![pyramid__x_30__y_-30__z_0](Assets/pyramid__x_30__y_-30__z_0.png)
-
-* X: $30^\circ$, Y: $-30^\circ$, Z: $180^\circ$
-
-    ![pyramid__x_30__y_-30__z_180](Assets/pyramid__x_30__y_-30__z_180.png)
+| $\theta_x$ | $\theta_y$ | $\theta_z$ | Pyramid |
+|:----------:|:----------:|:----------:|:--------:|
+| $30^\circ$  | $0^\circ$   | $0^\circ$   | ![](Assets/pyramid__x_30__y_0__z_0.png) |
+| $-30^\circ$ | $0^\circ$   | $0^\circ$   | ![](Assets/pyramid__x_-30__y_0__z_0.png) |
+| $0^\circ$   | $30^\circ$  | $0^\circ$   | ![](Assets/pyramid__x_0__y_30__z_0.png) |
+| $0^\circ$   | $-30^\circ$ | $0^\circ$   | ![](Assets/pyramid__x_0__y_-30__z_0.png) |
+| $0^\circ$   | $0^\circ$   | $90^\circ$  | ![](Assets/pyramid__x_0__y_0__z_90.png) |
+| $0^\circ$   | $0^\circ$   | $-90^\circ$ | ![](Assets/pyramid__x_0__y_0__z_-90.png) |
+| $30^\circ$  | $-30^\circ$ | $0^\circ$   | ![](Assets/pyramid__x_30__y_-30__z_0.png) |
+| $30^\circ$  | $-30^\circ$ | $180^\circ$ | ![](Assets/pyramid__x_30__y_-30__z_180.png) |
 
 As you can see, you can combine the rotations also, pretty easily also. But, as I say over and over again, remember to follow the sequence of rotation matrices multiplication order. If you, from day 1, decided to rotate x the y then z, keep it that way, and do not mix this later on.
 
@@ -1877,7 +1856,7 @@ In the previous lesson I showed you how 2D rotation matrices look like, but now 
 * Rotation alongside X axis:
 
     $
-        R_x(\theta_x)=
+        R_x(\theta)=
         \begin{bmatrix}
         1 & 0 & 0 & 0 \\
         0 & \cos\theta_x & -\sin\theta_x & 0 \\
@@ -1889,7 +1868,7 @@ In the previous lesson I showed you how 2D rotation matrices look like, but now 
 * Rotation alongside Y axis:
 
     $
-        R_y(\theta_y)=
+        R_y(\theta)=
         \begin{bmatrix}
         \cos\theta_y & 0 & \sin\theta_y & 0 \\
         0 & 1 & 0 & 0 \\
@@ -1901,7 +1880,7 @@ In the previous lesson I showed you how 2D rotation matrices look like, but now 
 * Rotation alongside -Z axis:
 
     $
-        R_z(\theta_z)=
+        R_z(\theta)=
         \begin{bmatrix}
         \cos\theta_z & -\sin\theta_z & 0 & 0 \\
         \sin\theta_z & \cos\theta_z & 0 & 0 \\
@@ -1986,35 +1965,65 @@ Here is the visualization of positive and negative rotations. If we set all the 
 
 ![pyramid__x_0__y_0__z_0](Assets/pyramid__x_0__y_0__z_0.png)
 
-Now let's look, how each rotation would change the way we view the pyramid. Again, remember, that all of these rotations do not change the camera position at all. Positions stays constant.
+Now let's look how differnt orbital angles change the way we view the pyramid. Also, an important fact is that with orbital rotations, the camera position changes also.
 
-Without further edue:
+Without further edue le's see how pyramid's view changes based on different orbital rotations:
 
-* X: $30^\circ$, Y: $0^\circ$, Z: $00^\circ$
+| $\theta_x$ | $\theta_y$ | $\theta_z$ | Orbit |
+|:----------:|:----------:|:----------:|:------:|
+| $30^\circ$  | $0^\circ$  | $0^\circ$   | ![](Assets/orbit__x_30__y_0__z_0.png) |
+| $-30^\circ$ | $0^\circ$  | $0^\circ$   | ![](Assets/orbit__x_-30__y_0__z_0.png) |
+| $0^\circ$   | $30^\circ$ | $0^\circ$   | ![](Assets/orbit__x_0__y_30__z_0.png) |
+| $0^\circ$   | $-30^\circ$| $0^\circ$   | ![](Assets/orbit__x_0__y_-30__z_0.png) |
+| $0^\circ$   | $0^\circ$  | $90^\circ$  | ![](Assets/orbit__x_0__y_0__z_90.png) |
+| $0^\circ$   | $0^\circ$  | $-90^\circ$ | ![](Assets/orbit__x_0__y_0__z_-90.png) |
 
-    ![pyramid__x_30__y_0__z_0](Assets/orbit__x_30__y_0__z_0.png)
+For these examples we used camera's original position: [0, 0, 2.5]. Let's also see how the same rotations change camera's position:
 
-* X: $-30^\circ$, Y: $00^\circ$, Z: $0^\circ$
+| $\theta_x$ | $\theta_y$ | $\theta_z$ | Position |
+|:----------:|:----------:|:----------:|:--------:|
+| $30^\circ$  | $0^\circ$  | $0^\circ$   | $[0.0, -1.25, 2.17]$ |
+| $-30^\circ$ | $0^\circ$  | $0^\circ$   | $[0.0, 1.25, 2.17]$ |
+| $0^\circ$   | $30^\circ$ | $0^\circ$   | $[1.25, 0.0, 2.17]$ |
+| $0^\circ$   | $-30^\circ$| $0^\circ$   | $[-1.25, 0.0, 2.17]$ |
+| $0^\circ$   | $0^\circ$  | $90^\circ$  | $[0.0, 0.0, 2.5]$ |
+| $0^\circ$   | $0^\circ$  | $-90^\circ$ | $[0.0, 0.0, 2.5]$ |
 
-    ![pyramid__x_-30__y_0__z_0](Assets/orbit__x_-30__y_0__z_0.png)
+The one thing that can look weird is the rotation around the Z axis. I mean look at the z axis rotation for camera rotation and orbital rotation. At first glance, they look exactly the same. Why is that?
 
-* X: $0^\circ$, Y: $30^\circ$, Z: $0^\circ$
+To be fair, these rotations are not the same. The main reason, why they look alike, is because the camera position, for camera and orbital rotations, was the same $[0.0, 0.0, 2.5]$. Notice, that both x and y components are 0. Orbital rotation around Z axis changes the x and the y components coordinates, but if they are both 0, they will remain 0. I mean look again at the z rotation matrix:
 
-    ![pyramid__x_0__y_30__z_0](Assets/orbit__x_0__y_30__z_0.png)
+$
+    R_z(\theta)=
+    \begin{bmatrix}
+    \cos\theta_z & -\sin\theta_z & 0 & 0 \\
+    \sin\theta_z & \cos\theta_z & 0 & 0 \\
+    0 & 0 & 1 & 0 \\
+    0 & 0 & 0 & 1
+    \end{bmatrix}
+$
 
-* X: $0^\circ$, Y: $-30^\circ$, Z: $0^\circ$
+It does not matter that this matrix has $\cos$ and $\sin$, anything multiplied by 0 produces the exact same 0. In order to see how camera and orbital rotation aroud the z axis differ, we need to change camera position. Let's change the starting position from $[0.0, 0.0, 2.5]$ to $[5.0, 0.0, 20.0]$.
 
-    ![pyramid__x_0__y_-30__z_0](Assets/orbit__x_0__y_-30__z_0.png)
+If all the rotations are set to 0:
 
-* X: $0^\circ$, Y: $0^\circ$, Z: $90^\circ$
+```C++
+// Camera local angles
+const float cameraRotationAngleX = glm::radians(0.0f);
+const float cameraRotationAngleY = glm::radians(0.0f);
+const float cameraRotationAngleZ = glm::radians(0.0f);
 
-    ![pyramid__x_0__y_0__z_90](Assets/orbit__x_0__y_0__z_90.png)
+// Camera orbit angles around origin
+const float orbitRotationAngleX = glm::radians(0.0f);
+const float orbitRotationAngleY = glm::radians(0.0f);
+const float orbitRotationAngleZ = glm::radians(0.0f);
+```
 
-* X: $0^\circ$, Y: $0^\circ$, Z: $-90^\circ$
+this is the view we are going to get:
 
-    ![pyramid__x_0__y_0__z_-90](Assets/orbit__x_0__y_0__z_-90.png)
+![position__5_0_20__camera_rotation__0_0_0__orbital_rotation__0_0_0](Assets/position__5_0_20__camera_rotation__0_0_0__orbital_rotation__0_0_0.png)
 
-There are 2 interesting things that can be noticed from orbital rotations:
+The following images chronologically display how additional $90^\circ$ camera rotation around z axis change the pyramid view:
 
-1. Rotations around X and Y axes positive and negative directions seem different than when the camera was rotated itself
-2. Rotations around Z axes are the same as when camera was rotated itself
+* $\theta_z \text{: }$
+
