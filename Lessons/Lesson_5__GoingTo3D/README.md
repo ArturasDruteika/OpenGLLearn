@@ -2025,5 +2025,20 @@ this is the view we are going to get:
 
 The following images chronologically display how additional $90^\circ$ camera rotation around z axis change the pyramid view:
 
-* $\theta_z \text{: }$
+| $\theta_z$ | $x$ | $y$ | $z$ | Image |
+|:----------:|:---:|:---:|:---:|:-----:|
+| $90^\circ$  | $5.0$ | $0.0$ | $20.0$ | ![](Assets/position__5_0_20__camera_rotation__0_0_90__orbital_rotation__0_0_0.png) |
+| $180^\circ$ | $5.0$ | $0.0$ | $20.0$ | ![](Assets/position__5_0_20__camera_rotation__0_0_180__orbital_rotation__0_0_0.png) |
+| $270^\circ$ | $5.0$ | $0.0$ | $20.0$ | ![](Assets/position__5_0_20__camera_rotation__0_0_270__orbital_rotation__0_0_0.png) |
 
+Now let's look at the same pyramid, but with orbital rotations around z axis:
+
+| $\theta_z$ | $x$ | $y$ | $z$ | Image |
+|:----------:|:---:|:---:|:---:|:-----:|
+| $90^\circ$  | $0.0$  | $5.0$  | $20.0$ | ![](Assets/camera_rotation__0_0_0__orbital_rotation__0_0_90.png) |
+| $180^\circ$ | $-5.0$ | $0.0$  | $20.0$ | ![](Assets/camera_rotation__0_0_0__orbital_rotation__0_0_180.png) |
+| $270^\circ$ | $0.0$  | $-5.0$ | $20.0$ | ![](Assets/camera_rotation__0_0_0__orbital_rotation__0_0_270.png) |
+
+This comparison should clear all the misconceptions about the camera and orbital rotations around z axis.
+
+In camera rotation, the camera position always stays the same and because of it, even though the viewed object might change the location on the final image, you still see the same exact side of the object. In orbital rotations, camera position always changes, but because of it, you can view objects from different angles.
