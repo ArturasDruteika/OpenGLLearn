@@ -2042,3 +2042,46 @@ Now let's look at the same pyramid, but with orbital rotations around z axis:
 This comparison should clear all the misconceptions about the camera and orbital rotations around z axis.
 
 In camera rotation, the camera position always stays the same and because of it, even though the viewed object might change the location on the final image, you still see the same exact side of the object. In orbital rotations, camera position always changes, but because of it, you can view objects from different angles.
+
+Moving forward towards the final pieces that are needed to calculate the `view` matrix:
+
+```C++
+// Camera orbit rotation matrices
+const glm::mat4 orbitRotateX3D = CreateRotationX3D(orbitRotationAngleX);
+const glm::mat4 orbitRotateY3D = CreateRotationY3D(orbitRotationAngleY);
+const glm::mat4 orbitRotateZ3D = CreateRotationZ3D(orbitRotationAngleZ);
+```
+
+These lines create orbital rotation matrices for each axis.
+
+```C++
+// Local camera rotation: X first, then Y, then Z
+const glm::mat4 cameraRotation3D = cameraRotateZ3D * cameraRotateY3D * cameraRotateX3D;
+// Orbit rotation: X first, then Y, then Z
+const glm::mat4 orbitRotation3D = orbitRotateZ3D * orbitRotateY3D * orbitRotateX3D;
+// Create a single matrix comprised of camera and orbital rotations 
+const glm::mat4 finalCameraRotation3D = orbitRotation3D * cameraRotation3D;
+```
+
+These 3 lines create 2 matrices that both encode all the x, y, z transformations which then are used to create a single `finalCameraRotation3D` which encodes both camera and orbital rotations.
+
+```C++
+// Adjust position in real world
+const glm::vec3 cameraPosition = glm::vec3(orbitRotation3D * glm::vec4(baseCameraPosition, 1.0f));
+```
+
+We need to update camera position because we applied orbital rotation (do not forget that orbital rotations change position and camera rotation does not). The calculation itself is pretty simple:
+
+1. `glm::vec4(baseCameraPosition, 1.0f)`: transform camera original position (3D) into homogeneous space
+2. `orbitRotation3D * glm::vec4(baseCameraPosition, 1.0f)`: multiply this position vector (in homogeneous space) with orbital transformation matrix (we do not need camera rotation matrix because it does not transform camera position)
+3. `glm::vec3(...)` transform that vector back to model space (from homogeneous space). We can just drop the homogeneous coordinate and not think about it.
+
+
+```C++
+// Adjust camera forward direction in real world
+const glm::vec3 cameraForward = glm::normalize(glm::vec3(finalCameraRotation3D * glm::vec4(baseCameraForward, 0.0f)));
+// Adjust camera up direction in real world
+const glm::vec3 cameraUp = glm::normalize(glm::vec3(finalCameraRotation3D * glm::vec4(baseCameraUp, 0.0f)));
+```
+
+We need to recalculate camera forward and up directions because camera and orbital rotations can change where these vectors point.
