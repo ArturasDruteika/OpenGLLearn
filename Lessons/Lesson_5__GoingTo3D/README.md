@@ -2072,7 +2072,7 @@ const glm::vec3 cameraPosition = glm::vec3(orbitRotation3D * glm::vec4(baseCamer
 
 We need to update camera position because we applied orbital rotation (do not forget that orbital rotations change position and camera rotation does not). The calculation itself is pretty simple:
 
-1. `glm::vec4(baseCameraPosition, 1.0f)`: transform camera original position (3D) into homogeneous space
+1. `glm::vec4(baseCameraPosition, 1.0f)`: transform camera original position (3D) into homogeneous space.
 2. `orbitRotation3D * glm::vec4(baseCameraPosition, 1.0f)`: multiply this position vector (in homogeneous space) with orbital transformation matrix (we do not need camera rotation matrix because it does not transform camera position)
 3. `glm::vec3(...)` transform that vector back to model space (from homogeneous space). We can just drop the homogeneous coordinate and not think about it.
 
@@ -2085,3 +2085,150 @@ const glm::vec3 cameraUp = glm::normalize(glm::vec3(finalCameraRotation3D * glm:
 ```
 
 We need to recalculate camera forward and up directions because camera and orbital rotations can change where these vectors point.
+
+One interesting thing can be noticed from these 3 lines: for some reason `glm::vec4(baseCameraPosition, 1.0f)` has `1.0f`, but `glm::vec4(baseCameraForward, 0.0f)` and `glm::vec4(baseCameraUp, 0.0f)` both have `0.0f`. Why is that?
+
+It all has to do with what the variable represents. `baseCameraPosition` is a position, while `baseCameraForward` and `baseCameraUp` are direction vectors. With camera position, we want to be able to apply all types of affine transformations, while for camera basis (direction) vectors, we only want to apply linear transformations. This is because a simple point can be roated, scaled or translated, but in the end, that point will only have it's position changed. But for direction vectors, we want them to only change the direction due to rotation. If you also applied translation to the camera direction vectors, that would change that direction also.
+
+Here is a simple example: 
+
+* Camera position: [0, 0, 0]
+* Right: [1, 0, 0]
+* Up: [0, 0, 1]
+* Forward: [0, 0, -1]
+
+If you rotate the camera 180&deg; around Y axis:
+
+* Camera position: [0, 0, 0]
+* Right: [-1, 0, 0]
+* Up: [0, 0, 1]
+* Forward: [0, 0, 1]
+
+If you move camera 5 units to the left:
+
+* Camera position: [-5, 0, 0]
+* Right: [-1, 0, 0]
+* Up: [0, 0, 1]
+* Forward: [0, 0, 1]
+
+Just think about it intuitively, the direction vectors should not become:
+
+* Right: [-6, 0, 0]
+* Up: [-5, 0, 1]
+* Forward: [-5, 0, 1]
+
+To be more precise, if camera at the beginning was looking forward (in model space), then when it was rotated 180&deg; the camera started looking backwards (model space). If then the camera was moved 5 units to the left, the position changes, but the camera still would have to look backwards (in model space). Same goes for the rest of the camera direction vectors.
+
+Mathematically, it would look like this (example in 3D world, transformation matrices are in homogeneous space):
+
+$
+    p - \text{position} \\
+    \vec{d} - \text{direction vector} \\
+    R - \text{rotation matrix} \\
+    T - \text{translation matrix} \\
+    M - R \cdot T
+$
+
+$
+    p = [x, y, z, 1] \\
+    \vec{d} = [x, y, z, 0]
+$
+
+$
+    R_h =
+    \begin{bmatrix}
+    R_{11} & R_{12} & R_{13} & 0 \\
+    R_{21} & R_{22} & R_{23} & 0 \\
+    R_{31} & R_{32} & R_{33} & 0 \\
+    0 & 0 & 0 & 1
+    \end{bmatrix}
+$
+
+$
+    T_h =
+    \begin{bmatrix}
+    1 & 0 & 0 & T_x \\
+    0 & 1 & 0 & T_y \\
+    0 & 0 & 1 & T_z \\
+    0 & 0 & 0 & 1
+    \end{bmatrix}
+$
+
+$
+    M = T \cdot R =
+    \begin{bmatrix}
+    R_{11} & R_{12} & R_{13} & T_x \\
+    R_{21} & R_{22} & R_{23} & T_y \\
+    R_{31} & R_{32} & R_{33} & T_z \\
+    0 & 0 & 0 & 1
+    \end{bmatrix}.
+$
+
+Let's see what happens when position $p$ is multiplied with transformation $M$:
+
+Let's see what happens when position $p$ is multiplied with transformation $M$:
+
+$
+    Mp =
+    \begin{bmatrix}
+    R_{11} & R_{12} & R_{13} & T_x \\
+    R_{21} & R_{22} & R_{23} & T_y \\
+    R_{31} & R_{32} & R_{33} & T_z \\
+    0 & 0 & 0 & 1
+    \end{bmatrix}
+    \begin{bmatrix}
+    x \\
+    y \\
+    z \\
+    1
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+    R_{11}x + R_{12}y + R_{13}z + T_x \cdot 1 \\
+    R_{21}x + R_{22}y + R_{23}z + T_y \cdot 1 \\
+    R_{31}x + R_{32}y + R_{33}z + T_z \cdot 1 \\
+    1
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+    R_{11}x + R_{12}y + R_{13}z + T_x \\
+    R_{21}x + R_{22}y + R_{23}z + T_y \\
+    R_{31}x + R_{32}y + R_{33}z + T_z \\
+    1
+    \end{bmatrix}
+$
+
+Notice that translation components are applied correctly. Position changes. Now let's see why direction vectors have 0:
+
+$
+    M\vec{d} =
+    \begin{bmatrix}
+    R_{11} & R_{12} & R_{13} & T_x \\
+    R_{21} & R_{22} & R_{23} & T_y \\
+    R_{31} & R_{32} & R_{33} & T_z \\
+    0 & 0 & 0 & 1
+    \end{bmatrix}
+    \begin{bmatrix}
+    x \\
+    y \\
+    z \\
+    0
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+    R_{11}x + R_{12}y + R_{13}z + T_x \cdot 0 \\
+    R_{21}x + R_{22}y + R_{23}z + T_y \cdot 0 \\
+    R_{31}x + R_{32}y + R_{33}z + T_z \cdot 0 \\
+    0
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+    R_{11}x + R_{12}y + R_{13}z \\
+    R_{21}x + R_{22}y + R_{23}z \\
+    R_{31}x + R_{32}y + R_{33}z \\
+    0
+    \end{bmatrix}
+$
+
+Notice that since translation components were multiplied by 0, in the final result they vanished. Direction is unaffected by translation.
+

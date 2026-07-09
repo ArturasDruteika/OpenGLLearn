@@ -349,20 +349,20 @@ int main()
 
     // Local camera rotation: X first, then Y, then Z
     const glm::mat4 cameraRotation3D = cameraRotateZ3D * cameraRotateY3D * cameraRotateX3D;
-
     // Orbit rotation: X first, then Y, then Z
     const glm::mat4 orbitRotation3D = orbitRotateZ3D * orbitRotateY3D * orbitRotateX3D;
-
-    // 1. Move camera around origin
-    const glm::vec3 cameraPosition = glm::vec3(orbitRotation3D * glm::vec4(baseCameraPosition, 1.0f));
-
-    // 2. Apply orbit rotation to base direction, then apply camera local rotation
+    // Create a single matrix comprised of camera and orbital rotations 
     const glm::mat4 finalCameraRotation3D = orbitRotation3D * cameraRotation3D;
 
+    // Adjust position in real world
+    const glm::vec3 cameraPosition = glm::vec3(orbitRotation3D * glm::vec4(baseCameraPosition, 1.0f));
+
+    // Adjust camera forward direction in real world
     const glm::vec3 cameraForward = glm::normalize(glm::vec3(finalCameraRotation3D * glm::vec4(baseCameraForward, 0.0f)));
-
+    // Adjust camera up direction in real world
     const glm::vec3 cameraUp = glm::normalize(glm::vec3(finalCameraRotation3D * glm::vec4(baseCameraUp, 0.0f)));
-
+    
+    // Calculate view matrix
     const glm::mat4 view = glm::lookAt(
         cameraPosition,
         cameraPosition + cameraForward,
