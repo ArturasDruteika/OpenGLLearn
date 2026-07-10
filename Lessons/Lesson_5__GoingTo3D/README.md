@@ -1690,23 +1690,26 @@ const glm::mat4 orbitRotateZ3D = CreateRotationZ3D(orbitRotationAngleZ);
 
 // Local camera rotation: X first, then Y, then Z
 const glm::mat4 cameraRotation3D = cameraRotateZ3D * cameraRotateY3D * cameraRotateX3D;
-
 // Orbit rotation: X first, then Y, then Z
 const glm::mat4 orbitRotation3D = orbitRotateZ3D * orbitRotateY3D * orbitRotateX3D;
-
-// 1. Move camera around origin
-const glm::vec3 cameraPosition = glm::vec3(orbitRotation3D * glm::vec4(baseCameraPosition, 1.0f));
-
-// 2. Apply orbit rotation to base direction, then apply camera local rotation
+// Create a single matrix comprised of camera and orbital rotations 
 const glm::mat4 finalCameraRotation3D = orbitRotation3D * cameraRotation3D;
 
-const glm::vec3 cameraForward = glm::normalize(glm::vec3(finalCameraRotation3D * glm::vec4(baseCameraForward, 0.0f)));
+// Adjust position in real world
+const glm::vec3 cameraPosition = glm::vec3(orbitRotation3D * glm::vec4(baseCameraPosition, 1.0f));
 
+// Adjust camera forward direction in real world
+const glm::vec3 cameraForward = glm::normalize(glm::vec3(finalCameraRotation3D * glm::vec4(baseCameraForward, 0.0f)));
+// Adjust camera up direction in real world
 const glm::vec3 cameraUp = glm::normalize(glm::vec3(finalCameraRotation3D * glm::vec4(baseCameraUp, 0.0f)));
 
+// Target (or a point) which camera is looking at
+const glm::vec3 targetPosition = cameraPosition + cameraForward;
+
+// Calculate view matrix
 const glm::mat4 view = glm::lookAt(
     cameraPosition,
-    cameraPosition + cameraForward,
+    targetPosition,
     cameraUp
 );
 ```
@@ -2232,3 +2235,20 @@ $
 
 Notice that since translation components were multiplied by 0, in the final result they vanished. Direction is unaffected by translation.
 
+Finally, we arrived at the view matrix:
+
+```C++
+// Target (or a point) which camera is looking
+const glm::vec3 targetPosition = cameraPosition + cameraForward;
+
+// Calculate view matrix
+const glm::mat4 view = glm::lookAt(
+    cameraPosition,
+    targetPosition,
+    cameraUp
+);
+```
+
+I think that I do not need to write another esse on why we need a view matrix. But still, to clarify everything, we need it, because it transforms the model space into camera space (local space for camera object) and because of this transformation the world is seen from the camera point of view.
+
+`const glm::vec3 targetPosition = cameraPosition + cameraForward;` the goal of this line is to assign coordinates to a point in space the camera is looking at. An analogy is if you stand and look at an empty field, you have a direction of view, but `targetPosition` is like a random ball placed somewhere in that field which has direct coordinates and desbripes a point in space where you are looking at.

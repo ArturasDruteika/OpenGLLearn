@@ -361,11 +361,14 @@ int main()
     const glm::vec3 cameraForward = glm::normalize(glm::vec3(finalCameraRotation3D * glm::vec4(baseCameraForward, 0.0f)));
     // Adjust camera up direction in real world
     const glm::vec3 cameraUp = glm::normalize(glm::vec3(finalCameraRotation3D * glm::vec4(baseCameraUp, 0.0f)));
+
+    // Target (or a point) which camera is looking
+    const glm::vec3 targetPosition = cameraPosition + cameraForward;
     
     // Calculate view matrix
     const glm::mat4 view = glm::lookAt(
         cameraPosition,
-        cameraPosition + cameraForward,
+        targetPosition,
         cameraUp
     );
 
