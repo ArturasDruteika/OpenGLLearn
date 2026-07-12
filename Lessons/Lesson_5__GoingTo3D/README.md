@@ -1663,6 +1663,55 @@ Also, the same piece if code that we have seen in the previous lessons. No need 
 ### Camera
 
 ``` C++
+const glm::mat4 CreateViewMatrix(
+    const glm::vec3& cameraPosition,
+    float cameraRotationAngleX,
+    float cameraRotationAngleY,
+    float cameraRotationAngleZ,
+    float orbitRotationAngleX,
+    float orbitRotationAngleY,
+    float orbitRotationAngleZ
+)
+{
+    // Camera local rotation matrices
+    const glm::mat4 cameraRotateX3D = CreateRotationX3D(cameraRotationAngleX);
+    const glm::mat4 cameraRotateY3D = CreateRotationY3D(cameraRotationAngleY);
+    const glm::mat4 cameraRotateZ3D = CreateRotationZ3D(cameraRotationAngleZ);
+
+    // Camera orbit rotation matrices
+    const glm::mat4 orbitRotateX3D = CreateRotationX3D(orbitRotationAngleX);
+    const glm::mat4 orbitRotateY3D = CreateRotationY3D(orbitRotationAngleY);
+    const glm::mat4 orbitRotateZ3D = CreateRotationZ3D(orbitRotationAngleZ);
+
+    // Local camera rotation: X first, then Y, then Z
+    const glm::mat4 cameraRotation3D = cameraRotateZ3D * cameraRotateY3D * cameraRotateX3D;
+    // Orbit rotation: X first, then Y, then Z
+    const glm::mat4 orbitRotation3D = orbitRotateZ3D * orbitRotateY3D * orbitRotateX3D;
+    // Create a single matrix comprised of camera and orbital rotations 
+    const glm::mat4 finalCameraRotation3D = orbitRotation3D * cameraRotation3D;
+
+    // Adjust position in real world
+    const glm::vec3 newCameraPosition = glm::vec3(orbitRotation3D * glm::vec4(cameraPosition, 1.0f));
+
+    // Calculate inverse camera rotation.
+    // For an orthonormal rotation matrix, inverse(rotation) = transpose(rotation).
+    const glm::mat3 viewRotation = glm::transpose(glm::mat3(finalCameraRotation3D));
+
+    // Calculate inverse camera translation in the rotated coordinate system
+    const glm::vec3 viewTranslation = -viewRotation * newCameraPosition;
+
+    // Calculate view matrix
+    glm::mat4 view(1.0f);
+    view[0] = glm::vec4(viewRotation[0], 0.0f);
+    view[1] = glm::vec4(viewRotation[1], 0.0f);
+    view[2] = glm::vec4(viewRotation[2], 0.0f);
+    view[3] = glm::vec4(viewTranslation, 1.0f);
+
+    return view;
+}
+
+...
+
 // Camera local angles
 const float cameraRotationAngleX = glm::radians(5.0f);   // pitch
 const float cameraRotationAngleY = glm::radians(-5.0f);   // yaw
@@ -1675,46 +1724,21 @@ const float orbitRotationAngleZ = glm::radians(0.0f);
 
 // Camera base transform
 const glm::vec3 baseCameraPosition = { 0.0f, 0.0f, 2.5f };
-const glm::vec3 baseCameraForward = { 0.0f, 0.0f, -1.0f };
-const glm::vec3 baseCameraUp = { 0.0f, 1.0f, 0.0f };
 
-// Camera local rotation matrices
-const glm::mat4 cameraRotateX3D = CreateRotationX3D(cameraRotationAngleX);
-const glm::mat4 cameraRotateY3D = CreateRotationY3D(cameraRotationAngleY);
-const glm::mat4 cameraRotateZ3D = CreateRotationZ3D(cameraRotationAngleZ);
-
-// Camera orbit rotation matrices
-const glm::mat4 orbitRotateX3D = CreateRotationX3D(orbitRotationAngleX);
-const glm::mat4 orbitRotateY3D = CreateRotationY3D(orbitRotationAngleY);
-const glm::mat4 orbitRotateZ3D = CreateRotationZ3D(orbitRotationAngleZ);
-
-// Local camera rotation: X first, then Y, then Z
-const glm::mat4 cameraRotation3D = cameraRotateZ3D * cameraRotateY3D * cameraRotateX3D;
-// Orbit rotation: X first, then Y, then Z
-const glm::mat4 orbitRotation3D = orbitRotateZ3D * orbitRotateY3D * orbitRotateX3D;
-// Create a single matrix comprised of camera and orbital rotations 
-const glm::mat4 finalCameraRotation3D = orbitRotation3D * cameraRotation3D;
-
-// Adjust position in real world
-const glm::vec3 cameraPosition = glm::vec3(orbitRotation3D * glm::vec4(baseCameraPosition, 1.0f));
-
-// Adjust camera forward direction in real world
-const glm::vec3 cameraForward = glm::normalize(glm::vec3(finalCameraRotation3D * glm::vec4(baseCameraForward, 0.0f)));
-// Adjust camera up direction in real world
-const glm::vec3 cameraUp = glm::normalize(glm::vec3(finalCameraRotation3D * glm::vec4(baseCameraUp, 0.0f)));
-
-// Target (or a point) which camera is looking at
-const glm::vec3 targetPosition = cameraPosition + cameraForward;
-
-// Calculate view matrix
-const glm::mat4 view = glm::lookAt(
-    cameraPosition,
-    targetPosition,
-    cameraUp
+const glm::mat4 view = CreateViewMatrix(
+    baseCameraPosition,
+    cameraRotationAngleX,
+    cameraRotationAngleY,
+    cameraRotationAngleZ,
+    orbitRotationAngleX,
+    orbitRotationAngleY,
+    orbitRotationAngleZ
 );
 ```
 
 This is the first piece of code that actualy is new to us. This is what we need in order to correctly create a view matrix, which is going to be used later for the MVP matrix.
+
+Just to clarify why I named this section "Camera" is because the goal of the camera object (later we will have a separate class for camera) is to construct the view matrix.
 
 Let's analyze block by block:
 
@@ -1804,32 +1828,52 @@ As you can see, you can combine the rotations also, pretty easily also. But, as 
 I will give you an actual example of camera rotations in our 3D world with a pyramid. First, let's see how the code would be changed to achieve that:
 
 ```C++
+const glm::mat4 CreateViewMatrix(
+    const glm::vec3& cameraPosition,
+    float cameraRotationAngleX,
+    float cameraRotationAngleY,
+    float cameraRotationAngleZ
+)
+{
+    // Camera local rotation matrices
+    const glm::mat4 cameraRotateX3D = CreateRotationX3D(cameraRotationAngleX);
+    const glm::mat4 cameraRotateY3D = CreateRotationY3D(cameraRotationAngleY);
+    const glm::mat4 cameraRotateZ3D = CreateRotationZ3D(cameraRotationAngleZ);
+
+    // Local camera rotation: X first, then Y, then Z
+    const glm::mat4 cameraRotation3D = cameraRotateZ3D * cameraRotateY3D * cameraRotateX3D;
+
+    // Calculate inverse camera rotation.
+    // For an orthonormal rotation matrix, inverse(rotation) = transpose(rotation).
+    const glm::mat3 viewRotation = glm::transpose(glm::mat3(cameraRotation3D));
+
+    // Calculate inverse camera translation in the rotated coordinate system
+    const glm::vec3 viewTranslation = -viewRotation * cameraPosition;
+
+    // Calculate view matrix
+    glm::mat4 view(1.0f);
+    view[0] = glm::vec4(viewRotation[0], 0.0f);
+    view[1] = glm::vec4(viewRotation[1], 0.0f);
+    view[2] = glm::vec4(viewRotation[2], 0.0f);
+    view[3] = glm::vec4(viewTranslation, 1.0f);
+
+    return view;
+}
+
+
 // Camera local angles
 const float cameraRotationAngleX = glm::radians(15.0f);  // pitch
 const float cameraRotationAngleY = glm::radians(15.0f);  // yaw
 const float cameraRotationAngleZ = glm::radians(45.0f);  // roll
 
-// Camera base transform
 const glm::vec3 baseCameraPosition = { 0.0f, 0.0f, 2.5f };
-const glm::vec3 baseCameraForward = { 0.0f, 0.0f, -1.0f };
-const glm::vec3 baseCameraUp = { 0.0f, 1.0f, 0.0f };
 
-// Camera local rotation matrices
-const glm::mat4 cameraRotateX3D = CreateRotationX3D(cameraRotationAngleX);
-const glm::mat4 cameraRotateY3D = CreateRotationY3D(cameraRotationAngleY);
-const glm::mat4 cameraRotateZ3D = CreateRotationZ3D(cameraRotationAngleZ);
-
-// Local camera rotation: X first, then Y, then Z
-const glm::mat4 cameraRotation3D = cameraRotateZ3D * cameraRotateY3D * cameraRotateX3D;
-
-const glm::vec3 cameraForward = glm::normalize(glm::vec3(cameraRotation3D * glm::vec4(baseCameraForward, 0.0f)));
-const glm::vec3 cameraUp = glm::normalize(glm::vec3(cameraRotation3D * glm::vec4(baseCameraUp, 0.0f)));
-
-const glm::mat4 view = glm::lookAt(
+const glm::mat4 view = CreateViewMatrix(
     baseCameraPosition,
-    cameraForward,
-    cameraUp
-);
+    cameraRotationAngleX,
+    cameraRotationAngleY,
+    cameraRotationAngleZ
+)
 ```
 
 This piece of code can be separated into smaller chunks. So let's analyze those chunks one by one.
@@ -1944,6 +1988,15 @@ Looks pretty complex, but I still suggest looking at it as separate x, y, z tran
 1. Apply X rotation
 2. Apply Y rotation
 3. Apply Z rotation
+
+```C++
+// Calculate inverse camera rotation.
+// For an orthonormal rotation matrix, inverse(rotation) = transpose(rotation).
+const glm::mat3 viewRotation = glm::transpose(glm::mat3(cameraRotation3D));
+
+// Calculate inverse camera translation in the rotated coordinate system
+const glm::vec3 viewTranslation = -viewRotation * cameraPosition;
+```
 
 That is essentially it in terms of camera rotations around itself. Again, remember, that this type of rotation does not affect camera's postion in world space.
 

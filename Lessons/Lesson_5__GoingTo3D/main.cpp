@@ -382,8 +382,6 @@ int main()
 
     // Camera base transform
     const glm::vec3 baseCameraPosition = { 0.0f, 0.0f, 2.5f };
-    const glm::vec3 baseCameraForward = { 0.0f, 0.0f, -1.0f };
-    const glm::vec3 baseCameraUp = { 0.0f, 1.0f, 0.0f };
 
     const glm::mat4 view = CreateViewMatrix(
         baseCameraPosition,
