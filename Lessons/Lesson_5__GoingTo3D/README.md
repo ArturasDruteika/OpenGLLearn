@@ -1998,6 +1998,16 @@ const glm::mat3 viewRotation = glm::transpose(glm::mat3(cameraRotation3D));
 const glm::vec3 viewTranslation = -viewRotation * cameraPosition;
 ```
 
+Angles and rotation matrices are intuitive, but what about the inverse stuff? For me, the easiest and the most intuitive thing that helped me to understand is Einstein. Yes, the same old crazy, but brilliantly clever guy that talk a lot about light and relativity. 
+
+Now, why did I bring up his name in the explanation about the inverse stuff? Remember, how Einstein gave the world a little thought experiment about a human that jumps from a tall building? The thought experiment is that a human is falling from a very big building and the people who see him falling see him as going down. But, from a falling person's perspective, he is not falling down, everyhing around him is going up. For the people (the observers), they see a human hitting the ground from the top of it, for that human the earth is hitting him from below him. 2 things are true, but the difference is relativity.
+
+The same analogy works here also. In order to see what is on our right, you have to move you head to the right. But the same coul be said in order to see what is on your right, the whole world could rotate to your left, and now what was on your right is now in front of you. I mean for your head, you had to turn right, but for the eyes, there is no difference between turning right or rotating the whole world to the left.
+
+The same is for the camera. If you rotate the camera to see what is on the right, it is the same as rotating the world to the left. 
+
+But, do not mix up one thing. We do not want to rotate the whole virtual world that is in the model space. Rather, we want to rotate everything that is in the camera space.
+
 That is essentially it in terms of camera rotations around itself. Again, remember, that this type of rotation does not affect camera's postion in world space.
 
 
