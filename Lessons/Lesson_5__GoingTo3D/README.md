@@ -1847,15 +1847,12 @@ const glm::mat4 CreateViewMatrix(
     // For an orthonormal rotation matrix, inverse(rotation) = transpose(rotation).
     const glm::mat3 viewRotation = glm::transpose(glm::mat3(cameraRotation3D));
 
-    // Calculate inverse camera translation in the rotated coordinate system
-    const glm::vec3 viewTranslation = -viewRotation * cameraPosition;
-
-    // Calculate view matrix
+    // Calculate view matrix (rotation only)
     glm::mat4 view(1.0f);
     view[0] = glm::vec4(viewRotation[0], 0.0f);
     view[1] = glm::vec4(viewRotation[1], 0.0f);
     view[2] = glm::vec4(viewRotation[2], 0.0f);
-    view[3] = glm::vec4(viewTranslation, 1.0f);
+    // view[3] remains (0, 0, 0, 1)
 
     return view;
 }
@@ -1993,9 +1990,6 @@ Looks pretty complex, but I still suggest looking at it as separate x, y, z tran
 // Calculate inverse camera rotation.
 // For an orthonormal rotation matrix, inverse(rotation) = transpose(rotation).
 const glm::mat3 viewRotation = glm::transpose(glm::mat3(cameraRotation3D));
-
-// Calculate inverse camera translation in the rotated coordinate system
-const glm::vec3 viewTranslation = -viewRotation * cameraPosition;
 ```
 
 Angles and rotation matrices are intuitive, but what about the inverse stuff? For me, the easiest and the most intuitive thing that helped me to understand is Einstein. Yes, the same old crazy, but brilliantly clever guy that talk a lot about light and relativity. 
@@ -2008,7 +2002,7 @@ The same is for the camera. If you rotate the camera to see what is on the right
 
 But, do not mix up one thing. We do not want to rotate the whole virtual world that is in the model space. Rather, we want to rotate everything that is in the camera space.
 
-That is essentially it in terms of camera rotations around itself. Again, remember, that this type of rotation does not affect camera's postion in world space.
+That is essentially it in terms of camera rotations around itself. Again, remember, that this type of rotation does not affect camera's postion in world space, but is rotating everything (except camera) in camera space.
 
 
 #### Rotating Camera Around an Object - Orbiting
@@ -2133,7 +2127,7 @@ These 3 lines create 2 matrices that both encode all the x, y, z transformations
 
 ```C++
 // Adjust position in real world
-const glm::vec3 cameraPosition = glm::vec3(orbitRotation3D * glm::vec4(baseCameraPosition, 1.0f));
+const glm::vec3 newCameraPosition = glm::vec3(orbitRotation3D * glm::vec4(baseCameraPosition, 1.0f));
 ```
 
 We need to update camera position because we applied orbital rotation (do not forget that orbital rotations change position and camera rotation does not). The calculation itself is pretty simple:
@@ -2142,8 +2136,72 @@ We need to update camera position because we applied orbital rotation (do not fo
 2. `orbitRotation3D * glm::vec4(baseCameraPosition, 1.0f)`: multiply this position vector (in homogeneous space) with orbital transformation matrix (we do not need camera rotation matrix because it does not transform camera position)
 3. `glm::vec3(...)` transform that vector back to model space (from homogeneous space). We can just drop the homogeneous coordinate and not think about it.
 
+```C++
+// Calculate inverse camera rotation.
+// For an orthonormal rotation matrix, inverse(rotation) = transpose(rotation).
+const glm::mat3 viewRotation = glm::transpose(glm::mat3(finalCameraRotation3D));
+```
+
+As mentioned before, we create a rotation matrix, that is an inverse of camera rotation. We do it, because in camera space rotation can be done by rotating everything around camera to the opposite side of the defined rotation.
 
 ```C++
+// Calculate inverse camera translation in the rotated coordinate system
+const glm::vec3 viewTranslation = viewRotation * (-newCameraPosition);;
+```
+
+This line is actually really confusing. To better understand it I suggest that you start to think in terms of camera space. This operation only makes sense if you are in camera space.
+
+Let's first make one thing clear: `glm::vec3 viewTranslation` is a translation vector expressed in view (camera) space, not world space. It tells us how much the world should be translated as part of the transformation from world space into camera (view) space. Do not forget that due to orbital camera rotations the camera position has also changed, because of it, we have to also encode it into our view transformation.
+
+`newCameraPosition` still is in the world space, but the `viewRotation` is the transformation that transforms points from world space to camera space.
+
+What we have now:
+
+| Variable | Coordinate System | Description |
+|----------|-------------------|-------------|
+| `newCameraPosition` | **World Space** | The camera's position in the world after applying the orbit rotation. |
+| `viewRotation` | **View Space** (World → View transform) | The inverse camera rotation. It converts vectors from **world space** to **view (camera) space**. |
+| `viewTranslation` | **View Space** | The translation component of the view matrix. It tells how much the world must be translated in **view space** so that the camera ends up at the origin `(0, 0, 0)`. |
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- ```C++
 // Adjust camera forward direction in real world
 const glm::vec3 cameraForward = glm::normalize(glm::vec3(finalCameraRotation3D * glm::vec4(baseCameraForward, 0.0f)));
 // Adjust camera up direction in real world
@@ -2314,4 +2372,4 @@ const glm::mat4 view = glm::lookAt(
 
 I think that I do not need to write another esse on why we need a view matrix. But still, to clarify everything, we need it, because it transforms the model space into camera space (local space for camera object) and because of this transformation the world is seen from the camera point of view.
 
-`const glm::vec3 targetPosition = cameraPosition + cameraForward;` the goal of this line is to assign coordinates to a point in space the camera is looking at. An analogy is if you stand and look at an empty field, you have a direction of view, but `targetPosition` is like a random ball placed somewhere in that field which has direct coordinates and desbripes a point in space where you are looking at.
+`const glm::vec3 targetPosition = cameraPosition + cameraForward;` the goal of this line is to assign coordinates to a point in space the camera is looking at. An analogy is if you stand and look at an empty field, you have a direction of view, but `targetPosition` is like a random ball placed somewhere in that field which has direct coordinates and desbripes a point in space where you are looking at. -->

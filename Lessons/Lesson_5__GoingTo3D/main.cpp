@@ -185,7 +185,7 @@ const glm::mat4 CreateViewMatrix(
     const glm::mat3 viewRotation = glm::transpose(glm::mat3(finalCameraRotation3D));
 
     // Calculate inverse camera translation in the rotated coordinate system
-    const glm::vec3 viewTranslation = -viewRotation * newCameraPosition;
+    const glm::vec3 viewTranslation = viewRotation * (-newCameraPosition);
 
     // Calculate view matrix
     glm::mat4 view(1.0f);
