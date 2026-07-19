@@ -2146,7 +2146,7 @@ As mentioned before, we create a rotation matrix, that is an inverse of camera r
 
 ```C++
 // Calculate inverse camera translation in the rotated coordinate system
-const glm::vec3 viewTranslation = viewRotation * (-newCameraPosition);;
+const glm::vec3 viewTranslation = viewRotation * (-newCameraPosition);
 ```
 
 This line is actually really confusing. To better understand it I suggest that you start to think in terms of camera space. This operation only makes sense if you are in camera space.
@@ -2163,15 +2163,88 @@ What we have now:
 | `viewRotation` | **View Space** (World → View transform) | The inverse camera rotation. It converts vectors from **world space** to **view (camera) space**. |
 | `viewTranslation` | **View Space** | The translation component of the view matrix. It tells how much the world must be translated in **view space** so that the camera ends up at the origin `(0, 0, 0)`. |
 
+Now that we understand in which domain each variable lives, we can start understanding the reason why this: `const glm::vec3 viewTranslation = viewRotation * (-newCameraPosition);` looks the way it looks. The deeper question is why the `newCameraPosition` vector has a negative sign? 
+
+The reason behind it the same as when I was explaining why inverse rotation is needed. With rotations, the idea was that if you rotate to the left by some $\theta$, it is the same as the whole world in the camera space rotates right by the same $\theta$.
+
+With translation it is exactly the same. If you move the camera by 5 units to the left, it is the same as moving everything (except camera) in camera space by 5 units to the right. 
+
+Then why do you have to multiply negative translation with rotation matrix? I mean why can't view matrix look like this:
+
+```C++
+// Calculate view matrix
+glm::mat4 view(1.0f);
+view[0] = glm::vec4(viewRotation[0], 0.0f);
+view[1] = glm::vec4(viewRotation[1], 0.0f);
+view[2] = glm::vec4(viewRotation[2], 0.0f);
+// Correct
+// view[3] = glm::vec4(viewTranslation, 1.0f);
+// Why can't it be this?
+view[3] = glm::vec4(newCameraPosition, 1.0f);
+```
+
+The idea is simple. Imagine that I give you a compass and tell you "go walk 10m straight north and then turn 90&deg; to the east". It is kinda easy and intuitive, but what if I modify the compass, so that north is 90&deg; to the left of the actual north, and I give you the same instructions "go walk 10m north straight and then turn 90&deg; to the east". Naturally, the question arises "north and east to what? New modified compass, or the actual compass? If we followed the actual north, then 90&deg; east would be turning to the right hand side, but with the modified compass, now, going 10m north is going 10m to the left of the first direction, and then turning 90&deg; east would be looking into real world north.
+
+The same problem would happen with translation. In world coordinates, a traslation "5 units to the right" would be transformed into something very different, because first you have to know what that translation looks like in camera space. Do not remember that view matrix maps world space to camera space, so becuase of it we also have to map the camera trasnlation to camera space, which is what `const glm::vec3 viewTranslation = viewRotation * (-newCameraPosition);` is doing for us.
+
+Finally, we have arrived to the goal of camera, the view matrix:
+
+```C++
+// Calculate view matrix
+glm::mat4 view(1.0f);
+view[0] = glm::vec4(viewRotation[0], 0.0f);
+view[1] = glm::vec4(viewRotation[1], 0.0f);
+view[2] = glm::vec4(viewRotation[2], 0.0f);
+view[3] = glm::vec4(viewTranslation, 1.0f);
+```
+
+In reality, it is pretty simple to understand it. To remind you what a mathematical version of view matrix looks like:
+
+$
+    V =
+    \begin{bmatrix}
+    r_{00} & r_{01} & r_{02} & -r_{00}p_x - r_{01}p_y - r_{02}p_z \\
+    r_{10} & r_{11} & r_{12} & -r_{10}p_x - r_{11}p_y - r_{12}p_z \\
+    r_{20} & r_{21} & r_{22} & -r_{20}p_x - r_{21}p_y - r_{22}p_z \\
+    0 & 0 & 0 & 1
+    \end{bmatrix}
+$
+
+where
+
+$
+    p = \text{new (translated) camera position}
+$
+
+It would be better to simplify this into:
+
+$
+    V =
+    \begin{bmatrix}
+    r_{00} & r_{01} & r_{02} & t_{v_x} \\
+    r_{10} & r_{11} & r_{12} & t_{v_y} \\
+    r_{20} & r_{21} & r_{22} & t_{v_z} \\
+    0 & 0 & 0 & 1
+    \end{bmatrix}
+$
+
+where
+
+$
+    \mathbf{t}_v =
+    \begin{bmatrix}
+    t_{v_x} \\
+    t_{v_y} \\
+    t_{v_z}
+    \end{bmatrix}
+    =
+    -R^{-1}\mathbf{p}.
+$
+
+Now you can clearly see, that the 3x3 part of the view matrix is just the rotation part (i.e. `viewRotation`), while the last column is just a trasnalation part (i.e. `viewTranslation`).
 
 
-
-
-
-
-
-
-
+### MVP matrix
 
 
 
