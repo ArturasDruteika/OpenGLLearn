@@ -395,9 +395,6 @@ int main()
 
     const glm::vec3 scale = { 1.4f, 1.4f, 1.4f };
     const glm::mat4 scale3D = CreateScale3D(scale);
-
-    // Rotation matrix multiplication sequence rule: R = Ry * Rx * Rz
-    // Keep the same final framing, but apply this transform to the camera instead of the model.
     const glm::mat4 model = scale3D;
 
     int mvpLocation = glGetUniformLocation(shaderProgram, "u_mvp");

@@ -2246,6 +2246,18 @@ Now you can clearly see, that the 3x3 part of the view matrix is just the rotati
 
 ### MVP matrix
 
+MVP is an acronym that stands for: Model, View, Projection. MVP matrix is the combination of the aforementioned matrices that make up a single transformation. This transformation maps world space coordinate system into a projection space (clip space).
+
+We already have covered what all 3 matrices mean separately, but just to recap let's go one by one:
+
+* Model - Real world represantation matrix.
+* View - How does that real world look like once camera is the origin
+* Projection - How do we map 3D points to 2D. In rendering, projections is more of a view space transformation to clip space.
+
+Every created verted is usually in local space, but all vertices need to have it's own coordinates in the real world. What we want is to map that vertex coordinate to clip space.
+
+"How it happens?" was explained in the previous sections. Every vertex has to go through world space, then view space, then clip space. These are 3 operations, which take time to complete. Instead of calculating 3 different values for each vertex, we can first calculate a combined transformation, that given the vertex coordinates, maps it onto the clip space. Now instead of 3 multiplications, we only need to do a single one (once again, the magic of linear algebra).
+
 
 
 
