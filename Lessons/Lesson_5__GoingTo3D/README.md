@@ -2250,20 +2250,160 @@ MVP is an acronym that stands for: Model, View, Projection. MVP matrix is the co
 
 We already have covered what all 3 matrices mean separately, but just to recap let's go one by one:
 
-* Model - Real world represantation matrix.
-* View - How does that real world look like once camera is the origin
-* Projection - How do we map 3D points to 2D. In rendering, projections is more of a view space transformation to clip space.
+* **Model** - Real world represantation matrix.
+* **View** - How does that real world look like once camera is the origin
+* **Projection** - How do we map 3D points to 2D. In rendering, projection is more of a view space transformation to clip space.
 
-Every created verted is usually in local space, but all vertices need to have it's own coordinates in the real world. What we want is to map that vertex coordinate to clip space.
+We create vertices in local space, but all vertices need to have it's own coordinates in the real world. For this we use model matrix. Later, we want to see how that world looks like from camera position. That is why we use view matrix. After that we want to see how that world looks like if we apply a specific perspective, like zooming in with camera, or having a large field of view. That is why we are using a projction matrix.
 
-"How it happens?" was explained in the previous sections. Every vertex has to go through world space, then view space, then clip space. These are 3 operations, which take time to complete. Instead of calculating 3 different values for each vertex, we can first calculate a combined transformation, that given the vertex coordinates, maps it onto the clip space. Now instead of 3 multiplications, we only need to do a single one (once again, the magic of linear algebra).
+I also have to stress the fact that order of operations matters a lot here. An order can easily be deduced from MVP order of letters sequence. First, use model matrix, then view matri and then projection matrix. Mathematically it would look like this:
+
+$
+    p \text{ - vertex position} \\
+    p' \text{ - vertex position after MVP} \\
+    M \text{ - model matrix} \\
+    V \text{ - view matrix} \\
+    P \text{ - projection matrix} \\
+$
+
+$
+    p' = P \cdot V \cdot M \cdot p
+$
 
 
+#### MVP Implementation in Code
+
+We already have a constructed view matrix, and we know how to construct a model matrix from the previous lesson. Let's see how a model matrix looks in this lesson.
+
+```C++
+const glm::vec3 scale = { 1.4f, 1.4f, 1.4f };
+const glm::mat4 scale3D = CreateScale3D(scale);
+const glm::mat4 model = scale3D;
+```
+
+For this lesson, I did not want to use all 3, but still felt the need to have a model matrix that would somehow impact the final world. Because of it I decided that only scaing of the entire world will be used.
+
+To be honest, I just realized that we are slightly advanced, because in the last lesson we have learned all the secrets about the consturction of the model matrix. I feel really proud about that.
+
+Finally, we need to construct a projection matrix. In this lesson it is done as follows:
+
+```C++
+const float aspectRatio =
+    static_cast<float>(g_framebufferWidth) /
+    static_cast<float>(g_framebufferHeight > 0 ? g_framebufferHeight : 1);
+
+const glm::mat4 projection = glm::perspective(
+    glm::radians(FOV_DEGREES_Y_AXIS),
+    aspectRatio,
+    NEAR_PLANE,
+    FAR_PLANE
+);
+
+const glm::mat4 mvp = projection * view * model;
+```
+
+What happens here is we need to have an aspect ration, in order to construct the projection matrix. Because aspect ration is simply $width / height$, we do exactly the same thing in our code. Notice that the `aspectRatio` is calculated constantly in the main rendering loop. If we resize our window, we need to immediately see the effect of the resize.
+
+And then there is the projection matrix construction. From this projection matrix:
+
+$
+    P =
+    \begin{bmatrix}
+        \frac{1}{\tan\left(\frac{fov}{2}\right)\cdot aspect} & 0 & 0 & 0 \\
+        0 & \frac{1}{\tan\left(\frac{fov}{2}\right)} & 0 & 0 \\
+        0 & 0 & \frac{f + n}{n - f} & \frac{2fn}{n - f} \\
+        0 & 0 & -1 & 0
+    \end{bmatrix}
+$
+
+we can see that we need to know 4 variables values in order to construct $P$:
+
+* $fov$ - field of view
+* $aspect$ - aspect
+* $f$ - far plane
+* $n$ - near place
+
+`glm::perspective()` essentially takes these 4 arguments and outputs a nice looking projection transformation matrix.
+
+Again, nothing more to add since we already have learned all the details about projection matrix.
 
 
+#### Final MVP Construction
+
+After we have all 3 matrices constructed, the only thing left is the construction of the MVP matrix itself. We construct this matrix like this:
+
+```C++
+const glm::mat4 mvp = projection * view * model;
+```
+
+Notice the order. That is why I stressed that fact a lot. If you mix up the order, you will get something really strange that I can't even describe, so do not mix it up.
 
 
+### Shaders
 
+The final point I want to add about this lesson are the shaders. I mean we know what shaders are, but in this lesson there is one very important part about them.
+
+In our vertex shader for this lesson we have this line:
+
+```GLSL
+uniform mat4 u_mvp;
+```
+
+and in our code we do this:
+
+```C++
+int mvpLocation = glGetUniformLocation(shaderProgram, "u_mvp");
+
+...
+
+    glUniformMatrix4fv(mvpLocation, 1, GL_FALSE, glm::value_ptr(mvp));
+```
+
+What I want to say is that we calculate MVP matrix inside our c++ application. You may ask "Why do you stress this fact? Why is it important?" The main reason is speed.
+
+You could easily replace our vertex shader with this:
+
+```GLSL
+#version 460 core
+
+layout (location = 0) in vec3 a_position;
+layout (location = 1) in vec4 a_color;
+
+out vec4 v_color;
+
+uniform mat4 u_m;
+uniform mat4 u_v;
+uniform mat4 u_p;
+
+void main()
+{
+    mat4 mvp = u_p * u_v * u_m;
+    gl_Position = mvp * vec4(a_position, 1.0);
+    v_color = a_color;
+}
+```
+
+and then replace the c++ code like this:
+
+```C++
+int modelMatrixLocation = glGetUniformLocation(shaderProgram, "u_m");
+int viewMatrixLocation = glGetUniformLocation(shaderProgram, "u_v");
+int prpjectionMatrixLocation = glGetUniformLocation(shaderProgram, "u_p");
+
+...
+
+    glUniformMatrix4fv(modelMatrixLocation, 1, GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(prpjectionMatrixLocation, 1, GL_FALSE, glm::value_ptr(projection));
+```
+
+This still works the same as previous code, but (a very big but) the speed of the entire rendering system drops. For this example it might not look significant enough that your eyes could catch up, but if we render huge scenes with lighting and etc, you would definitely see the difference. 
+
+In the original implementation, `mvp` matrix was calculated a single time per render iteration. In the given example the problem is that `mvp` matrix is calculated as many times, as you have vertices defined. So since a pyramid has 5 vertices, `mvp` will be calculated 5 times (4 times more than we actually need).
+
+Remember, that if you have a single camera, you only need to calculate `mvp` once per iteration. In the given example, as mentioned earlier, 4 `mvp` calculation would be totally pointless, but those calculations would still eat you GPU resources.
+
+With the example I gave you, the main thing you need to understand is that: do not populate your shaders with calculations that can be done in c++ part.
 
 
 
