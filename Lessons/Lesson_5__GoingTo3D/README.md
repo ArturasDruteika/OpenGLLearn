@@ -1,39 +1,39 @@
 # Lesson 5 - Going to 3D
 
-This lesson is going to be an intro to a 3D renderer. But please, do not get too excited, as we are only going to discuss the basics of 3D world and we will do a simple transition from rendering 2D shapes to 3D. 
+This lesson is going to be an intro to a 3D renderer. But please, do not get too excited, as we are only going to discuss the basics of the 3D world and we will do a simple transition from rendering 2D shapes to 3D. 
 
 At the end of the lesson, we will be able to render a pyramid as seen below:
 
 ![pyramid](Assets/pyramid.png)
 
-To be honest, after this lesson, you will be able to render any 3D shape, given that you correctly construct it's data.
+To be honest, after this lesson, you will be able to render any 3D shape, given that you correctly construct its data.
 
 In this lesson, we are going to cover:
 
-* Transition from 2D to 3D world
-* Intro into camera 
+* Transition from the 2D to the 3D world
+* Intro to the camera 
 * Aspect ratio
 
 What we are not going to cover in this lesson are:
 
 * Interactive camera
-* Live transformations (like orbiting bodies or etc.)
+* Live transformations (like orbiting bodies etc.)
 * Light
 
-These topics (especially anything that has to do with lights) will be left for the following lessons. This lesson is not going to be long as the previous one. Transformations were the thing that takes time to understand and that's totally fine. Transformations, especially for those that do not like math, is a bit tricky to grasp the intuition. But this lesson is way simpler.
+These topics (especially anything that has to do with lights) will be left for the following lessons. This lesson is not going to be as long as the previous one. Transformations were the thing that took time to understand and that's totally fine. Transformations, especially for those who do not like math, are a bit tricky to grasp the intuition. But this lesson is way simpler.
 
 So, without further ado, let's continue with the lesson.
 
 
-## Transition from 2D to 3D world
+## Transition from the 2D to the 3D world
 
-To be fair, going from 2D to 3D is kind of simple. I am not joking. The only thing that changes in the data that is being loaded to a GPU VRAM is the coordinates component (position). In 2D we had 2 numbers describing where in space the vertex should be placed (X and Y coords). In 3D world, another dimension is needed, which is called the Z dimension. Because of it, instead of 2 numbers, we need 3 numbers to describe the vertex position (X, Y and Z coords). Look at this image bellow:
+To be fair, going from 2D to 3D is kind of simple. I am not joking. The only thing that changes in the data that is being loaded into GPU VRAM is the coordinates component (position). In 2D, we had 2 numbers describing where in space the vertex should be placed (X and Y coords). In the 3D world, another dimension is needed, which is called the Z dimension. Because of it, instead of 2 numbers, we need 3 numbers to describe the vertex position (X, Y and Z coords). Look at this image below:
 
 ![2D_3D_graph](Assets/2D_3D_graph.png)
 
 Is it clearer now? 
 
-One thing to rememeber (or you can think about it as guidlines) is the axis directions. By convention:
+One thing to remember (or you can think about it as guidelines) is the axis directions. By convention:
 
 * X axis: left <--> right
 * Y axis: up <--> down
@@ -41,55 +41,55 @@ One thing to rememeber (or you can think about it as guidlines) is the axis dire
 
 #### Z axis
 
-X and Y axes are pretty simple to understand, but Z is a bit trickier. You can think of this depth dimension the same way depth is measured in water. Imagine, that you put your face paraller to the water surface, so that your eyes would look directly into the water. This way the depth of the water acts as a Z dimension.
+X and Y axes are pretty simple to understand, but Z is a bit trickier. You can think of this depth dimension the same way depth is measured in water. Imagine that you put your face parallel to the water surface, so that your eyes would look directly into the water. This way the depth of the water acts as a Z dimension.
 
-Also, another important thing is the Z axis convention. There are 2 way how you can measure an axis:
+Also, another important thing is the Z axis convention. There are 2 ways you can measure an axis:
 
-1) Right hand rule: the Z axis is poisitve going towards you (in rendering it would be towards the screen) (this is the convention)
+1) The right-hand rule: the Z axis is positive going towards you (in rendering it would be towards the screen) (this is the convention)
 2) Left hand rule: the Z axis is negative going away from you (in rendering it would be away from the screen)
 
 This graph below clearly demonstrates this:
 
 ![opengl_3D_coords](Assets/opengl_3D_coords.jpeg)
 
-To be honest, I do not know what else to talk about 3D real world. The main thing is that coordinates expand to another dimension (Z axis).
+To be honest, I do not know what else to say about the 3D real world. The main thing is that coordinates expand to another dimension (Z axis).
 
 
 ## Camera
 
-For me, the best way to think about camera is like an actual operator that is filming the scene. Imagine, that you have a scene which has some objects placed in it (like tables, chairs and etc.). Now the operator can film the scene from many positions, maybe from the left side, maybe from the right. The operator can film the scene from the bottom or the top side. In other words, the operator can film it from any direction and any distance. The camera produces the visual information (what it captured), thus allowing viewers to see what is happening in that scene. The different position of the camera, produces the different view of the scene.
+For me, the best way to think about the camera is like an actual operator that is filming the scene. Imagine that you have a scene which has some objects placed in it (like tables, chairs, etc.). Now the operator can film the scene from many positions, maybe from the left side, maybe from the right. The operator can film the scene from the bottom or the top side. In other words, the operator can film it from any direction and any distance. The camera produces the visual information (what it captured), thus allowing viewers to see what is happening in that scene. A different position of the camera produces a different view of the scene.
 
-The exact same principles apply for the camera term in rendering. Instead of a human carying that camera from place to place, the position is controlled by the user him/herself. 
+The exact same principles apply for the camera term in rendering. Instead of a human carrying that camera from place to place, the position is controlled by the user. 
 
 The image below illustrates everything you need to know about the camera for this lesson:
 
 ![camera](Assets/camera.png)
 
-Let's go 1 by 1 and explain all of these:
+Let's go through them one by one and explain all of these:
 
 * __Position__ - the coordinates of the camera.
-* __Forward (View Direction)__ - it is a vector, a direction the camera is looking to. Imagine that from a camera a straight vector is point. This vector points to the direction the is focused.
+* __Forward (View Direction)__ - it is a vector, the direction the camera is looking in. Imagine that from the camera, a straight vector is pointing. This vector points in the direction the camera is focused.
 * __Up__ - a vector that is pointing to the up direction from the camera and that is perpendicular to the forward vector.
-* __Right__ - a vector that is pointing to the right direction from the camera  and that is perpendicular to the forward vector.
-* __Near Plane (Image Plane)__ - the closest distance the object can be seen. Anything closer than that, and the object is not going to be rendered.
-* __Far Plane__ the farthest distance the object can be seen. Anything farther than that, and the object is not going to be rendered.
+* __Right__ - a vector that is pointing to the right direction from the camera and that is perpendicular to the forward vector.
+* __Near Plane (Image Plane)__ - the closest distance at which an object can be seen. Anything closer than that, and the object is not going to be rendered.
+* __Far Plane__ - the farthest distance at which an object can be seen. Anything farther than that, and the object is not going to be rendered.
 * __View Frustum__ - a truncated pyramid (a pyramid with its top sliced off), where the two parallel faces are the near plane and the far plane.
-* __Field of View (FOV)__ - How much of the scene the camera sees. Usually, the camera ___only___ everything that is inside the view frustum. Anything outside the view frustum is clipped.
+* __Field of View (FOV)__ - how much of the scene the camera sees. Usually, the camera sees ___only___ everything that is inside the view frustum. Anything outside the view frustum is clipped.
 
-Looking at the image, only 2 out of the 3 objects would be seen, the green cube and the red sphere, the blue cone would not be visible to the camera because it is outside the view frustum. 
+Looking at the image, only 2 out of the 3 objects would be seen: the green cube and the red sphere, the blue cone would not be visible to the camera because it is outside the view frustum. 
 
-Also, take a look at the __image plane__ in the image. In the parenthesis it is named as "screen". If it is easier for you, you can totally think of it like that, but please do not make a mistake thinking that the the view starts at the camera position. Now, why is that a problem? Well, mathematically, if a near plane is the coords of the camera, then the view frustum is not a frustum at all, but a pyramid, since no plane can be constructed in 1 point. That is why it is very important to have a near plane a little farther from the actual camera position, thus making a frustum possible.
+Also, take a look at the __image plane__ in the image. In parentheses it is named as "screen". If it is easier for you, you can totally think of it like that, but please do not make a mistake thinking that the view starts at the camera position. Now, why is that a problem? Well, mathematically, if a near plane is the coordinates of the camera, then the view frustum is not a frustum at all, but a pyramid, since no plane can be constructed at a single point. That is why it is very important to have a near plane a little farther from the actual camera position, thus making a frustum possible.
 
 #### Up and Right Vectors
 
-Let's dive a little deeper for the __up__ and the __right__ vectors. First of all, why do we need these 2 vectors?
+Let's dive a little deeper into the __up__ and the __right__ vectors. First of all, why do we need these 2 vectors?
 
 * __Up__ (camera up, not the world up) is used for the generation of the __view__ matrix (we are going to cover this later in this lesson).
 * __Right__ is used to calculate the up vector.
 
 So in a sense, we need A to construct C, but we need B to construct A, where A is up, B is right, C is view. 
 
-How to calculate these vectors? Below are the equations for vectors caclulation:
+How to calculate these vectors? Below are the equations for vector calculation:
 
 $
     \mathbf{Right} = \mathrm{normalize}(\mathbf{Forward} \times \mathbf{WorldUp})
@@ -101,8 +101,8 @@ $
 
 Keep in mind 2 things:
 
-1. `WorldUp` is a global up direction for the world, for example in 3D world, `up` vector would be [0, 1, 0] 
-2. `x` is not a dot product but a cross section multiplication which is done this way:
+1. `WorldUp` is a global up direction for the world, for example in the 3D world, the `up` vector would be [0, 1, 0] 
+2. `x` is not a dot product but a cross-product multiplication which is done this way:
 
     $
         \mathbf{a} =
@@ -123,46 +123,46 @@ Keep in mind 2 things:
         \end{bmatrix}
     $
 
-Cross multiplication of 2 vectors is great because it spits out a 3-rd vector which is perpendicular to `a` and `b` vectors. To better understand why a 3-rd vector is perpendicular, just take a look at this image:
+Cross multiplication of 2 vectors is great because it spits out a 3rd vector which is perpendicular to `a` and `b` vectors. To better understand why a 3rd vector is perpendicular, just take a look at this image:
 
 ![cross_product](Assets/cross_product.png)
 
-It clearly shows that a produced `n` vector is perpendicular to both `a` and `b`, or in other words, it is perpendicular to a plane that is defines by a total span of vectors `a` and `b`. Also, another important thing to see in this image is the order of multiplication. The cross product is not __commutatve__. `a × b` and `b × a` produce vectors that point in opposite directions. The exact direction is determined by the right-hand rule. Right hand rule works by pointing your index finger to the direction the first vector is pointing and middle finger - to the direction the second vector points, then the direction of the 3-rd vector is determined by your thumb. Just take a look at the image below:
+It clearly shows that a produced `n` vector is perpendicular to both `a` and `b`, or in other words, it is perpendicular to a plane that is defines by a total span of vectors `a` and `b`. Also, another important thing to see in this image is the order of multiplication. The cross product is not __commutative__. `a × b` and `b × a` produce vectors that point in opposite directions. The exact direction is determined by the right-hand rule. The right-hand rule works by pointing your index finger to the direction the first vector is pointing and middle finger - to the direction the second vector points, then the direction of the 3rd vector is determined by your thumb. Just take a look at the image below:
 
 ![cross_product](Assets/cross_section_right_hand_rule.png)
 
-The important thing to remember from this sections is that we need `up` (camera up) in order to get the `view` matrix.
+The important thing to remember from this section is that we need `up` (camera up) in order to get the `view` matrix.
 
 
 #### Near / Far Planes and View Frustum
 
-Once these 3 concepts are understood, you will understand half of what you see on your screen and why do you see it as you do ( a couple smiling faces). Why only a half? Well, because there are still concepts like __view__ and __projection__ matrices (which, as I said, I will cover on this lesson). But those, in my opinion, should be discussed after near, far planes and view frustum sits wells in your head. So, let's start digesting it. 
+Once these 3 concepts are understood, you will understand half of what you see on your screen and why you see it as you do (a couple smiling faces). Why only a half? Well, because there are still concepts like __view__ and __projection__ matrices (which, as I said, I will cover in this lesson). But those, in my opinion, should be discussed after near, far planes and view frustum sits well in your head. So, let's start digesting it. 
 
 ![view_frustum](Assets/view_frustum.png)
 
-I hope this image elaborates a little more as to what I mean by near, far planes and view frustum. You can think of a near plane as to where the monitor screen starts. Far plane is where the visibility ends, and what you see on your screen is inside the view frustum (the blue volume in the image). I explained on why the near plane cannot start at the coordinates of a camera, but I never told why does the far plane have to have a defined end. 
+I hope this image elaborates a little more as to what I mean by near, far planes and view frustum. You can think of a near plane as to where the monitor screen starts. Far plane is where the visibility ends, and what you see on your screen is inside the view frustum (the blue volume in the image). I explained why the near plane cannot start at the coordinates of a camera, but I never explained why the far plane have to have a defined end. 
 
-The far plane has to have a defined ending because otherwise an infinite view frustum would happen. This would be a huge problem for your GPU, because looking infinitely far back there might be objects that are in the frustum's volume, so in a sense, calculations on those objects would be done. Also, for the same GPU problem, it is advised not to make a far plane super far away. Do not forget, that the more objects are visible, the more computation is needed to process and render them. But, it is up to the programmer to find an optimal solution for the distance of the far plane. Some scenes do not need the far plane to be very far away, but others, like a scenery of trees or a huge field require it to be farther away.
+The far plane has to have a defined ending because otherwise an infinite view frustum would happen. This would be a huge problem for your GPU, because looking infinitely far back there might be objects that are in the frustum's volume, so in a sense, calculations on those objects would be done. Also, for the same GPU problem, it is advised not to make a far plane super faraway. Do not forget that the more objects are visible, the more computation is needed to process and render them. But, it is up to the programmer to find an optimal solution for the distance of the far plane. Some scenes do not need the far plane to be very faraway, but others, like a scenery of trees or a huge field require it to be farther away.
 
 Again, to sum this little section, just know that based on the near and the far planes, the view frustum is constructed, and everything that is seen through the monitor screen is inside the view frustum.
 
 #### Field of View (FOV)
 
-__FOV__ is the angle that determines how much of the world the camera can see at one. This parameter is needed once we start calculating the projection matrix (which we will cover in this lesson).
+__FOV__ is the angle that determines how much of the world the camera can see at once. This parameter is needed once we start calculating the projection matrix (which we will cover in this lesson).
 
 To illustrate what the FOV is, here is the first explanatory image:
 
 ![fov_1](Assets/fov_1.png)
 
-As you can see in this image, field of view angles fo from wide to narrow. Each colored triangle (in 3D it would be a pyramid) shows what area is visible through the camera lense. Wide angle is great in capturing near objects, but each captured objects has less detail in a single frame, while narrow angle is great for having a great detail in far away objects, but instead of seeing many objects, a few or a single object is visible. It is essentially a tradeoff, and each case or each combination might require to look at the scene with a different angle. The image below captures this idea:
+As you can see in this image, field of view angles go from wide to narrow. Each colored triangle (in 3D it would be a pyramid) shows what area is visible through the camera lens. Wide angle is great in capturing near objects, but each captured object has less detail in a single frame, while narrow angle is great for having a great detail in faraway objects, but instead of seeing many objects, a few or a single object is visible. It is essentially a tradeoff, and each case or each combination might require looking at the scene with a different angle. The image below captures this idea:
 
 ![fov_2](Assets/fov_2.png)
 
-There is a single tree in an empty field. The top right image shows how this scene is captured using a wide angle. Almost the entire scene is captured, all the mountains and hills, all of the sky and grass, captured in a single image. We can say that we see about 90% of the actual scene. But, using this picture, if we wanted to see the individual details of the tree or a mountain or even a grass, we would see that it lacks pixels. There is not enough detail for each individual object. Here comes the the bottom right image. A single tree is captured. A lot of detail for an individual tree, you can easiluy see it's branches and almost individual leafs. But, not a lot of background. Instead of the full view of the actual scene, we see about 5% of it, only a single tree with a little background that surrounds it. But then again, it is up to the person that uses the camera to determine what he / she wants to capture.
+There is a single tree in an empty field. The top right image shows how this scene is captured using a wide angle. Almost the entire scene is captured, all the mountains and hills, all of the sky and grass, captured in a single image. We can say that we see about 90% of the actual scene. But, using this picture, if we wanted to see the individual details of the tree or a mountain or even a grass, we would see that it lacks pixels. There is not enough detail for each individual object. Here comes the bottom right image. A single tree is captured. A lot of detail for an individual tree, you can easily see its branches and almost individual leaves. But, not a lot of background. Instead of the full view of the actual scene, we see about 5% of it, only a single tree with a little background that surrounds it. But then again, it is up to the person that uses the camera to determine what he / she wants to capture.
 
 Also, looking at the top right and top bottom images, one important thing to say is that both images have the same amount of total pixels.
 
-The exact same FOV principles hold in the rendering world. If you have a camera that has a wide FOV angle, you will be able to see a lot of scene at once throuh your monitor screen, but each separate object might not have the most detail and vice versa with a narrow FOV angle.
+The exact same FOV principles hold in the rendering world. If you have a camera that has a wide FOV angle, you will be able to see a lot of scene at once through your monitor screen, but each separate object might not have the most detail and vice versa with a narrow FOV angle.
 
 The equation for FOV is the following:
 
@@ -181,12 +181,12 @@ $
     FOV_v = 2 \cdot \arctan\left(\frac{sensor\_height}{2 \cdot focal\_length}\right)
 $
 
-But, these are the equations that help as determine the FOV in the real world. In redering, we usually directly set the FOV. Also, one important thing to note here is that FOV is usually set for the vertcal component. Why? Well, as you will see later, the horizontal component can be extracted knowing what is the aspect ratio.
+But, these are the equations that help us determine the FOV in the real world. In rendering, we usually directly set the FOV. Also, one important thing to note here is that FOV is usually set for the vertical component. Why? Well, as you will see later, the horizontal component can be extracted knowing what is the aspect ratio.
 
 
 #### Aspect Ratio
 
-__Aspect Ratio__ tells the ration between the pixels in width and pixels in height. No magic, just easy to understand topic. This parameter, same as FOV, is needed to calculate the projection matrix. The equation for the aspect ratio is this:
+__Aspect Ratio__ tells the ratio between the pixels in width and pixels in height. No magic, just easy to understand topic. This parameter, same as FOV, is needed to calculate the projection matrix. The equation for the aspect ratio is this:
 
 $
 aspect\_ratio = \frac{width}{height}
@@ -196,12 +196,12 @@ I hope this image explains everything to you about the aspect ratio.
 
 ![aspect_ratio](Assets/aspect_ratio.png)
 
-Now, that we have went through all the "small" building blocks of the camera, let's go to the "big bolder" topics.
+Now that we have gone through all the "small" building blocks of the camera, let's go to the "big, bolder" topics.
 
 
 ## Camera Transformations: View and Projection Matrices
 
-These 2 remaining topics about the camera are, at least for me, kind of hard to understand. I mean, I remember when I first stumbled on these 2 words and was like "what is that?". Trust me when I say this, but it took me some time to get a good grip on what these things are. This is, probobly, the first time where the notion of "why do I see objects like I do in pure form?" comes to light. First of all, in this section stop thinking anything outside the real world. I mean when I will be explaining these 2 matrices, do not think about no OpenGL or shaders or any other thing related to pixel coloration. Instead, all the time think about the real world (virtual world).
+These 2 remaining topics about the camera are, at least for me, kind of hard to understand. I mean, I remember when I first stumbled on these 2 words and was like "what is that?". Trust me when I say this, but it took me some time to get a good grip on what these things are. This is, probably, the first time when the notion of "why do I see objects like I do in pure form?" comes to light. First of all, in this section stop thinking anything outside the real world. I mean when I explain these 2 matrices, do not think about OpenGL or shaders or any other thing related to pixel coloration. Instead, all the time think about the real world (virtual world).
 
 Remember how to get the model matrix of each object, you have to follow these steps:
 
@@ -209,13 +209,13 @@ $
     \text{Local} \;\rightarrow\; \text{Scaling} \;\rightarrow\; \text{Rotation} \;\rightarrow\; \text{Translation} \;\rightarrow\; \text{Model}
 $
 
-Well, somewhat the same logic can be applie here (the following represent different coordinat systems):
+Well, somewhat the same logic can be applied here (the following represent different coordinate systems):
 
 $
     \text{Model} \rightarrow \text{View} \rightarrow \text{Clip (Projection)} \rightarrow \text{NDC} \rightarrow \text{Screen}
 $
 
-Before moving any further, here you can see __NDC__ and __Screen__. I am going to cover these 2 in this or the following lessons. For now, just know that NDC (normalized device coordinate) is resolution or pixel invariant 2D coordinate system. It's range is $(-1, 1)$ (both, for X and for Y axes). Screen is the actual pixel coordinates (also 2D, because screen is flat), meaning that when X and Y coordinates are given, they represent the actual pixel position on your monitor screen. 
+Before moving any further, here you can see __NDC__ and __Screen__. I am going to cover these 2 in this or the following lessons. For now, just know that NDC (normalized device coordinate) is resolution or pixel invariant 2D coordinate system. Its range is $(-1, 1)$ (for both the X and Y axes). Screen is the actual pixel coordinates (also 2D, because screen is flat), meaning that when X and Y coordinates are given, they represent the actual pixel position on your monitor screen. 
 
 We know what a model matrix is, but following it, we can also see our 2 main protagonists of this section. Since __view__ goes right after the model matrix, let's start with it.
 
@@ -226,19 +226,19 @@ We know what a model matrix is, but following it, we can also see our 2 main pro
 __View Matrix__ is a matrix that transforms world space into camera (view) space. It transforms all objects in the scene in such a way that the camera becomes the origin of the coordinate system and looks along a fixed direction. In a sense, you can think about this transformation as changing the world space to local space, where the local space is relative to the camera. To help you visualize this, imagine a cube placed at position [x, y, z] in world space, and a camera located at $(x_c, y_c, z_c)$. After applying the view matrix, the coordinate system is transformed so that the camera is effectively at $(0, 0, 0)$, and the cube is moved and rotated to a new position $(x_t, y_t, z_t)$ relative to the camera. In other words, instead of moving the camera, the entire world is transformed relative 
 to the camera's position and orientation.
 
-What might help you to better understand how a camera view coordinate are how the axis look like. Remember what are camera's forward direction, right and up vectors? Well, these become axes in the camera view coordinate system:
+What might help you to better understand how a camera view coordinates work is how the axes look. Remember what are camera's forward direction, right and up vectors? Well, these become axes in the camera view coordinate system:
 
 * Forward vector --> -Z axis (since Z axis goes towards the screen)
 * Right vector --> +X axis
 * Up vector --> +Y axis
 
-The idea of view matrix is kinda simple. You need a view transform in order to move all the world in such a way that the camera would be the origin of it. You need the camera to be the origin because you see the real world through your monitor, and he monitor is eesentialy the camera lense through which you see the real world. 
+The idea of the view matrix is kinda simple. You need a view transform in order to move all the world in such a way that the camera would be the origin of it. You need the camera to be the origin because you see the real world through your monitor, and the monitor is essentially the camera lens through which you see the real world. 
 
-There are also deeper and much more important reasons on why the view transform is necessary. For example, it mathematically simplifies a lot of the stuff for the GPU. Imagine for a second that you did not use the view transform. In this case, now the GPU has to somehow figure out what is visible and what is not. And how would the GPU do it? Well, in this case, for every object the GPU would have to calculate the camera orientation (because we want to see if the object is visible or not), compute projections differently. We would need all this stuff because, at the end, the clip space essentially tells what objects are in the camera view are and which not. View transformation simplifies a lot of steps, and also, because matrices are amazing, you can combine the view matrix with the projection matrix (which we are going to discuss now).
+There are also deeper and much more important reasons why the view transform is necessary. For example, it mathematically simplifies a lot of the stuff for the GPU. Imagine for a second that you did not use the view transform. In this case, now the GPU has to somehow figure out what is visible and what is not. And how would the GPU do it? Well, in this case, for every object the GPU would have to calculate the camera orientation (because we want to see if the object is visible or not), compute projections differently. We would need all this stuff because, at the end, the clip space essentially tells which objects are in the camera view and which are not. View transformation simplifies a lot of steps, and also, because matrices are amazing, you can combine the view matrix with the projection matrix (which we are going to discuss now).
 
 ### Mathematical Core and Intuition Behind View Transformation
 
-The core problem we are trying to solve with view transformation is that we want to transform the world space in such a way that the camera is the origin of this new coordinate system. Remember, that up now, the origin of the real world is defined as $(0, 0, 0)$ while camera has it's own position $(x, y, z)$. 
+The core problem we are trying to solve with view transformation is that we want to transform the world space in such a way that the camera is the origin of this new coordinate system. Remember, that up to now, the origin of the real world is defined as $(0, 0, 0)$ while the camera has its own position $(x, y, z)$. 
 
 In order to transform the real world coordinate system into a camera space, you need 3 things:
 
@@ -248,7 +248,7 @@ In order to transform the real world coordinate system into a camera space, you 
         \vec{c}
     $
 
-* Target (what the caera is looking towards)
+* Target (what the camera is looking towards)
 
     $
         \vec{t}
@@ -261,7 +261,7 @@ In order to transform the real world coordinate system into a camera space, you 
     $
 
 
-Next, we need to build 3 axes vectors that will define camera space's coordinate system's base axes. As mentioned earlier we need:
+Next, we need to build 3 axis vectors that will define camera space's coordinate system's base axes. As mentioned earlier we need:
 
 * Forward vector (camera direction) <--> $-z$
 
@@ -281,17 +281,17 @@ Next, we need to build 3 axes vectors that will define camera space's coordinate
         \vec{u}_{\text{camera}} = \vec{r} \times \vec{f}
     $
 
-Now, before continuing any further, let's just take a small step back and try to think what will the view transformation do. I mean what type of transformations. Remember, that there are 3 basic types of physical transformations: scaling, rotation and translation. Now let's see which of these 3 are needed for the view transformation:
+Now, before continuing any further, let's just take a small step back and try to think what the view transformation will do. I mean what types of transformations it will perform. Remember, that there are 3 basic types of physical transformations: scaling, rotation and translation. Now let's see which of these 3 are needed for the view transformation:
 
 * Scaling - no We do not in any shape or form scale anything. Not a single object in the camera space is going to have a different size than what it used to have.
-* Rotation - yes. Imagine if the camera is rotate 90 degrees on the Z axis. This way the camera up vector is the -X axis of the world space. But, in camera space, the up vector of the camera becomes the Y axis for the camera space. Because of it rotation is needed in view transformation.
-* Translation - yes. Remember, that we want to make the camera position as the origin for the camera space, meaning that cameera position in world space $(x, y, z)$ becomes $(0, 0, 0)$ in camera space:
+* Rotation - yes. Imagine if the camera is rotated 90 degrees on the Z axis. This way the camera up vector is the -X axis of the world space. But, in camera space, the up vector of the camera becomes the Y axis for the camera space. Because of this, rotation is needed in view transformation.
+* Translation - yes. Remember, that we want to make the camera position as the origin for the camera space, meaning that camera position in world space $(x, y, z)$ becomes $(0, 0, 0)$ in camera space:
 
     $
         \overset{\text{world space}}{(x, y, z)} \;\rightarrow\; \overset{\text{camera space}}{(0, 0, 0)}
     $
 
-Now we know that view transformation is basically comprised of 2 types physical transformations: rotation and translation. Because view transformation has translation ad the fact that we want to express this transformation as a linear operation, we have to visit our good old friend homogeneous coordinate system. This means that the view matrix is going to be 4D instead of 3D.
+Now we know that view transformation is basically comprised of 2 types of physical transformations: rotation and translation. Because view transformation has translation and the fact that we want to express this transformation as a linear operation, we have to visit our good old friend a homogeneous coordinate system. This means that the view matrix is going to be 4D instead of 3D.
 
 Here is how the view matrix looks like:
 
@@ -305,7 +305,7 @@ $
     \end{bmatrix}
 $
 
-For me, when I first saw this matrix was "what is that? Why is it layed the way as it is?". To better understand why the view matrix looks the way it does, it is advised to look at the translation and rotation transformations separately. Because, remember that the view matrix is comprised of of these 2 transformations. Also, remember this one fact, that when the view matrix is being created, first you apply the translation and then the rotation matrices. Do not mistaken it with the model matrix, where vice versa happens (first rotation and only then translation).
+For me, when I first saw this matrix, my reaction was "what is that? Why is it laid the way as it is?". To better understand why the view matrix looks the way it does, it is advised to look at the translation and rotation transformations separately. Because, remember that the view matrix is comprised of these 2 transformations. Also, remember this one fact, that when the view matrix is being created, first you apply the translation and then the rotation matrices. Do not mistake it with the model matrix, where the reverse happens (first rotation and only then translation).
 
 Let's take a look at how the translation matrix for the view transformation is going to look like:
 
@@ -319,9 +319,9 @@ $
     \end{bmatrix}
 $
 
-One thing to note from the beginning is that we are again in the homogeneous coordinate system (we are in 3D world, but the transformation matrix is 4D). Do not forget translation is not a linear operation, but we want to make it one. Homogeneous coordinate system allows us to achieve this. 
+One thing to note from the beginning is that we are again in a a homogeneous coordinate system (we are in 3D world, but the transformation matrix is 4D). Do not forget that translation is not a linear operation, but we want to make it one. Homogeneous coordinate system allows us to achieve this. 
 
-Again, you might go "why is the `-` sign before the camera position?". Well, our goal is to make camera position in world space, the origin of camera space (as I mentioned before). So if the camera is at:
+Again, you might go "why is the `-` sign before the camera position?". Well, our goal is to make the camera position in world space, the origin of camera space (as I mentioned before). So if the camera is at:
 
 $
     c \rightarrow (c_x, c_y, c_z)
@@ -349,7 +349,7 @@ $
 
 So now we know why the delta components in the translation matrix have a `-` sign.
 
-Let's now study the rotation part. The rotation trasnformation matrix looks like this:
+Let's now study the rotation part. The rotation transformation matrix looks like this:
 
 $
     R =
@@ -361,7 +361,7 @@ $
     \end{bmatrix}
 $
 
-This looks a bit harder to understand than the translation matrix (of the view matrix). Since this matrix is also in the homogeneous coordinate system and in order to better understand how the rotation part works in the view transformation, let's first drop the last dimension of the rotation matrix. Now, this matrix looks like this:
+This looks a bit harder to understand than the translation matrix (of the view matrix). Since this matrix is also in a a homogeneous coordinate system and in order to better understand how the rotation part works in the view transformation, let's first drop the last dimension of the rotation matrix. Now, this matrix looks like this:
 
 $
     R =
@@ -372,9 +372,9 @@ $
     \end{bmatrix}
 $
 
-One thing to notice from the beginning is that values are logically placed. I mean first row has right vector values, second row has up vector values and the third row has negative forward vector values (remember, positive values go toward the screen). But, at the moment, it still looks a bit confusing. One of the weird things I noticed while learning the rotation matrix (which is the transformation component in the view matrix) was that for some reason, the rows of this matrix have basis axis of camera space. My question was, why the basis vectors are now the rows and not columns, I mean in the last lesson I remember that I told you that in math, it is a convention to have columns in the matrix representing the basis vectors of that coordinate system. So why is it that this rotation matrix is [transposed](https://en.wikipedia.org/wiki/Transpose)?
+One thing to notice from the beginning is that values are logically placed. I mean the first row has right vector values, the second row has up vector values and the third row has negative forward vector values (remember, positive values go toward the screen). But, at the moment, it still looks a bit confusing. One of the weird things I noticed while learning the rotation matrix (which is the transformation component in the view matrix) was that for some reason, the rows of this matrix have basis axes of camera space. My question was, why the basis vectors are now rows and not columns, I mean in the last lesson I remember that I told you that in math, it is a convention to have columns in the matrix representing the basis vectors of that coordinate system. So why is it that this rotation matrix is [transposed](https://en.wikipedia.org/wiki/Transpose)?
 
-The main idea why the rows instead of columns are the basis vectors in this rotation matrix is because we are trying to transform the world space to local space. Remember, how we had a an object constructed and then we wanted to move it to the world space (in a sense, putting a contstructed object into the scene). What we essentially are doing is moving the object from local space to world space. When an operation like this is done, usually the transformation matrix has basis vectors defined in columns. One critical thing to understand is that camera space is essentially a local space for the camear object. Now, logically thinking, in order to go back from the world space to local space, we can just take the original transformation matrix and apply the inverse of it. In a sense it would look like this:
+The main idea why the rows instead of columns are the basis vectors in this rotation matrix is because we are trying to transform the world space to local space. Remember, how we had an object constructed and then we wanted to move it to the world space (in a sense, putting a constructed object into the scene). What we essentially are doing is moving the object from local space to world space. When an operation like this is done, usually the transformation matrix has basis vectors defined in columns. One critical thing to understand is that camera space is essentially a local space for the camera object. Now, logically thinking, in order to go back from the world space to local space, we can just take the original transformation matrix and apply the inverse of it. In a sense it would look like this:
 
 $
     M - \text{transformation matrix, local space} \rightarrow \text{world space}\\
@@ -382,14 +382,14 @@ $
     \vec{v}_{\text{local}} = M^{-1} \, \vec{v}_{\text{world}}
 $
 
-That looks pretty reasonable, but our rotation does not look like an inverse, it looks transposed. Yes, but here lies one of the math's hidden beauties. If a transformation is orthogonal, it's inverse is a transposed version of it (the original trasnformation). In order for a trasnformation to be an orthogonal, it needs to preserve angles and lengths, also, it needs to be a linear transformation. Rotation preserves all of these. There is also a reflection trasnformation, but will not be covering that on this lesson. Translation is not linear and scaling literally lengthens or shortens the lines.
+That looks pretty reasonable, but our rotation does not look like an inverse, it looks transposed. Yes, but here lies one of the math's hidden beauties. If a transformation is orthogonal, its inverse is a transposed version of it (the original transformation). In order for a transformation to be orthogonal, it needs to preserve angles and lengths, also, it needs to be a linear transformation. Rotation preserves all of these. There is also a reflection transformation, but we will not be covering that in this lesson. Translation is not linear and scaling literally lengthens or shortens the lines.
 
-Let's look again into the mathematical world to understand why the trasnpose of the rotation matrix is actually an inverse of it:
+Let's look again into the mathematical world to understand why the transpose of the rotation matrix is actually an inverse of it:
 
 For orthogonal matrix __Q__ the defining property is:
 
 $
-    I - \text{indentity matrix}
+    I - \text{identity matrix}
 $
 
 $
@@ -410,9 +410,9 @@ $
 
 then $Q^T$ is an inverse of $Q$.
 
-Because the view trasnformation essentially transforms world space into a camera space, which is a local space for the camera object, that means that the rotation part of the view matrix is transposed. That is rows in rotation matrix of the view transformation has rows as basis vectors.
+Because the view transformation essentially transforms world space into a camera space, which is a local space for the camera object, that means that the rotation part of the view matrix is transposed. That is why the rotation matrix of the view transformation has basis vectors as rows.
 
-Now we have 2 necessary components that comprise a single view matrix. We have translation and rotation matrices. The only thing that is left is we need to multiply them together and we will have a proper view matrix.
+Now we have 2 necessary components that comprise a single view matrix. We have translation and rotation matrices. The only thing left is to multiply them together and we will have a proper view matrix.
 
 $
     V - \text{view matrix} \\
@@ -449,16 +449,16 @@ $
     \end{bmatrix}
 $
 
-If you do not believe that multiplying $R_{V}T_{V}$ produces these values, you can try multiplying it on paper. Hightly suggest that in order so that you could arrive to these results yourselves.
+If you do not believe that multiplying $R_{V}T_{V}$ produces these values, you can try multiplying it on paper. I highly suggest that so that you can arrive at these results yourselves.
 
-One question you might have is why first translation is applied and only then rotation. I mean in the last lesson I told you that the order of multiplication is $TRS$. But remember, this is only the order if we move from local space to world space. Since view trasnformation transforms world space to local space all the operations also have to be reverted in order. Because of it, we have to first translate the space and only then rotate it.
+One question you might have is why translation is applied first and only then rotation. I mean in the last lesson I told you that the order of multiplication is $TRS$. But remember, this is only the order if we move from local space to world space. Since view transformation transforms world space to local space all the operations also have to be reverted in order. Because of it, we have to first translate the space and only then rotate it.
 
-Finally, now we understand what is a view transformation and how to construct it. We know $\frac{1}{2}$ of the transformations needed for this lesson. Next, we have a projection transformation.  
+Finally, we now understand what a view transformation is and how to construct it. We know $\frac{1}{2}$ of the transformations needed for this lesson. Next, we have a projection transformation.  
 
 ---
 ### Projection Transformation
 
-Dilemma is simple - we have 3D objects which are represented by triangles where each vertex is defined in 3D space $(x, y, z)$ coordinates. The problem is that our screen is 2D, and pixels are usually specified by 2 coordinates $(x, y)$. Now, how can we transform 3D points in a way that we could see them on a 2D screen? Lucky for us, we have one special transformation, suited exactly for these kinda situations. Here comes the __projection transformation__.
+The dilemma is simple - we have 3D objects which are represented by triangles where each vertex is defined in 3D space $(x, y, z)$ coordinates. The problem is that our screen is 2D, and pixels are usually specified by 2 coordinates $(x, y)$. Now, how can we transform 3D points in a way that we could see them on a 2D screen? Lucky for us, we have one special transformation, suited exactly for these kinds of situations. Here comes the __projection transformation__.
 
 __Projection Transformation__ - transforms 3D points in camera (view) space into a form that can be mapped onto a 2D screen. 
 
@@ -466,7 +466,7 @@ Remember this image:
 
 ![camera](Assets/camera.png)
 
-Well in this situation the view on your monitor should be something like this:
+Well, in this situation the view on your monitor should be something like this:
 
 ![camera](Assets/camera_view_through_monitor.png)
 
@@ -478,31 +478,31 @@ $
     \text{3D} \rightarrow \text{Projection Transformation} \rightarrow \text{2D}
 $
 
-This is where the projection transformation is responsible for in real world. In rendering, it is a bit different. In rendering the 3D to 2D transformation happens in these steps:
+This is what the projection transformation is responsible for in the real world. In rendering, it is a bit different. In rendering the 3D to 2D transformation happens in these steps:
 
 $
     \text{View Space} \rightarrow \text{Projection Transformation} \rightarrow \text{Clip Space} \rightarrow \text{Perspective Divide} \rightarrow \text{NDC} \rightarrow \text{Viewport Transform} \rightarrow \text{Screen Space}
 $
 
-As you can see, here projection transformation only is one of many steps in transforming 3D coordinates to 2D, which could mean pixels on our monitor screen. In rendering, projection transformation trasnforms view space to clip space (aka. projection space).
+As you can see, here the projection transformation is only one of many steps in transforming 3D coordinates to 2D, which could mean pixels on our monitor screen. In rendering, projection transformation trasnforms view space to clip space (a.k.a. projection space).
 
 Before we continue any further, I want to say that to understand projection transformation properly I recommend understanding what is NDC (normalized device coordinates) and what is clip space. Why I suggest it? Because I think that there are 2 reasons why it will help you overall:
 
-1. Understanding NDC space let's you understand the purpose of projection trasnformation way simpler than before
+1. Understanding NDC space lets you understand the purpose of projection transformation way simpler than before
 2. NDC space overall is far easier to understand and wrap your head around it than projection
 3. Even though clip space is a bit harder than NDC, it is still way easier than projection matrix
 
 
 ### NDC
 
-**NDC (normalized device coordinates)** is a coordinate system where each axis has a range of $[-1; 1]$. It exists because there must be some GLFW window size independant coordinate system, so that GLFW window with different sizes could correctly display vertex positions. 
+**NDC (normalized device coordinates)** is a coordinate system where each axis has a range of $[-1; 1]$. It exists because there must be some GLFW window size-independent coordinate system, so that GLFW window with different sizes could correctly display vertex positions. 
 
-A clear example is imagine 2 different size monitors:
+A clear example is to imagine 2 differently sized monitors:
 
 1. GLFW window A: size 400 x 800
 2. GLFW window B: size 800 x 400
 
-Following a common ground, if there is a sphere that is in the center of the GLFW window, that would mean that on window A it would be at coordinates [200; 400], but on window B it would be at [400; 200]. How to define what is center for GLFW window space which is different in size? Look at the 2 images below:
+Following a common ground, if there is a sphere that is in the center of the GLFW window, that would mean that on window A it would be at coordinates [200; 400], but on window B it would be at [400; 200]. How to define what the center is for GLFW window space which is different in size? Look at the 2 images below:
 
 1. Image size: 400 x 800
     
@@ -515,12 +515,12 @@ Following a common ground, if there is a sphere that is in the center of the GLF
 
 Do you see the problem? NDC exists exactly to solve this issue. 
 
-What it serves for is if we have a coordinate system that is GLFW window size independant, then we can say that the same sphere in the NDC space is [0; 0]. Then internally a graphics API handles GLFW window size positions, so that any size GLFW window could display the sphere on exactly the same place.
+Its purpose is that if we have a coordinate system that is GLFW window size-independent, then we can say that the same sphere in the NDC space is [0; 0]. Then internally a graphics API handles GLFW window size positions, so that any size GLFW window could display the sphere in exactly the same place.
 
 
 ### Clip Space
 
-**Clip Space** is a coordinate system which essentially tells which vertices are visible and which not. To be more technical, clip space where the GPU decides what is inside camera's view and what should be clipple away. Remember the car and the window example in lesson 2.
+**Clip Space** is a coordinate system that essentially tells us which vertices are visible and which not. To be more technical, clip space is where the GPU decides what is inside camera's view and what should be clipped away. Remember the car and the window example in lesson 2.
 
 To know which vertices will be visible and which not, remember this rule:
 
@@ -530,18 +530,18 @@ $
     -w_\text{clip} \leq z_\text{clip} \leq w_\text{clip}
 $
 
-A vertex is visible only and only if these 3 conditions are true. If at least one of these fail, the vertex is clipped and will not be visible in the final image.
+A vertex is visible if and only if these 3 conditions are true. If at least one of these fail, the vertex is clipped and will not be visible in the final image.
 
-Also, remember that the clip space still has a shape of $[D + 1; D + 1]$ where $D$ is the number of dimensions in real world. That means that clip space is homogeneous coordinate system.
+Also, remember that the clip space still has a shape of $[D + 1; D + 1]$ where $D$ is the number of dimensions in real world. That means that clip space is a homogeneous coordinate system.
 
-Another fact worth mentioning is do not mistake clip space with NDC range. I have done this myself where for some time I was thinking that clip space has also a range of $[-1; 1]$. That is wrong. This is NDC's range, clip space do not have bounds.
+Another fact worth mentioning is do not mistake clip space with NDC range. I have done this myself where for some time I was thinking that clip space has also a range of $[-1; 1]$. That is wrong. This is NDC's range, clip space does not have bounds.
 
 
 ### Perspective Divide
 
 We understand what is clip space and what is NDC space, now we need to understand what is the operation that turns one to the other.
 
-**Perspective divide** is a special operation which goal is to transform clip space to NDC space. This step creates a perspective effect where the distant objects appear to be smaller, than nearby ones.
+**Perspective divide** is a special operation whose goal is to transform clip space to NDC space. This step creates a perspective effect where the distant objects appear to be smaller than nearby ones.
 
 This operation is very simple:
 
@@ -558,12 +558,12 @@ One important thing to understand about perspective divide is the fact that this
 
 ### Resume: NDC, Clip Space, Perspective Divide
 
-I think that it is great that now we understnad what happens before and after the projection transformation, because it will be easier to understand the essence of it once I start explaining it. The projection transformation, in my opinion, is the hardest real world transformation to explain because a lot of it, at first, does not make sense. Just know that the goal of perspective transformation in rendering is to create clip space values, which after perspective divide produce values which lie in the NDC space.
+I think that it is great that now we understand what happens before and after the projection transformation, because it will be easier to understand the essence of it once I start explaining it. The projection transformation, in my opinion, is the hardest real world transformation to explain because a lot of it, at first, does not make sense. Just know that the goal of perspective transformation in rendering is to create clip space values, which after perspective divide produce values which lie in the NDC space.
 
 
 ### Mathematical Core and Intuition Behind Projection Transformation
 
-The core problem we are trying to solve is that we want 3D points in camera space to be transformed to 2D coordinates. Again, we need 2D coordinates because we are slowly moving towards a final image that will be see on your screen. 
+The core problem we are trying to solve is that we want 3D points in camera space to be transformed to 2D coordinates. Again, we need 2D coordinates because we are slowly moving towards a final image that will be seen on your screen. 
 
 The problem can be generalized by this:
 
@@ -592,7 +592,7 @@ $
     d = 1
 $
 
-This makes :
+This gives:
 
 $
     \begin{aligned}
@@ -601,7 +601,7 @@ $
     \end{aligned}
 $
 
-This way we would retain the distance, where once the $z$ value is large, the division by $z$ would produce a small value. Also, do you notice, that these equations are the same as the perspective divide? That is why I wanted to explain those topics first, because now we understand this equation.
+This way we would retain the distance, where once the $z$ value is large, the division by $z$ would produce a small value. Also, do you notice that these equations are the same as the perspective divide? That is why I wanted to explain those topics first, because now we understand this equation.
 
 This is all great, but here lies a small problem. The way we divide coordinates by $z$ is not considered a linear operation. As you remember from our previous lesson, I stressed the fact that transformations (if possible) should be linear, because this way we can combine multiple operations into a single matrix. You may ask me "why isn't this operation linear?". Remember, a linear transformation is a transformation that satisfies these 2 rules:
 
@@ -617,7 +617,7 @@ This is all great, but here lies a small problem. The way we divide coordinates 
         T(a\,\vec{u}) = a\,T(\vec{u})
     $
 
-Let's check the additivy first for the division by $z$:
+Let's check the additivity first for the division by $z$:
 
 $
     \vec{u} = (1, 0, 1) \ ; \vec{v} = (0, 1, 1)
@@ -638,7 +638,7 @@ $
     T(\vec{u})+T(\vec{v})=(1,0)+(0,1)=(1,1)
 $
 
-So, we have the first result for the $T(\vec{u}) + T(\vec{v}) = (1, 1)$. Now wee need to check what the $T(\vec{u} + \vec{v})$ will give. 
+So, we have the first result for the $T(\vec{u}) + T(\vec{v}) = (1, 1)$. Now we need to check what the $T(\vec{u} + \vec{v})$ will give. 
 
 First, let's add the 2 vectors together:
 
@@ -660,9 +660,9 @@ $
     T(\vec{u}) + T(\vec{v}) \neq T(\vec{u} + \vec{v}) \rightarrow (1, 1) \neq \left(\frac{1}{2}, \frac{1}{2}\right)
 $
 
-"Hmmm, what can be done to solve this linearity issue? I wonder if a similar problem apeared in the previous lesson, where we wanted to make a translation also linear.". For some of those that remembered the last lesson, we have learned about the homogeneous coordinate system. This coordinate system was great because it allowed us to express translation as a linear operation by introducing another dimension. Remember that our goal is to combine transformations into a single matrix (entity) which could be reused for all objects. 
+"Hmmm, what can be done to solve this linearity issue? I wonder if a similar problem appeared in the previous lesson, where we wanted to make a translation also linear.". For some of those that remembered the last lesson, we learned about a a homogeneous coordinate system. This coordinate system was great because it allowed us to express translation as a linear operation by introducing another dimension. Remember that our goal is to combine transformations into a single matrix (entity) which could be reused for all objects. 
 
-We can follow the same logic to make the projection transformation linear also. In the previous lesson, we were still dealing with 2D world, so our transformation matrix in homogeneous coordinate system was 3D. Now, since we are transitioning to 3D, the transformation matrix has to be 4D.
+We can follow the same logic to make the projection transformation linear also. In the previous lesson, we were still dealing with 2D world, so our transformation matrix in a homogeneous coordinate system was 3D. Now, since we are transitioning to 3D, the transformation matrix has to be 4D.
 
 The projection matrix in homogeneous space looks like this:
 
@@ -676,7 +676,7 @@ $
     \end{bmatrix}
 $
 
-Ok, if view matrix made 0 sense at the beginning, this one looks even worse. Remember, that the projection transformation transforms a vector from view space to clip space:
+Okay, if the view matrix made no sense at the beginning, this one looks even worse. Remember, that the projection transformation transforms a vector from view space to clip space:
 
 $
     \vec{v_\text{view}} = [x_\text{view}, y_\text{view}, z_\text{view}, w_\text{view}] \text{ - vector in view space} \\
@@ -688,9 +688,9 @@ $
     \vec{v_\text{clip}} = P \cdot \vec{v_\text{view}}
 $
 
-I think that the best way to understand this matrix is to look at it by each row individually, since each row trasnforms a single component in the input vector. Let's see how it works:
+I think that the best way to understand this matrix is to look at it by each row individually, since each row transforms a single component in the input vector. Let's see how it works:
 
-* 1-st row
+* 1st row
 
     $
         \begin{bmatrix}
@@ -699,7 +699,7 @@ I think that the best way to understand this matrix is to look at it by each row
         \xrightarrow{\text{transforms}} x_\text{view} \rightarrow x_\text{clip}
     $
 
-* 2-nd row
+* 2nd row
 
     $
         \begin{bmatrix}
@@ -708,7 +708,7 @@ I think that the best way to understand this matrix is to look at it by each row
         \xrightarrow{\text{transforms}} y_\text{view} \rightarrow y_\text{clip}
     $
 
-* 3-rd row
+* 3rd row
 
     $
         \begin{bmatrix}
@@ -717,7 +717,7 @@ I think that the best way to understand this matrix is to look at it by each row
         \xrightarrow{\text{transforms}} z_\text{view} \rightarrow z_\text{clip}
     $
 
-* 4-th row
+* 4th row
 
     $
         \begin{bmatrix}
@@ -728,9 +728,9 @@ I think that the best way to understand this matrix is to look at it by each row
 
 Let's go one by one and understand why and how they transform their respective components.
 
-### 1-st row
+### 1st row
 
-The 1-st row of the projection matrix has only a single non 0 element. That means that for the $x_\text{clip}$ the result will be:
+The 1st row of the projection matrix has only a single nonzero element. That means that for the $x_\text{clip}$ the result will be:
 
 $
     x_\text{clip} = \frac{1}{\tan\left(\frac{fov}{2}\right)\cdot aspect} \cdot x_\text{view}
@@ -742,7 +742,7 @@ $
     \frac{1}{\tan\left(\frac{fov}{2}\right)\cdot aspect}
 $
 
-To understand it better, we have disect this expression into even smaller parts. Let's start from:
+To understand it better, we have to dissect this expression into even smaller parts. Let's start from:
 
 $
     \tan\left(\frac{fov}{2}\right)
@@ -770,7 +770,7 @@ $
     t = n \cdot \tan\left(\frac{\theta}{2}\right)
 $
 
-Now we can express the height (top) in terms of distance from the eyer and the $\tan\left(\frac{\theta}{2}\right)$ value.
+Now we can express the height (top) in terms of distance from the eye and the $\tan\left(\frac{\theta}{2}\right)$ value.
 
 If we choose $near$ to be 1, then this equation simplifies to:
 
@@ -778,7 +778,7 @@ $
     t = \tan\left(\frac{\theta}{2}\right)
 $
 
-This is an extremely important result. It tells us how large the visible half-height of the camera frustum is at distance 1. From this, we can see that increasing the field of view increases the size of the visible region. A larger visible region means more world space fits inside the camera frustum, causing objects to appear smaller in projected space. A smaller field of view produces the opposite effect and behaves similarly to a zoomed-in camera. Also, from the definition of __fov__, we can say that the the larger the angle, the smaller the object's projection on the screen is. You can see this clearly on the tree picture (at the top of the lesson). The tree, in both pictures, has the same height, but the different fov makes tree to have the different size on the screen. That is directly affected by this equation.
+This is an extremely important result. It tells us how large the visible half-height of the camera frustum is at distance 1. From this, we can see that increasing the field of view increases the size of the visible region. A larger visible region means more world space fits inside the camera frustum, causing objects to appear smaller in projected space. A smaller field of view produces the opposite effect and behaves similarly to a zoomed-in camera. Also, from the definition of __fov__, we can say that the larger the angle, the smaller the object's projection on the screen is. You can see this clearly on the tree picture (at the top of the lesson). The tree, in both pictures, has the same height, but the different fov makes the tree have a different size on the screen. That is directly affected by this equation.
 
 Now, the above equation basically tells us ___how large the visible region at a distance of 1 is___. This is great, but this number can vary from 0 to infinity. I mean look at this:
 
@@ -787,14 +787,14 @@ $
     t = \tan\left(\frac{180^\circ}{2}\right) = \tan\left(90^\circ\right) = \infty
 $
 
-Usually to prevent the infinities, we hardcode that choosing an angle of 180&deg; is prohibited.
+Usually, to prevent the infinities, we hardcode that choosing an angle of 180&deg; is prohibited.
 
 I will give you an actual example showing how $fov$ affects the height proportion of the object on the screen. Let's take 2 examples: 
 
 1. Small fov: 15&deg;  $\; \; \; \; \; \tan(15^\circ) \approx 0.27$
 2. Large fov: 120&deg; $\; \; \; \tan(120^\circ) \approx 1.73$
 
-Let's plug in these values to this equation $top = \tan\left(\frac{\theta}{2}\right)$:
+Let's plug these values into this equation $top = \tan\left(\frac{\theta}{2}\right)$:
 
 $
     f - \text{scaling factor} \\
@@ -945,12 +945,12 @@ A larger aspect ratio:
 
 That is exactly why the aspect ratio appears in the denominator.
 
-To sum it up, we now understand what type of transformation does the top left matrix do. The goal of this transformation is to apply scale X and Y coordinates of the input vector by scaling factors respectively.
+To sum it up, we now understand what type of transformation the top-left part of the matrix performs. The goal of this transformation is to scale the X and Y coordinates of the input vector by scaling factors respectively.
 
 
-### 2-nd row
+### 2nd row
 
-Second row of the projection transformation is:
+The second row of the projection transformation is:
 
 $
     \begin{bmatrix}
@@ -958,13 +958,13 @@ $
     \end{bmatrix}
 $
 
-This is probobly the easiest to explain, since it is almost identical to the 1-st row, just without the $aspect$ term. We do not need the $aspect$ to get the $y_\text{clip}$ because remember, that $fov$ is defined as the vertical angle (not the horizontal). So our vertical scaling factor does not require to be further adjusted according to the aspect.
+This is probably the easiest to explain, since it is almost identical to the 1st row, just without the $aspect$ term. We do not need the $aspect$ to get the $y_\text{clip}$ because remember, that $fov$ is defined as the vertical angle (not the horizontal). So our vertical scaling factor does not need to be further adjusted according to the aspect.
 
-### 4-th row
+### 4th row
 
-I suggest to understand this row first, because it is easier and more intuitive from the remaining 2 rows.
+I suggest to understand this row first, because it is easier and more intuitive than the remaining 2 rows.
 
-The 4-th row is:
+The 4th row is:
 
 $
     \begin{bmatrix}
@@ -995,13 +995,13 @@ $
     \vec{p} = [0, 0, -1, 0]
 $
 
-Let's see how will $\vec{v}$ change in the cslip space:
+Let's see how will $\vec{v}$ change in the clip space:
 
 $
     w_{\text{clip}} = \vec{p} \cdot \vec{v_{\text{view}}} = -z
 $
 
-Now we have a proof that a clip value is equal to $-z$. Now let's go a bit forward with it:
+Now we have a proof that the clip value is equal to $-z$. Now let's go a bit forward with it:
 
 $
     \vec{v_{\text{view}}} \text{ - vector in view space} \\
@@ -1030,7 +1030,7 @@ $
     \vec{v_{\text{clip}}} = [x', y', z', -z]
 $
 
-What comes next? Well, to understand it better, let's look back at all the trasnformations that happen in the rendering saga:
+What comes next? Well, to understand it better, let's look back at all the transformations that happen in the rendering saga:
 
 $
     \text{Model Space}
@@ -1050,7 +1050,7 @@ $
 
 The next step after clip space is the **perspective divide**. The essence and goal of the perspective divide is pretty intuitive and clear. 
 
-**Perpsective divide** transforms the vector in clip space to a vector in NDC space. An example of how it works:
+**Perspective divide** transforms the vector in clip space to a vector in NDC space. An example of how it works:
 
 $
     \vec{v_{\text{clip}}} = [x_\text{clip}, y_\text{clip}, z_\text{clip}, w_\text{clip}] \\
@@ -1083,13 +1083,13 @@ $
     \end{aligned}
 $
 
-This is the simplest way to project something onto a 2D screen from 3D world. Doesn't the 3 above equation look similar to this one? That is the essence of the 3-rd row in the projection transformation. You get the divisor for that is projecting x and y coords onto 2D screen.
+This is the simplest way to project something onto a 2D screen from 3D world. Doesn't the 3 equations above look similar to this one? That is the essence of the 3rd row in the projection transformation. You get the divisor for that is projecting x and y coords onto 2D screen.
 
-Also, one key thing to remember is that up to now, many transformations we did were linear, but perspective divide is not a linear operation, since (as shown before) division by a value is does not satisfy the additivity rule.
+Also, one key thing to remember is that up to now, many transformations we did were linear, but perspective divide is not a linear operation, since (as shown before) division by a value does not satisfy the additivity rule.
 
-This was a kind of long explanation on meaning and intuition on what is the 4-th row in the projection transform. The goal of the $[0, 0, -1, 0]$ row is to create a clip space $w_\text{clip}$ value that is actually $-z_\text{view}$, and this value is used as a denominator for the transformation from clip space to NDC. The transformation that transforms the vector from clip space to NDC space is called perspective divide.
+This was a kind of long explanation of the meaning and intuition of the 4th row in the projection transform. The goal of the $[0, 0, -1, 0]$ row is to create a clip space $w_\text{clip}$ value that is actually $-z_\text{view}$, and this value is used as a denominator for the transformation from clip space to NDC. The transformation that transforms the vector from clip space to NDC space is called perspective divide.
 
-Now we can go to the last group of elements in the projection matrix, which will complete our journey through the projection transformation intricacies and reasons on why is it the way it is.
+Now we can go to the last group of elements in the projection matrix, which will complete our journey through the projection transformation intricacies and reasons why is it the way it is.
 
 
 ### 3rd row
@@ -1100,17 +1100,17 @@ $
     \end{bmatrix}
 $
 
-Before we continue with the explanation on why this row is the way it is, let's first get the intuition and what problem is the 3-rd row solving.
+Before we continue with the explanation on why this row is the way it is, let's first get the intuition and what problem is the 3rd row solving.
 
 As we remember:
 
-* 1-st row scales $x$ according to a scaling factor and an aspect
-* 2-nd row scales $y$ according to a scaling factor
-* 4-th row calculates $w_\text{clip}$, which, as we remember is $-z_\text{view}$
+* 1st row scales $x$ according to a scaling factor and an aspect
+* 2nd row scales $y$ according to a scaling factor
+* 4th row calculates $w_\text{clip}$, which, as we remember is $-z_\text{view}$
 
 The question that remains is: what should we do with the z component after the projection transformation?
 
-To understand the essence of this transformation, let's look back at the NDC space. NDC range (for all components or axes) is $[-1; 1]$. Also, there is a new concept we have to learn that is part of the clip space. Remember, that the clip space is the place where we can see which vertices in the view frustum are kept and which are clipped? I have told this before, but I think that I never have given a proper explanation on how to know which vertices are visible and which not.
+To understand the essence of this transformation, let's look back at the NDC space. NDC range (for all components or axes) is $[-1; 1]$. Also, there is a new concept we have to learn that is part of the clip space. Remember, that the clip space is the place where we can see which vertices in the view frustum are kept and which are clipped? I have said this before, but I think that I have never given a proper explanation on how to know which vertices are visible and which not.
 
 The important rule to understand is this one:
 
@@ -1120,9 +1120,9 @@ $
     -w_\text{clip} \leq z_\text{clip} \leq w_\text{clip}
 $
 
-These 3 equations essentially tell which vertices are visible. If all 3 components of a vertex satisfy each of the equation, then this vertex is visible. If only a single one is not in this range, i.e. $[-w_\text{clip}; w_\text{clip}]$, then the vertexz is going to be clipped (we are not going to see that vertex on our screen).
+These 3 equations essentially tell which vertices are visible. If all 3 components of a vertex satisfy each equation, then this vertex is visible. If only a single one is not in this range, i.e. $[-w_\text{clip}; w_\text{clip}]$, then the vertex is going to be clipped (we are not going to see that vertex on our screen).
 
-How does this come into play with the 3-rd row of the transformation matrix? Well, these 3 equations have 4 unique terms: $x_\text{clip}, y_\text{clip}, z_\text{clip}, w_\text{clip}$. We know what 3 of them actually are (i.e.: $x_\text{clip}, y_\text{clip}, w_\text{clip}$). To remind you what these are:
+How does this come into play with the 3rd row of the transformation matrix? Well, these 3 equations have 4 unique terms: $x_\text{clip}, y_\text{clip}, z_\text{clip}, w_\text{clip}$. We know what 3 of them actually are (i.e.: $x_\text{clip}, y_\text{clip}, w_\text{clip}$). To remind you what these are:
 
 * 
     $
@@ -1140,7 +1140,7 @@ How does this come into play with the 3-rd row of the transformation matrix? Wel
 
 The last remaining unknown term is $z_\text{clip}$.
 
-The purpose of the 3-rd row is to help construct a $z_\text{clip}$ value which, after the perspective divide, maps the view-space depth range $[−near;−far]$ into the NDC depth range $[−1;1]$.
+The purpose of the 3rd row is to help construct a $z_\text{clip}$ value which, after the perspective divide, maps the view-space depth range $[−near;−far]$ into the NDC depth range $[−1;1]$.
 
 The space that we are moving towards is the NDC, but we still are in the view space and in between view and NDC there is a clip space. We still have one major problem that we need to solve which is that in view space the z axis is still not scaled. Remember that in NDC the range is [-1; 1], but in view the $near$ and the $far$ planes can have whatever values you have set. For example:
 
@@ -1158,16 +1158,16 @@ $
     far \rightarrow +1
 $
 
-To be even more precise the above equation is kind of wrong, because, the z axis for the view space is actualy a -z axis since the camera forward direction points forward, but due to the rendering convention, the positive values go outside the camera forward. So the above equations should be replaced like this:
+To be even more precise the above equation is kind of wrong, because, the z axis for the view space is actually a -z axis since the camera forward direction points forward, but due to the rendering convention, the positive values go outside the camera forward. So the above equations should be replaced like this:
 
 $
     -near \rightarrow -1 \\
     -far \rightarrow +1
 $
 
-The 3-rd row itself does not transform $z_\text{view}$ into a space where $near$ is -1 and $far$ is 1. It constructs a $z_\text{clip}$ value which will be used in the perspective divide step which produces $z_\text{ndc}$. Only $z_\text{ndc}$ is where the $near$ is -1 and $far$ is 1. Do not forget or mix these concepts (I am telling you this because I was the one who for a long time thought that $z_\text{clip}$ is the value where $near$ is -1 and $far$ is 1). 
+The 3rd row itself does not transform $z_\text{view}$ into a space where $near$ is -1 and $far$ is 1. It constructs a $z_\text{clip}$ value which will be used in the perspective divide step which produces $z_\text{ndc}$. Only $z_\text{ndc}$ is where the $near$ is -1 and $far$ is 1. Do not forget or mix these concepts (I am telling you this because I was the one who for a long time thought that $z_\text{clip}$ is the value where $near$ is -1 and $far$ is 1). 
 
-Let's look how 3-rd row transforms the $z_\text{view}$ into $z_\text{clip}$. On paper it seems pretty understandable:
+Let's look at how 3rd row transforms the $z_\text{view}$ into $z_\text{clip}$. On paper it seems pretty understandable:
 
 $
     \begin{aligned}
@@ -1184,13 +1184,13 @@ First thing we need to know is that the projection transformation is responsible
 2. Calculate the clip value
 3. Calculating the $z_\text{clip}$ value.
 
-Because of these 3 rules, the mapping process (2-nd point) must be a linear operation. In mathematics, the simples linear scaling operation is:
+Because of these 3 rules, the mapping process (2nd point) must be a linear operation. In mathematics, the simplest linear scaling operation is:
 
 $
     x' = a \cdot x + b
 $
 
-At first I did not understand why is this a way to scale things, but let's analyze how it works.
+At first I did not understand why this is a way to scale things, but let's analyze how it works.
 
 Let's use the rendering example, where we want to make $near \rightarrow -1$ and $far \rightarrow +1$:
 
@@ -1258,7 +1258,7 @@ $
     \end{aligned}
 $
 
-Let's test it with a number that is in between -2 and -50. -26 seems to be 24 units from -2 and 24 units from -50. This means that if we apply this linear trasnformation it should have a value of 0, since it is in between. Let's look:
+Let's test it with a number that is in between -2 and -50. -26 seems to be 24 units from -2 and 24 units from -50. This means that if we apply this linear transformation it should have a value of 0, since it is in between. Let's look:
 
 $
     \begin{aligned}
@@ -1269,7 +1269,7 @@ $
     \end{aligned}
 $
 
-Now we know how to scale space. This is what we were looking for, but how does 3-rd row helps us to achieve that? Well, what if I told you that you can look into this row like this:
+Now we know how to scale space. This is what we were looking for, but how does 3rd row helps us to achieve that? Well, what if I told you that you can look into this row like this:
 
 $
     \begin{bmatrix}
@@ -1277,7 +1277,7 @@ $
     \end{bmatrix}
 $
 
-P.s. you see capital letters because it is the convention in math to use capital letter for coefficiants in matrices. Since 3-r row is part of a matrix, I will be using capital letters for A and B.
+P.S. you see capital letters because it is the convention in math to use capital letters for coefficients in matrices. Since 3rd row is part of a matrix, I will be using capital letters for A and B.
 
 Look at that, we have this:
 
@@ -1295,7 +1295,7 @@ $
     \end{aligned}
 $
 
-At this point, although we do not understand what do the $A$ and $B$ values mean, we can understand the big picture. We know that the 3-rd row is just a plain and simple linear equation which allows us to scale any $z_\text{view}$ coordinate.
+At this point, although we do not understand what the $A$ and $B$ values mean, we can understand the big picture. We know that the 3rd row is just a plain and simple linear equation which allows us to scale any $z_\text{view}$ coordinate.
 
 But, as with everything in these lessons, we cannot stop with just $A$ and $B$, we have to understand why they are the way they are. I will try to explain all the reasons and give you the intuition on why:
 
@@ -1324,15 +1324,15 @@ $
     \end{aligned}
 $
 
-Right now this equation does not make any sense, but please keep it inside your heads, because it will be very import soon.
+Right now this equation does not make any sense, but please keep it inside your heads, because it will be very important soon.
 
-Right now, we still have 0 intuition on A and B, let's focus on them. From a simple linear eqution form:
+Right now, we still have 0 intuition on A and B, let's focus on them. From a simple linear equation form:
 
 $
     z_\text{clip} = a \cdot z_\text{view} + b
 $
 
-we know that $a$ is a scaler for $x$ and $b$ is just a bias, meaning how much shift should be applied to a transformed value. Because of it, we can look at this:
+we know that $a$ is a scalar for $x$ and $b$ is just a bias, meaning how much shift should be applied to a transformed value. Because of it, we can look at this:
 
 $
     \begin{aligned}
@@ -1341,7 +1341,7 @@ $
     \end{aligned}
 $
 
-Now here comes the fun part. In order to understand $A$ and $B$ we have to derrive them from the conditions we already know and want to acheive. First of all we have:
+Now here comes the fun part. In order to understand $A$ and $B$ we have to derive them from the conditions we already know and want to achieve. First of all we have:
 
 $
     z_\text{view} = n = near \\
@@ -1399,7 +1399,7 @@ $
     \end{aligned}
 $
 
-There we have it. We mathematically derrived why:
+There we have it. We mathematically derived why:
 
 $
     \begin{aligned}
@@ -1421,9 +1421,9 @@ This equation is doing 2 things:
 1. Scales the z value according to $[-1; 1]$ with respective $A$ and $B$ coefficients
 2. Does the perspective divide
 
-After this operation, now our z value is transformed in such way that far away objects look smaller. Also, the value is scaled, which is what the NDC space requires.
+After this operation, now our z value is transformed in such a way that faraway objects look smaller. Also, the value is scaled, which is what the NDC space requires.
 
-What I want you to understand about the 3-rd row is that it only calculates the $z_\text{clip}$ value which is an intermediate. In clip space you still would not be able to see if farther objects look smaller. For this effect to work we need divide the $z_\text{clip}$ by $w_\text{clip}$:
+What I want you to understand about the 3rd row is that it only calculates the $z_\text{clip}$ value which is an intermediate. In clip space you still would not be able to see if farther objects look smaller. For this effect to work we need to divide the $z_\text{clip}$ by $w_\text{clip}$:
 
 $
     \begin{aligned}
@@ -1434,14 +1434,14 @@ $
 
 ### Resume on Projection Transformation
 
-Finally, we have reached the ending on the mathematical meaning of projection transformation. 
+Finally, we have reached the end of the mathematical explanation of projection transformation. 
 
-Understand that projection transformation in itself is just an intermediate step for the perspective divide.
+Understand that the projection transformation itself is just an intermediate step for the perspective divide.
 
 
 ## Code
 
-The hard part, aka. the theoretical part is finished. Let's go section by section while I keep explaining them. 
+The hard part, a.k.a. the theoretical part is finished. Let's go section by section while I keep explaining them. 
 
 
 ### Constants
@@ -1457,7 +1457,7 @@ constexpr float FOV_DEGREES_Y_AXIS = 45.0f;
 constexpr float NEAR_PLANE = 0.1f;
 constexpr float FAR_PLANE = 100.0f;
 
-// Global changable parameters
+// Global changeable parameters
 int g_framebufferWidth = WINDOW_WIDTH;
 int g_framebufferHeight = WINDOW_HEIGHT;
 ```
@@ -1470,7 +1470,7 @@ constexpr float NEAR_PLANE = 0.1f;
 constexpr float FAR_PLANE = 100.0f;
 ```
 
-In this lesson (and maybe a few later lessons) we will FOV, near and far planes as constants. In this lessons I decided to make these constants because our end goal is a static frame of a 3D pyramid.
+In this lesson (and maybe a few later lessons) we will use FOV, near and far planes as constants. In this lesson I decided to make these constants because our end goal is a static frame of a 3D pyramid.
 
 
 ### Structs and Functions
@@ -1483,7 +1483,7 @@ struct Vertex
 };
 ```
 
-Since vertices are objects which can have componenets, like positions, colors and, later, normals and etc., we need to create a seaparate struct for it with all those componenets as members for it. This way it will be easier to manage verticies in the future. 
+Since vertices are objects which can have components, like positions, colors and, later, normals and etc., we need to create a separate struct for it with all those components as members for it. This way it will be easier to manage vertices in the future. 
 
 ```C++
 glm::mat4 CreateRotationX3D(float angleInRadians);
@@ -1513,7 +1513,7 @@ These functions are exactly the same as in the previous lessons.
     const glm::vec3 backLeft = { -0.25f, -0.25f, -0.25f };
     const glm::vec3 backRight = { 0.25f, -0.25f, -0.25f };
 
-    // Each side of the pyramid will have it's own unique color
+    // Each side of the pyramid will have its own unique color
     const glm::vec4 neonBlue1 = { 0.0f, 0.3f, 0.8f, 1.0f };
     const glm::vec4 neonBlue2 = { 0.0f, 0.7f, 1.0f, 1.0f };
     const glm::vec4 neonGreen = { 0.2f, 1.0f, 0.2f, 1.0f };
@@ -1551,13 +1551,13 @@ These functions are exactly the same as in the previous lessons.
     };
 ```
 
-A pyramid has 5 vertices: 1 top and 4 comprising the base. Since we are in 3D, each vertex position is comprised of 3 numbers (x, y, z). Also, notice, that each vertex is defined in local space (local to pyramid itself).
+A pyramid has 5 vertices: 1 top and 4 comprising the base. Since we are in 3D, each vertex position is comprised of 3 numbers (x, y, z). Also, notice that each vertex is defined in local space (local to pyramid itself).
 
-Colors for this lesson were chosen such that yo ucould visually see that a frame is showing a 3D pyramid. Since we still have no way to rotate, zoom in / out the view, I had to think of a way to use colors which would indicate that an objects is actually a 3D object.
+Colors for this lesson were chosen such that you could visually see that a frame is showing a 3D pyramid. Since we still have no way to rotate, zoom in / out the view, I had to think of a way to use colors which would indicate that an object is actually a 3D object.
 
-Vertices vector is the simplest way in how can we group 5 pyramid vertices into a single entity (vector). In later lessons, I would suggest using not a standalone vector, but an OOP (object oriented programming) approach, where every single shape would have it's own class or a struct.
+The vertices vector is the simplest way to group 5 pyramid vertices into a single entity (vector). In later lessons, I would suggest using not a standalone vector, but an OOP (object-oriented programming) approach, where every single shape would have its own class or a struct.
 
-The goal of this code block is to construct a vector which contains all 5 vertices that define a single pyramid, where each vertex has a postion and a collor assigned to it.
+The goal of this code block is to construct a vector which contains all 5 vertices that define a single pyramid, where each vertex has a position and a color assigned to it.
 
 
 ### VAO VBO Setup
@@ -1736,7 +1736,7 @@ const glm::mat4 view = CreateViewMatrix(
 );
 ```
 
-This is the first piece of code that actualy is new to us. This is what we need in order to correctly create a view matrix, which is going to be used later for the MVP matrix.
+This is the first piece of code that actually is new to us. This is what we need in order to correctly create a view matrix, which is going to be used later for the MVP matrix.
 
 Just to clarify why I named this section "Camera" is because the goal of the camera object (later we will have a separate class for camera) is to construct the view matrix.
 
@@ -1750,7 +1750,7 @@ In rendering, there are 2 ways of how to interpret the camera rotation:
 1. Rotate camera itself
 2. Rotate camera around a point (orbiting)
 
-Lets's discuss first discuss the case where the camera is rotated itself. 
+Lets's discuss first discuss the case where the camera is rotatedd itself. 
 
 
 #### Rotating Camera Itself
@@ -1762,7 +1762,7 @@ const float cameraRotationAngleY = glm::radians(-5.0f);   // yaw
 const float cameraRotationAngleZ = glm::radians(90.0f);  // roll
 ```
 
-Here we are defining the way camera is rotated around it's own axes. Forget about camera postion, it should not bother you because we are performing a camera rotation in camera local space. 
+Here we are defining the way camera is rotatedd around it's own axes. Forget about camera position, it should not bother you because we are performing a camera rotation in camera local space. 
 
 In camera space (local space for camera) the basis vectors (X, Y, Z) point like this (again, it is a cnvention and not a strict rule):
 
@@ -2002,7 +2002,7 @@ The same is for the camera. If you rotate the camera to see what is on the right
 
 But, do not mix up one thing. We do not want to rotate the whole virtual world that is in the model space. Rather, we want to rotate everything that is in the camera space.
 
-That is essentially it in terms of camera rotations around itself. Again, remember, that this type of rotation does not affect camera's postion in world space, but is rotating everything (except camera) in camera space.
+That is essentially it in terms of camera rotations around itself. Again, remember, that this type of rotation does not affect camera's position in world space, but is rotating everything (except camera) in camera space.
 
 
 #### Rotating Camera Around an Object - Orbiting
@@ -2017,7 +2017,7 @@ I know it sounds weird, I mean the idea that some specified point in space, even
 
 So the expression "rotate camera 30 degrees around X axis" means that rotation from the object's perspective. Remember that and if the same sentence comes up, first, ask yourself "is it the camera itself going to be rotated, or is the camera going to be rotated around an object?". 
 
-Imagine a simple situation. You stand next to a brand ynew car. In this example the car is the object of reference and your head (i.e. your eyes) is the camera. If the camera would be rotated itself, that would mean that you just turn your head around, if the camera is rotated around an object, that would mean that you go around that car.
+Imagine a simple situation. You stand next to a brand ynew car. In this example the car is the object of reference and your head (i.e. your eyes) is the camera. If the camera would be rotated itself, that would mean that you just turn your head around, if the camera is rotatedd around an object, that would mean that you go around that car.
 
 As with camera rotations, now I will show how each rotation changes the view of our pyramid. 
 
@@ -2283,7 +2283,7 @@ const glm::mat4 model = scale3D;
 
 For this lesson, I did not want to use all 3, but still felt the need to have a model matrix that would somehow impact the final world. Because of it I decided that only scaing of the entire world will be used.
 
-To be honest, I just realized that we are slightly advanced, because in the last lesson we have learned all the secrets about the consturction of the model matrix. I feel really proud about that.
+To be honest, I just realized that we are slightly advanced, because in the last lesson we learned all the secrets about the consturction of the model matrix. I feel really proud about that.
 
 Finally, we need to construct a projection matrix. In this lesson it is done as follows:
 
