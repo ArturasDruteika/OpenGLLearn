@@ -2406,195 +2406,22 @@ Remember, that if you have a single camera, you only need to calculate `mvp` onc
 With the example I gave you, the main thing you need to understand is that: do not populate your shaders with calculations that can be done in c++ part.
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<!-- ```C++
-// Adjust camera forward direction in real world
-const glm::vec3 cameraForward = glm::normalize(glm::vec3(finalCameraRotation3D * glm::vec4(baseCameraForward, 0.0f)));
-// Adjust camera up direction in real world
-const glm::vec3 cameraUp = glm::normalize(glm::vec3(finalCameraRotation3D * glm::vec4(baseCameraUp, 0.0f)));
-```
-
-We need to recalculate camera forward and up directions because camera and orbital rotations can change where these vectors point.
-
-One interesting thing can be noticed from these 3 lines: for some reason `glm::vec4(baseCameraPosition, 1.0f)` has `1.0f`, but `glm::vec4(baseCameraForward, 0.0f)` and `glm::vec4(baseCameraUp, 0.0f)` both have `0.0f`. Why is that?
-
-It all has to do with what the variable represents. `baseCameraPosition` is a position, while `baseCameraForward` and `baseCameraUp` are direction vectors. With camera position, we want to be able to apply all types of affine transformations, while for camera basis (direction) vectors, we only want to apply linear transformations. This is because a simple point can be roated, scaled or translated, but in the end, that point will only have it's position changed. But for direction vectors, we want them to only change the direction due to rotation. If you also applied translation to the camera direction vectors, that would change that direction also.
-
-Here is a simple example: 
-
-* Camera position: [0, 0, 0]
-* Right: [1, 0, 0]
-* Up: [0, 0, 1]
-* Forward: [0, 0, -1]
-
-If you rotate the camera 180&deg; around Y axis:
-
-* Camera position: [0, 0, 0]
-* Right: [-1, 0, 0]
-* Up: [0, 0, 1]
-* Forward: [0, 0, 1]
-
-If you move camera 5 units to the left:
-
-* Camera position: [-5, 0, 0]
-* Right: [-1, 0, 0]
-* Up: [0, 0, 1]
-* Forward: [0, 0, 1]
-
-Just think about it intuitively, the direction vectors should not become:
-
-* Right: [-6, 0, 0]
-* Up: [-5, 0, 1]
-* Forward: [-5, 0, 1]
-
-To be more precise, if camera at the beginning was looking forward (in model space), then when it was rotated 180&deg; the camera started looking backwards (model space). If then the camera was moved 5 units to the left, the position changes, but the camera still would have to look backwards (in model space). Same goes for the rest of the camera direction vectors.
-
-Mathematically, it would look like this (example in 3D world, transformation matrices are in homogeneous space):
-
-$
-    p - \text{position} \\
-    \vec{d} - \text{direction vector} \\
-    R - \text{rotation matrix} \\
-    T - \text{translation matrix} \\
-    M - R \cdot T
-$
-
-$
-    p = [x, y, z, 1] \\
-    \vec{d} = [x, y, z, 0]
-$
-
-$
-    R_h =
-    \begin{bmatrix}
-    R_{11} & R_{12} & R_{13} & 0 \\
-    R_{21} & R_{22} & R_{23} & 0 \\
-    R_{31} & R_{32} & R_{33} & 0 \\
-    0 & 0 & 0 & 1
-    \end{bmatrix}
-$
-
-$
-    T_h =
-    \begin{bmatrix}
-    1 & 0 & 0 & T_x \\
-    0 & 1 & 0 & T_y \\
-    0 & 0 & 1 & T_z \\
-    0 & 0 & 0 & 1
-    \end{bmatrix}
-$
-
-$
-    M = T \cdot R =
-    \begin{bmatrix}
-    R_{11} & R_{12} & R_{13} & T_x \\
-    R_{21} & R_{22} & R_{23} & T_y \\
-    R_{31} & R_{32} & R_{33} & T_z \\
-    0 & 0 & 0 & 1
-    \end{bmatrix}.
-$
-
-Let's see what happens when position $p$ is multiplied with transformation $M$:
-
-Let's see what happens when position $p$ is multiplied with transformation $M$:
-
-$
-    Mp =
-    \begin{bmatrix}
-    R_{11} & R_{12} & R_{13} & T_x \\
-    R_{21} & R_{22} & R_{23} & T_y \\
-    R_{31} & R_{32} & R_{33} & T_z \\
-    0 & 0 & 0 & 1
-    \end{bmatrix}
-    \begin{bmatrix}
-    x \\
-    y \\
-    z \\
-    1
-    \end{bmatrix}
-    =
-    \begin{bmatrix}
-    R_{11}x + R_{12}y + R_{13}z + T_x \cdot 1 \\
-    R_{21}x + R_{22}y + R_{23}z + T_y \cdot 1 \\
-    R_{31}x + R_{32}y + R_{33}z + T_z \cdot 1 \\
-    1
-    \end{bmatrix}
-    =
-    \begin{bmatrix}
-    R_{11}x + R_{12}y + R_{13}z + T_x \\
-    R_{21}x + R_{22}y + R_{23}z + T_y \\
-    R_{31}x + R_{32}y + R_{33}z + T_z \\
-    1
-    \end{bmatrix}
-$
-
-Notice that translation components are applied correctly. Position changes. Now let's see why direction vectors have 0:
-
-$
-    M\vec{d} =
-    \begin{bmatrix}
-    R_{11} & R_{12} & R_{13} & T_x \\
-    R_{21} & R_{22} & R_{23} & T_y \\
-    R_{31} & R_{32} & R_{33} & T_z \\
-    0 & 0 & 0 & 1
-    \end{bmatrix}
-    \begin{bmatrix}
-    x \\
-    y \\
-    z \\
-    0
-    \end{bmatrix}
-    =
-    \begin{bmatrix}
-    R_{11}x + R_{12}y + R_{13}z + T_x \cdot 0 \\
-    R_{21}x + R_{22}y + R_{23}z + T_y \cdot 0 \\
-    R_{31}x + R_{32}y + R_{33}z + T_z \cdot 0 \\
-    0
-    \end{bmatrix}
-    =
-    \begin{bmatrix}
-    R_{11}x + R_{12}y + R_{13}z \\
-    R_{21}x + R_{22}y + R_{23}z \\
-    R_{31}x + R_{32}y + R_{33}z \\
-    0
-    \end{bmatrix}
-$
-
-Notice that since translation components were multiplied by 0, in the final result they vanished. Direction is unaffected by translation.
-
-Finally, we arrived at the view matrix:
+#### Depth Buffer Bit
 
 ```C++
-// Target (or a point) which camera is looking
-const glm::vec3 targetPosition = cameraPosition + cameraForward;
-
-// Calculate view matrix
-const glm::mat4 view = glm::lookAt(
-    cameraPosition,
-    targetPosition,
-    cameraUp
-);
+glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 ```
 
-I think that I do not need to write another esse on why we need a view matrix. But still, to clarify everything, we need it, because it transforms the model space into camera space (local space for camera object) and because of this transformation the world is seen from the camera point of view.
+One important thing to notice in the `glClear()` function is that now we also have to remember to clear the depth buffer bit, `GL_DEPTH_BUFFER_BIT`. Every iteration, we have to reset the buffer values so that anything from the previous frame does not populate the current frame.
 
-`const glm::vec3 targetPosition = cameraPosition + cameraForward;` the goal of this line is to assign coordinates to a point in space the camera is looking at. An analogy is if you stand and look at an empty field, you have a direction of view, but `targetPosition` is like a random ball placed somewhere in that field which has direct coordinates and desbripes a point in space where you are looking at. -->
+
+## Conclusion
+
+This is how much new content we had to cover to understand how basic 3D rendering works. I think the 2 key concepts from this lesson are the view and projection matrices. Knowing these 2 concepts is a must. And when I say knowing, I mean you have to understand how the 3 main types of transformations work, what the field of view is, and what the path is from local space to screen space. Currently, these are our building blocks moving forward. We will see how important the view and projection transformations are once we start working with illumination.
+
+
+## Personal Notes
+
+At the beginning of this lesson, I said that this lesson was not going to be a very big one in terms of content, but it happened to be almost 3 times larger than the previous lesson. I started this lesson on 2026-04-10, and now it is 2026-08-14. Over 4 months of learning for me as well.
+
+Before moving forward, please learn these basics from this lesson and understand them intuitively. Do not feel unintelligent or anything else bad because you do not understand these concepts. I myself have spent multiple hours understanding the projection matrix. I remember how I spent hours wanting to just stop because I had 0 clue what the first 2 rows of the projection matrix meant. So please do not be discouraged, and keep trying.
