@@ -11,34 +11,35 @@ int main()
         return -1;
     }
 
-    GLFWwindow* pWindow = glfwCreateWindow(800, 600, "GLFW Window", nullptr, nullptr);
-    if (!pWindow)
+    GLFWwindow* p_window = glfwCreateWindow(800, 600, "GLFW Window", nullptr, nullptr);
+    if (!p_window)
     {
         spdlog::error("Failed to create GLFW window");
         glfwTerminate();
         return -1;
     }
 
-    glfwMakeContextCurrent(pWindow);
+    glfwMakeContextCurrent(p_window);
 
     if (!gladLoadGL(glfwGetProcAddress))
     {
         spdlog::error("Failed to initialize GLAD");
-        glfwDestroyWindow(pWindow);
+        glfwDestroyWindow(p_window);
         glfwTerminate();
         return -1;
     }
 
-    while (!glfwWindowShouldClose(pWindow))
+    while (!glfwWindowShouldClose(p_window))
     {
         glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glfwSwapBuffers(pWindow);
+        glfwSwapBuffers(p_window);
         glfwPollEvents();
     }
 
-    glfwDestroyWindow(pWindow);
+    glfwDestroyWindow(p_window);
     glfwTerminate();
+    
     return 0;
 }
