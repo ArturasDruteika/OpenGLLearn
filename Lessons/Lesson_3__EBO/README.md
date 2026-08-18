@@ -9,7 +9,7 @@ Well, this object is not making anything easier for, but rather it is helping th
 To answer this question, let's go back to the original data, we had in the lesson 2:
 
 ```C++
-float triangleVertices[] = {
+float triangle_vertices[] = {
      // positions   // colors
      0.0f,  0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // top vertex 
     -0.5f, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // bottom left
@@ -20,7 +20,7 @@ float triangleVertices[] = {
 This is the data needed to render a single triangle with a color specified. How would we render 2 triangles? The first idea that come to mind is this "
 
 ```C++
-float triangleVertices[] = {
+float triangle_vertices[] = {
      // positions   // colors
      0.0f,  0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // top vertex 
     -0.5f, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // bottom left
@@ -38,7 +38,7 @@ At first, it looks pretty standard: just add more data describing a new triangle
 This rule is pretty simple, but now, let's imagine a scenario where 2 triangles form a single square. This would make `triangleVertices` look like this:
 
 ```C++
-float squareVertices[] = {
+float square_vertices[] = {
     // positions   // colors
     -0.5f,  0.5f,  1.0f, 1.0f, 1.0f, // top left        triangle 1
     -0.5f, -0.5f,  1.0f, 1.0f, 1.0f, // bottom left     triangle 1
@@ -65,7 +65,7 @@ What I want you to understand is that you should ask yourself this "do I really 
 One of the reason why __Element Buffer Object (EBO)__ was created was to solve this particular issue that I have described earlier. Using EBO, you can basically just tell which vertex should be taken for which triangle. Let's go straight to the example. Instead of this:
 
 ```C++
-float triangleVertices[] = {
+float triangle_vertices[] = {
     // positions   // colors
     -0.5f,  0.5f,  1.0f, 1.0f, 1.0f, // top left        triangle 1
     -0.5f, -0.5f,  1.0f, 1.0f, 1.0f, // bottom left     triangle 1
@@ -80,7 +80,7 @@ float triangleVertices[] = {
 why can't we rewrite this as:
 
 ```C++
-float triangleVertices[] = {
+float triangle_vertices[] = {
     // positions    // colors
     -0.5f,  0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // top left
     -0.5f, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // bottom left
@@ -130,7 +130,7 @@ Since we now now, what is EBO, let's see how to code it using OpenGL. Before sca
 Ok, first, we have to define the data:
 
 ```C++
-float triangleVertices[] = {
+float triangle_vertices[] = {
      // positions    // colors
      -0.5f,  0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // top left
      -0.5f, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // bottom left
@@ -162,7 +162,7 @@ As you can see, `ebo` is of the same type as the `vbo` and `vao` which we learne
 glBindVertexArray(vao);
 
 glBindBuffer(GL_ARRAY_BUFFER, vbo);
-glBufferData(GL_ARRAY_BUFFER, sizeof(triangleVertices), triangleVertices, GL_STATIC_DRAW);
+glBufferData(GL_ARRAY_BUFFER, sizeof(triangle_vertices), triangle_vertices, GL_STATIC_DRAW);
 
 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);

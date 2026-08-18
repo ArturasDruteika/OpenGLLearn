@@ -296,17 +296,17 @@ You can sort of think about this program in the following way "Give this program
 
 ```CPP
 
-unsigned int CreateShaderProgram(const std::string& vertex_source, const std::string& fragment_source)
+unsigned int create_shader_program(const std::string& vertex_source, const std::string& fragment_source)
 {
     unsigned int vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-    if (!CompileShader(vertex_source, vertex_shader))
+    if (!compile_shader(vertex_source, vertex_shader))
     {
         glDeleteShader(vertex_shader);
         return 0;
     }
 
     unsigned int fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    if (!CompileShader(fragment_source, fragment_shader))
+    if (!compile_shader(fragment_source, fragment_shader))
     {
         glDeleteShader(vertex_shader);
         glDeleteShader(fragment_shader);
@@ -339,9 +339,9 @@ unsigned int CreateShaderProgram(const std::string& vertex_source, const std::st
 Lets go line by line and explain everything that happens here:
 
 1. `unsigned int vertex_shader = glCreateShader(GL_VERTEX_SHADER);` tells OpenGL to create an __empty__ shader object with ID of type __vertex__. This line right here, does not create an actual shader, but it sort of prepares OpenGL for vertex shader creation.
-2. `if (!CompileShader(vertex_source, vertex_shader))` compiles vertex shader code into a vertex shader "object". Right here the vertex shader is compiled (if success happens), but we still could not use this shader now.
+2. `if (!compile_shader(vertex_source, vertex_shader))` compiles vertex shader code into a vertex shader "object". Right here the vertex shader is compiled (if success happens), but we still could not use this shader now.
 3. `unsigned int fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);` does exactly the same thing as the previous line, but does it for the fragment shader.
-4. `if (!CompileShader(fragment_source, fragment_shader))` exactly the same thing as the previous line, but only for a fragment shader.
+4. `if (!compile_shader(fragment_source, fragment_shader))` exactly the same thing as the previous line, but only for a fragment shader.
 5. `unsigned int shader_program = glCreateProgram();` creates an __empty__ shader program object with ID. I just want to stress this fact again that every OpenGL object must have it's own ID, because OpenGL, internally, tracks everything using IDs. __Shader object__ and __shader program object__ are 2 different things. Do not think these are the same.
 6. `glAttachShader(shader_program, vertex_shader);` and `glAttachShader(shader_program, fragment_shader);` attaches both shader objects to an empty shader program object. You need to attach these 2 (or any other number of defined shaders) shaders to this program, because otherwise the program will not know what to do with buffer data and rules how to read them. Attaching them, means that the final shader program will use these 2 shader programs for rendering pipeline.
 7. `glLinkProgram(shader_program);` links a shader program object. This right here (if successful), finally, creates an executable on the GPU side of our shader program which is defined by vertex and fragment codes.
@@ -359,7 +359,7 @@ To make it easier for you to think, this function does the same job as any of th
 This is the last stop for this "How to render a triangle using OpenGL?" lesson.
 
 ```C++
-int CompileShader(const std::string& source, unsigned int shader_id)
+int compile_shader(const std::string& source, unsigned int shader_id)
 {
     const char* source_c_str = source.c_str();
     glShaderSource(shader_id, 1, &source_c_str, nullptr);
@@ -377,7 +377,7 @@ int CompileShader(const std::string& source, unsigned int shader_id)
 }
 ```
 
-Mostly, all of is similar to `CreateShaderProgram`, so I will describe only shader compilation specific code:
+Mostly, all of is similar to `create_shader_program`, so I will describe only shader compilation specific code:
 
 1. `glShaderSource(shader_id, 1, &source_c_str, nullptr);` binds shader source code to the `shader_id`. Keep in mind that this shader ID is from her `unsigned int vertex_shader = glCreateShader(GL_VERTEX_SHADER);`. You can kinda think of this operation as storing the shader source code inside the specified shader object.
 2. `glCompileShader(shader_id);` compiles that shader source code into an actual GPU-executable shader code. After this, you still cannot directly use the program defined by vertex shader source code, because you need a shader program (which at this stage is still not created). After compiling shader source code, you can attach it directly during `glAttachShader(shader_program, vertex_shader);`. Keep in mind that as an argument, you pass `shader_id`, because the shader code is already part of the shader object that has `shader_id`.
@@ -450,15 +450,15 @@ I hyped up this operation so much, but it does nothing more than just starts the
 I did not elaborate on this much during this lesson, but it is not necesseraly neede for this, but still. 
 
 ```C++
-void framebufferSizeCallback(GLFWwindow* window, int width, int height)
+void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
 }
 
-glfwSetFramebufferSizeCallback(p_window, framebufferSizeCallback);
+glfwSetFramebufferSizeCallback(p_window, framebuffer_size_callback);
 ```
 
-This is how to have a GLFW window resize callback trigger the OpenGL. Keep in mind, that the GLFW window size and the OpenGL viewport are not the same thing. To give you some intuition, comment the `glfwSetFramebufferSizeCallback(p_window, framebufferSizeCallback);`, run the application and then try to resize the window. You can clearly see, that the GLFW window resizes how it should, but the triangle is not resized. 
+This is how to have a GLFW window resize callback trigger the OpenGL. Keep in mind, that the GLFW window size and the OpenGL viewport are not the same thing. To give you some intuition, comment the `glfwSetFramebufferSizeCallback(p_window, framebuffer_size_callback);`, run the application and then try to resize the window. You can clearly see, that the GLFW window resizes how it should, but the triangle is not resized. 
 
 __KEEP IN MIND__, that this functionality is not necessary to have. It totally depends on what is your goal with the rendering and GLFW window relationship.
 
