@@ -220,15 +220,15 @@ Here is the code for the vertex shader:
 
 ```GLSL
 #version 460 core
-layout (location = 0) in vec2 aPos;
-layout (location = 1) in vec4 aColor;
+layout (location = 0) in vec2 a_pos;
+layout (location = 1) in vec4 a_color;
 
-out vec4 ourColor;
+out vec4 our_color;
 
 void main()
 {
-    gl_Position = vec4(aPos, 0.0, 1.0);
-    ourColor = aColor;
+    gl_Position = vec4(a_pos, 0.0, 1.0);
+    our_color = a_color;
 }
 ```
 
@@ -236,12 +236,12 @@ Here is fragment shader:
 
 ```GLSL
 #version 460 core
-in vec4 ourColor;
+in vec4 our_color;
 out vec4 FragColor;
 
 void main()
 {
-    FragColor = ourColor;
+    FragColor = our_color;
 }
 ```
 
@@ -252,22 +252,22 @@ What do these shaders do? Let's first discuss the vertex shader. As you remember
 #### Let's go line by line and explain all of it (vertex shader):
 
 1. `#version 460 core` it tells the GLSL compiler to use version 4.60 of the GLSL language in the core profile.
-2. `layout (location = 0) in vec2 aPos;` and `layout (location = 1) in vec4 aColor;` this is an input for the fragment shader (simbolized by the keyword `in`). This is the place where the VAO becomes handy. Remember how I said that VAO basically tells OpenGL how to read the data from the buffer on the GPU. It is important for these 2 lines. `layout (location = X)` layout and location tell OpenGL pipeline, that in `location 0` should go attribute 0, and in `location 1` should go attribute 1. These 2 lines basically get fed those 2 attributes (their values) that we created earlier. Keep in mind, that even though the variables are named aPos (for position) and aColor, it does not mean that these attributes are positions and colors. We just chose to name these variables this way. They key part is their types, specifically, `vec2` and `vec4`. They MUST correlate with the values from the VAO.
-3. `out vec4 ourColor;` this is the ouput variable (the one that is the output of this shader). It is output of the shader because it has a keyword `out`. It also has a type, which means that this VS will output a `vec4` type of data.
+2. `layout (location = 0) in vec2 a_pos;` and `layout (location = 1) in vec4 a_color;` this is an input for the fragment shader (simbolized by the keyword `in`). This is the place where the VAO becomes handy. Remember how I said that VAO basically tells OpenGL how to read the data from the buffer on the GPU. It is important for these 2 lines. `layout (location = X)` layout and location tell OpenGL pipeline, that in `location 0` should go attribute 0, and in `location 1` should go attribute 1. These 2 lines basically get fed those 2 attributes (their values) that we created earlier. Keep in mind, that even though the variables are named a_pos (for position) and a_color, it does not mean that these attributes are positions and colors. We just chose to name these variables this way. They key part is their types, specifically, `vec2` and `vec4`. They MUST correlate with the values from the VAO.
+3. `out vec4 our_color;` this is the ouput variable (the one that is the output of this shader). It is output of the shader because it has a keyword `out`. It also has a type, which means that this VS will output a `vec4` type of data.
 4. `void main()` same as in C++, it says that this the main function that needs to be executed for this shader program. Kinda like an entry point to this program.
-5. `gl_Position = vec4(aPos, 0.0, 1.0);` this creates a new coordinate space, called __Clip Space__. This is kinda tricky to explain, but still, I will try. We have to go back to the window and a car example. I said that a car is visible through the window, but what if it is partially seen, I mean, let's say that wheels are not visible, because they are below the window. Also, I mentioned triangles and resolution. Now what if one of those triangles happens to be outside of the vision through the window? Well, option 1, is that it is not visible at all. That is easy, you just remove that triangle from further calculations. But how to know if it is visible or not? How to tell a machine, that wheel of the car are not visible? Easy for us to just see through the window and say "I cannot see the wheel.", but computers do not have this basic notion. Computers see everything in terms of numbers. __Clip Space__ is essentially the method that tells what is and what is not visible through the window. This is the place, where it is important that the first attribute of the VAO (for our concrete example) should be describing position. Clip space is dealing with coordinates and positions, so if you pass as vec2 some other numbers from data buffer (which stores info about our vertices), clip space will be calculated for those numbers, which might do some weird stuff on your vertices. Not to go very deep into why it works like that, but the main thing is this (Google it if you want to see what this means):
+5. `gl_Position = vec4(a_pos, 0.0, 1.0);` this creates a new coordinate space, called __Clip Space__. This is kinda tricky to explain, but still, I will try. We have to go back to the window and a car example. I said that a car is visible through the window, but what if it is partially seen, I mean, let's say that wheels are not visible, because they are below the window. Also, I mentioned triangles and resolution. Now what if one of those triangles happens to be outside of the vision through the window? Well, option 1, is that it is not visible at all. That is easy, you just remove that triangle from further calculations. But how to know if it is visible or not? How to tell a machine, that wheel of the car are not visible? Easy for us to just see through the window and say "I cannot see the wheel.", but computers do not have this basic notion. Computers see everything in terms of numbers. __Clip Space__ is essentially the method that tells what is and what is not visible through the window. This is the place, where it is important that the first attribute of the VAO (for our concrete example) should be describing position. Clip space is dealing with coordinates and positions, so if you pass as vec2 some other numbers from data buffer (which stores info about our vertices), clip space will be calculated for those numbers, which might do some weird stuff on your vertices. Not to go very deep into why it works like that, but the main thing is this (Google it if you want to see what this means):
     ```
     -w ≤ x ≤ w
     -w ≤ y ≤ w
     -w ≤ z ≤ w
     ```
-6. `ourColor = aColor;` pretty self explanatory. You just assign an output variable with the color, a vertex has.
+6. `our_color = a_color;` pretty self explanatory. You just assign an output variable with the color, a vertex has.
 
 
 #### Let's go line by line and explain all of it (fragment shader):
 
 1. `#version 460 core` it tells the GLSL compiler to use version 4.60 of the GLSL language in the core profile.
-2. `in vec4 ourColor;` this is an input for the fragment shader (symbolized by the keyword `in`). This input, for FS (fragment shader) is the output of the VS. If you look again the the VS, you can see `out vec4 ourColor;`. The same values finally comes to the `in vec4 ourColor;` for the FS.
+2. `in vec4 our_color;` this is an input for the fragment shader (symbolized by the keyword `in`). This input, for FS (fragment shader) is the output of the VS. If you look again the the VS, you can see `out vec4 our_color;`. The same values finally comes to the `in vec4 our_color;` for the FS.
 3. `void main()` entrypoint for the fragment shader program (same as VS).
 4. `out vec4 FragColor;` this is an output for of the FS. Again, you might ask me "Why VS and FS both output color? If FS outputs the color again, then what does it do?". This is the key to understanding FS. FS outputs color for each fragment left, that are ready to be placed on the screen. After FS, there are couple more steps, but those we will discuss later. After FS (right now), you can just take the values (color values, because this is what FS outputs) of those fragments and easily display them on the screen and you would see an actual image of what your triangle looks like.
 
