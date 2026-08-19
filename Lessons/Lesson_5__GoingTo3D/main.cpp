@@ -26,8 +26,8 @@ constexpr float NEAR_PLANE = 0.1f;
 constexpr float FAR_PLANE = 100.0f;
 
 // Global changable parameters
-int g_framebufferWidth = WINDOW_WIDTH;
-int g_framebufferHeight = WINDOW_HEIGHT;
+int g_framebuffer_width = WINDOW_WIDTH;
+int g_framebuffer_height = WINDOW_HEIGHT;
 
 
 struct Vertex
@@ -37,10 +37,10 @@ struct Vertex
 };
 
 
-glm::mat4 CreateRotationX3D(float angleInRadians)
+glm::mat4 create_rotation_x3d(float angle_in_radians)
 {
-    const float cosine = std::cos(angleInRadians);
-    const float sine = std::sin(angleInRadians);
+    const float cosine = std::cos(angle_in_radians);
+    const float sine = std::sin(angle_in_radians);
 
     glm::mat4 result(1.0f);
     result[1][1] = cosine;
@@ -50,10 +50,10 @@ glm::mat4 CreateRotationX3D(float angleInRadians)
     return result;
 }
 
-glm::mat4 CreateRotationY3D(float angleInRadians)
+glm::mat4 create_rotation_y3d(float angle_in_radians)
 {
-    const float cosine = std::cos(angleInRadians);
-    const float sine = std::sin(angleInRadians);
+    const float cosine = std::cos(angle_in_radians);
+    const float sine = std::sin(angle_in_radians);
 
     glm::mat4 result(1.0f);
     result[0][0] = cosine;
@@ -63,10 +63,10 @@ glm::mat4 CreateRotationY3D(float angleInRadians)
     return result;
 }
 
-glm::mat4 CreateRotationZ3D(float angleInRadians)
+glm::mat4 create_rotation_z3d(float angle_in_radians)
 {
-    const float cosine = std::cos(angleInRadians);
-    const float sine = std::sin(angleInRadians);
+    const float cosine = std::cos(angle_in_radians);
+    const float sine = std::sin(angle_in_radians);
 
     glm::mat4 result(1.0f);
     result[0][0] = cosine;
@@ -76,7 +76,7 @@ glm::mat4 CreateRotationZ3D(float angleInRadians)
     return result;
 }
 
-glm::mat4 CreateScale3D(const glm::vec3& scale)
+glm::mat4 create_scale_3d(const glm::vec3& scale)
 {
     glm::mat4 result(1.0f);
     result[0][0] = scale.x;
@@ -85,114 +85,114 @@ glm::mat4 CreateScale3D(const glm::vec3& scale)
     return result;
 }
 
-void framebufferSizeCallback(GLFWwindow* window, int width, int height)
+void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-    g_framebufferWidth = width;
-    g_framebufferHeight = height;
+    g_framebuffer_width = width;
+    g_framebuffer_height = height;
 
     glViewport(0, 0, width, height);
 }
 
-int CompileShader(const std::string& source, unsigned int shaderID)
+int compile_shader(const std::string& source, unsigned int shader_id)
 {
-    const char* sourceCStr = source.c_str();
-    glShaderSource(shaderID, 1, &sourceCStr, nullptr);
-    glCompileShader(shaderID);
+    const char* source_c_str = source.c_str();
+    glShaderSource(shader_id, 1, &source_c_str, nullptr);
+    glCompileShader(shader_id);
 
     int success;
-    char infoLog[512];
-    glGetShaderiv(shaderID, GL_COMPILE_STATUS, &success);
+    char info_log[512];
+    glGetShaderiv(shader_id, GL_COMPILE_STATUS, &success);
     if (!success)
     {
-        glGetShaderInfoLog(shaderID, 512, nullptr, infoLog);
-        spdlog::error("Shader compilation failed: {}", infoLog);
+        glGetShaderInfoLog(shader_id, 512, nullptr, info_log);
+        spdlog::error("Shader compilation failed: {}", info_log);
     }
 
     return success;
 }
 
-unsigned int CreateShaderProgram(const std::string& vertexSource, const std::string& fragmentSource)
+unsigned int create_shader_program(const std::string& vertex_source, const std::string& fragment_source)
 {
-    unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    if (!CompileShader(vertexSource, vertexShader))
+    unsigned int vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+    if (!compile_shader(vertex_source, vertex_shader))
     {
-        glDeleteShader(vertexShader);
+        glDeleteShader(vertex_shader);
         return 0;
     }
 
-    unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    if (!CompileShader(fragmentSource, fragmentShader))
+    unsigned int fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+    if (!compile_shader(fragment_source, fragment_shader))
     {
-        glDeleteShader(vertexShader);
-        glDeleteShader(fragmentShader);
+        glDeleteShader(vertex_shader);
+        glDeleteShader(fragment_shader);
         return 0;
     }
 
-    unsigned int shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
+    unsigned int shader_program = glCreateProgram();
+    glAttachShader(shader_program, vertex_shader);
+    glAttachShader(shader_program, fragment_shader);
+    glLinkProgram(shader_program);
 
     int success;
-    char infoLog[512];
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    char info_log[512];
+    glGetProgramiv(shader_program, GL_LINK_STATUS, &success);
     if (!success)
     {
-        glGetProgramInfoLog(shaderProgram, 512, nullptr, infoLog);
-        spdlog::error("Shader program linking failed: {}", infoLog);
-        glDeleteProgram(shaderProgram);
-        shaderProgram = 0;
+        glGetProgramInfoLog(shader_program, 512, nullptr, info_log);
+        spdlog::error("Shader program linking failed: {}", info_log);
+        glDeleteProgram(shader_program);
+        shader_program = 0;
     }
 
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
+    glDeleteShader(vertex_shader);
+    glDeleteShader(fragment_shader);
 
-    return shaderProgram;
+    return shader_program;
 }
 
-const glm::mat4 CreateViewMatrix(
-    const glm::vec3& cameraPosition,
-    float cameraRotationAngleX,
-    float cameraRotationAngleY,
-    float cameraRotationAngleZ,
-    float orbitRotationAngleX,
-    float orbitRotationAngleY,
-    float orbitRotationAngleZ
+const glm::mat4 create_view_matrix(
+    const glm::vec3& camera_position,
+    float camera_rotation_angle_x,
+    float camera_rotation_angle_y,
+    float camera_rotation_angle_z,
+    float orbit_rotation_angle_x,
+    float orbit_rotation_angle_y,
+    float orbit_rotation_angle_z
 )
 {
     // Camera local rotation matrices
-    const glm::mat4 cameraRotateX3D = CreateRotationX3D(cameraRotationAngleX);
-    const glm::mat4 cameraRotateY3D = CreateRotationY3D(cameraRotationAngleY);
-    const glm::mat4 cameraRotateZ3D = CreateRotationZ3D(cameraRotationAngleZ);
+    const glm::mat4 camera_rotate_x3d = create_rotation_x3d(camera_rotation_angle_x);
+    const glm::mat4 camera_rotate_y3d = create_rotation_y3d(camera_rotation_angle_y);
+    const glm::mat4 camera_rotate_z3d = create_rotation_z3d(camera_rotation_angle_z);
 
     // Camera orbit rotation matrices
-    const glm::mat4 orbitRotateX3D = CreateRotationX3D(orbitRotationAngleX);
-    const glm::mat4 orbitRotateY3D = CreateRotationY3D(orbitRotationAngleY);
-    const glm::mat4 orbitRotateZ3D = CreateRotationZ3D(orbitRotationAngleZ);
+    const glm::mat4 orbit_rotate_x3d = create_rotation_x3d(orbit_rotation_angle_x);
+    const glm::mat4 orbit_rotate_y3d = create_rotation_y3d(orbit_rotation_angle_y);
+    const glm::mat4 orbit_rotate_z3d = create_rotation_z3d(orbit_rotation_angle_z);
 
     // Local camera rotation: X first, then Y, then Z
-    const glm::mat4 cameraRotation3D = cameraRotateZ3D * cameraRotateY3D * cameraRotateX3D;
+    const glm::mat4 camera_rotation_3d = camera_rotate_z3d * camera_rotate_y3d * camera_rotate_x3d;
     // Orbit rotation: X first, then Y, then Z
-    const glm::mat4 orbitRotation3D = orbitRotateZ3D * orbitRotateY3D * orbitRotateX3D;
+    const glm::mat4 orbit_rotation_3d = orbit_rotate_z3d * orbit_rotate_y3d * orbit_rotate_x3d;
     // Create a single matrix comprised of camera and orbital rotations 
-    const glm::mat4 finalCameraRotation3D = orbitRotation3D * cameraRotation3D;
+    const glm::mat4 final_camera_rotation_3d = orbit_rotation_3d * camera_rotation_3d;
 
     // Adjust position in real world
-    const glm::vec3 newCameraPosition = glm::vec3(orbitRotation3D * glm::vec4(cameraPosition, 1.0f));
+    const glm::vec3 new_camera_position = glm::vec3(orbit_rotation_3d * glm::vec4(camera_position, 1.0f));
 
     // Calculate inverse camera rotation.
     // For an orthonormal rotation matrix, inverse(rotation) = transpose(rotation).
-    const glm::mat3 viewRotation = glm::transpose(glm::mat3(finalCameraRotation3D));
+    const glm::mat3 view_rotation = glm::transpose(glm::mat3(final_camera_rotation_3d));
 
     // Calculate inverse camera translation in the rotated coordinate system
-    const glm::vec3 viewTranslation = viewRotation * (-newCameraPosition);
+    const glm::vec3 view_translation = view_rotation * (-new_camera_position);
 
     // Calculate view matrix
     glm::mat4 view(1.0f);
-    view[0] = glm::vec4(viewRotation[0], 0.0f);
-    view[1] = glm::vec4(viewRotation[1], 0.0f);
-    view[2] = glm::vec4(viewRotation[2], 0.0f);
-    view[3] = glm::vec4(viewTranslation, 1.0f);
+    view[0] = glm::vec4(view_rotation[0], 0.0f);
+    view[1] = glm::vec4(view_rotation[1], 0.0f);
+    view[2] = glm::vec4(view_rotation[2], 0.0f);
+    view[3] = glm::vec4(view_translation, 1.0f);
 
     return view;
 }
@@ -210,72 +210,72 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, OPENGL_MINOR_VERSION);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    std::string windowName = "3D Pyramid";
+    std::string window_name = "3D Pyramid";
 
-    GLFWwindow* pWindow = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, windowName.c_str(), nullptr, nullptr);
-    if (!pWindow)
+    GLFWwindow* p_window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, window_name.c_str(), nullptr, nullptr);
+    if (!p_window)
     {
         spdlog::error("Failed to create GLFW window");
         glfwTerminate();
         return -1;
     }
 
-    glfwMakeContextCurrent(pWindow);
-    glfwSetFramebufferSizeCallback(pWindow, framebufferSizeCallback);
+    glfwMakeContextCurrent(p_window);
+    glfwSetFramebufferSizeCallback(p_window, framebuffer_size_callback);
 
     if (!gladLoadGL(glfwGetProcAddress))
     {
         spdlog::error("Failed to initialize GLAD");
-        glfwDestroyWindow(pWindow);
+        glfwDestroyWindow(p_window);
         glfwTerminate();
         return -1;
     }
 
-    glfwGetFramebufferSize(pWindow, &g_framebufferWidth, &g_framebufferHeight);
-    glViewport(0, 0, g_framebufferWidth, g_framebufferHeight);
+    glfwGetFramebufferSize(p_window, &g_framebuffer_width, &g_framebuffer_height);
+    glViewport(0, 0, g_framebuffer_width, g_framebuffer_height);
 
     // Pyramid is comprised of 5 vertices
     const glm::vec3 top = { 0.0f, 0.35f, 0.0f };
-    const glm::vec3 frontLeft = { -0.25f, -0.25f, 0.25f };
-    const glm::vec3 frontRight = { 0.25f, -0.25f, 0.25f };
-    const glm::vec3 backLeft = { -0.25f, -0.25f, -0.25f };
-    const glm::vec3 backRight = { 0.25f, -0.25f, -0.25f };
+    const glm::vec3 front_left = { -0.25f, -0.25f, 0.25f };
+    const glm::vec3 front_right = { 0.25f, -0.25f, 0.25f };
+    const glm::vec3 back_left = { -0.25f, -0.25f, -0.25f };
+    const glm::vec3 back_right = { 0.25f, -0.25f, -0.25f };
 
     // Each side of the pyramid will have it's own unique color
-    const glm::vec4 neonBlue1 = { 0.0f, 0.3f, 0.8f, 1.0f };
-    const glm::vec4 neonBlue2 = { 0.0f, 0.7f, 1.0f, 1.0f };
-    const glm::vec4 neonGreen = { 0.2f, 1.0f, 0.2f, 1.0f };
-    const glm::vec4 neonPurple = { 0.8f, 0.0f, 1.0f, 1.0f };
-    const glm::vec4 baseBlue = { 0.0f, 0.4f, 0.8f, 1.0f };
-    const glm::vec4 basePurple = { 0.4f, 0.0f, 0.8f, 1.0f };
+    const glm::vec4 neon_blue_1 = { 0.0f, 0.3f, 0.8f, 1.0f };
+    const glm::vec4 neon_blue_2 = { 0.0f, 0.7f, 1.0f, 1.0f };
+    const glm::vec4 neon_green = { 0.2f, 1.0f, 0.2f, 1.0f };
+    const glm::vec4 neon_purple = { 0.8f, 0.0f, 1.0f, 1.0f };
+    const glm::vec4 base_blue = { 0.0f, 0.4f, 0.8f, 1.0f };
+    const glm::vec4 base_purple = { 0.4f, 0.0f, 0.8f, 1.0f };
 
     const std::vector<Vertex> vertices =
     {
         // Front face
-        { top, neonBlue1 },        // 0: top
-        { frontLeft, neonBlue2 },  // 1: front-left
-        { frontRight, neonBlue2 }, // 2: front-right
+        { top, neon_blue_1 },        // 0: top
+        { front_left, neon_blue_2 },  // 1: front-left
+        { front_right, neon_blue_2 }, // 2: front-right
 
         // Right face
-        { top, neonBlue1 },        // 3: top
-        { frontRight, neonGreen }, // 4: front-right
-        { backRight, neonBlue2 },  // 5: back-right
+        { top, neon_blue_1 },        // 3: top
+        { front_right, neon_green }, // 4: front-right
+        { back_right, neon_blue_2 },  // 5: back-right
 
         // Back face
-        { top, neonPurple },       // 6: top
-        { backRight, neonPurple }, // 7: back-right
-        { backLeft, neonPurple },  // 8: back-left
+        { top, neon_purple },       // 6: top
+        { back_right, neon_purple }, // 7: back-right
+        { back_left, neon_purple },  // 8: back-left
 
         // Left face
-        { top, neonBlue2 },        // 9: top
-        { backLeft, neonBlue1 },   // 10: back-left
-        { frontLeft, neonBlue1 },  // 11: front-left
+        { top, neon_blue_2 },        // 9: top
+        { back_left, neon_blue_1 },   // 10: back-left
+        { front_left, neon_blue_1 },  // 11: front-left
 
         // Base face - square
-        { frontLeft, baseBlue },    // 12: front-left
-        { backLeft, baseBlue },     // 13: back-left
-        { backRight, basePurple },  // 14: back-right
-        { frontRight, basePurple }  // 15: front-right
+        { front_left, base_blue },    // 12: front-left
+        { back_left, base_blue },     // 13: back-left
+        { back_right, base_purple },  // 14: back-right
+        { front_right, base_purple }  // 15: front-right
     };
 
     const std::vector<unsigned int> indices =
@@ -337,16 +337,16 @@ int main()
     );
     glEnableVertexAttribArray(1);
 
-    std::string vertexShaderSource;
-    std::string fragmentShaderSource;
+    std::string vertex_shader_source;
+    std::string fragment_shader_source;
 
-    std::filesystem::path vertexShaderPath = "shaders/vertex.glsl";
-    std::filesystem::path fragmentShaderPath = "shaders/fragment.glsl";
+    std::filesystem::path vertex_shader_path = "shaders/vertex.glsl";
+    std::filesystem::path fragment_shader_path = "shaders/fragment.glsl";
 
     try
     {
-        vertexShaderSource = Orion::Utils::FileOperations::LoadFileAsString(vertexShaderPath);
-        fragmentShaderSource = Orion::Utils::FileOperations::LoadFileAsString(fragmentShaderPath);
+        vertex_shader_source = Orion::Utils::FileOperations::LoadFileAsString(vertex_shader_path);
+        fragment_shader_source = Orion::Utils::FileOperations::LoadFileAsString(fragment_shader_path);
     }
     catch (const std::exception& exception)
     {
@@ -354,83 +354,83 @@ int main()
         glDeleteVertexArrays(1, &vao);
         glDeleteBuffers(1, &vbo);
         glDeleteBuffers(1, &ebo);
-        glfwDestroyWindow(pWindow);
+        glfwDestroyWindow(p_window);
         glfwTerminate();
         return -1;
     }
 
-    unsigned int shaderProgram = CreateShaderProgram(vertexShaderSource, fragmentShaderSource);
-    if (shaderProgram == 0)
+    unsigned int shader_program = create_shader_program(vertex_shader_source, fragment_shader_source);
+    if (shader_program == 0)
     {
         glDeleteVertexArrays(1, &vao);
         glDeleteBuffers(1, &vbo);
         glDeleteBuffers(1, &ebo);
-        glfwDestroyWindow(pWindow);
+        glfwDestroyWindow(p_window);
         glfwTerminate();
         return -1;
     }
 
     // Camera local angles
-    const float cameraRotationAngleX = glm::radians(5.0f);   // pitch
-    const float cameraRotationAngleY = glm::radians(-5.0f);   // yaw
-    const float cameraRotationAngleZ = glm::radians(90.0f);  // roll
+    const float camera_rotation_angle_x = glm::radians(5.0f);   // pitch
+    const float camera_rotation_angle_y = glm::radians(-5.0f);   // yaw
+    const float camera_rotation_angle_z = glm::radians(90.0f);  // roll
 
     // Camera orbit angles around origin
-    const float orbitRotationAngleX = glm::radians(20.0f);
-    const float orbitRotationAngleY = glm::radians(-35.0f);
-    const float orbitRotationAngleZ = glm::radians(0.0f);
+    const float orbit_rotation_angle_x = glm::radians(20.0f);
+    const float orbit_rotation_angle_y = glm::radians(-35.0f);
+    const float orbit_rotation_angle_z = glm::radians(0.0f);
 
     // Camera base transform
-    const glm::vec3 baseCameraPosition = { 0.0f, 0.0f, 2.5f };
+    const glm::vec3 base_camera_position = { 0.0f, 0.0f, 2.5f };
 
-    const glm::mat4 view = CreateViewMatrix(
-        baseCameraPosition,
-        cameraRotationAngleX,
-        cameraRotationAngleY,
-        cameraRotationAngleZ,
-        orbitRotationAngleX,
-        orbitRotationAngleY,
-        orbitRotationAngleZ
+    const glm::mat4 view = create_view_matrix(
+        base_camera_position,
+        camera_rotation_angle_x,
+        camera_rotation_angle_y,
+        camera_rotation_angle_z,
+        orbit_rotation_angle_x,
+        orbit_rotation_angle_y,
+        orbit_rotation_angle_z
     );
 
     const glm::vec3 scale = { 1.4f, 1.4f, 1.4f };
-    const glm::mat4 scale3D = CreateScale3D(scale);
-    const glm::mat4 model = scale3D;
+    const glm::mat4 scale_3d = create_scale_3d(scale);
+    const glm::mat4 model = scale_3d;
 
-    int mvpLocation = glGetUniformLocation(shaderProgram, "u_mvp");
-    if (mvpLocation == -1)
+    int mvp_location = glGetUniformLocation(shader_program, "u_mvp");
+    if (mvp_location == -1)
     {
         spdlog::error("Failed to find uniform location for u_mvp");
-        glDeleteProgram(shaderProgram);
+        glDeleteProgram(shader_program);
         glDeleteVertexArrays(1, &vao);
         glDeleteBuffers(1, &vbo);
         glDeleteBuffers(1, &ebo);
-        glfwDestroyWindow(pWindow);
+        glfwDestroyWindow(p_window);
         glfwTerminate();
         return -1;
     }
 
-    while (!glfwWindowShouldClose(pWindow))
+    while (!glfwWindowShouldClose(p_window))
     {
         glClearColor(BACKGROUND_COLOR[0], BACKGROUND_COLOR[1], BACKGROUND_COLOR[2], BACKGROUND_COLOR[3]);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glUseProgram(shaderProgram);
+        glUseProgram(shader_program);
         glBindVertexArray(vao);
 
-        const float aspectRatio =
-            static_cast<float>(g_framebufferWidth) /
-            static_cast<float>(g_framebufferHeight > 0 ? g_framebufferHeight : 1);
+        const float aspect_ratio =
+            static_cast<float>(g_framebuffer_width) /
+            static_cast<float>(g_framebuffer_height > 0 ? g_framebuffer_height : 1);
 
         const glm::mat4 projection = glm::perspective(
             glm::radians(FOV_DEGREES_Y_AXIS),
-            aspectRatio,
+            aspect_ratio,
             NEAR_PLANE,
             FAR_PLANE
         );
 
         const glm::mat4 mvp = projection * view * model;
-        glUniformMatrix4fv(mvpLocation, 1, GL_FALSE, glm::value_ptr(mvp));
+        glUniformMatrix4fv(mvp_location, 1, GL_FALSE, glm::value_ptr(mvp));
 
         glDrawElements(
             GL_TRIANGLES,
@@ -439,16 +439,16 @@ int main()
             nullptr
         );
 
-        glfwSwapBuffers(pWindow);
+        glfwSwapBuffers(p_window);
         glfwPollEvents();
     }
 
-    glDeleteProgram(shaderProgram);
+    glDeleteProgram(shader_program);
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo);
     glDeleteBuffers(1, &ebo);
 
-    glfwDestroyWindow(pWindow);
+    glfwDestroyWindow(p_window);
     glfwTerminate();
 
     return 0;

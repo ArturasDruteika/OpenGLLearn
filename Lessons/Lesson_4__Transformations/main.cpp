@@ -19,17 +19,17 @@ constexpr int WINDOW_HEIGHT = 800;
 constexpr float BACKGROUND_COLOR[4] = { 0.1f, 0.2f, 0.3f, 1.0f };
 
 
-glm::mat3 CreateTranslation2D(const glm::vec2& translation)
+glm::mat3 create_translation_2d(const glm::vec2& translation)
 {
     glm::mat3 result(1.0f);
     result[2] = glm::vec3(translation, 1.0f);
     return result;
 }
 
-glm::mat3 CreateRotation2D(float angleInRadians)
+glm::mat3 create_rotation_2d(float angle_in_radians)
 {
-    const float cosine = std::cos(angleInRadians);
-    const float sine = std::sin(angleInRadians);
+    const float cosine = std::cos(angle_in_radians);
+    const float sine = std::sin(angle_in_radians);
 
     glm::mat3 result(1.0f);
     result[0] = glm::vec3(cosine, sine, 0.0f);
@@ -37,7 +37,7 @@ glm::mat3 CreateRotation2D(float angleInRadians)
     return result;
 }
 
-glm::mat3 CreateScale2D(const glm::vec2& scale)
+glm::mat3 create_scale_2d(const glm::vec2& scale)
 {
     glm::mat3 result(1.0f);
     result[0] = glm::vec3(scale.x, 0.0f, 0.0f);
@@ -45,64 +45,64 @@ glm::mat3 CreateScale2D(const glm::vec2& scale)
     return result;
 }
 
-void framebufferSizeCallback(GLFWwindow* window, int width, int height)
+void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
 }
 
-int CompileShader(const std::string& source, unsigned int shaderID)
+int compile_shader(const std::string& source, unsigned int shader_id)
 {
-    const char* sourceCStr = source.c_str();
-    glShaderSource(shaderID, 1, &sourceCStr, nullptr);
-    glCompileShader(shaderID);
+    const char* source_c_str = source.c_str();
+    glShaderSource(shader_id, 1, &source_c_str, nullptr);
+    glCompileShader(shader_id);
 
     int success;
-    char infoLog[512];
-    glGetShaderiv(shaderID, GL_COMPILE_STATUS, &success);
+    char info_log[512];
+    glGetShaderiv(shader_id, GL_COMPILE_STATUS, &success);
     if (!success)
     {
-        glGetShaderInfoLog(shaderID, 512, nullptr, infoLog);
-        spdlog::error("Shader compilation failed: {}", infoLog);
+        glGetShaderInfoLog(shader_id, 512, nullptr, info_log);
+        spdlog::error("Shader compilation failed: {}", info_log);
     }
     return success;
 }
 
-unsigned int CreateShaderProgram(const std::string& vertexSource, const std::string& fragmentSource)
+unsigned int create_shader_program(const std::string& vertex_source, const std::string& fragment_source)
 {
-    unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    if (!CompileShader(vertexSource, vertexShader))
+    unsigned int vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+    if (!compile_shader(vertex_source, vertex_shader))
     {
-        glDeleteShader(vertexShader);
+        glDeleteShader(vertex_shader);
         return 0;
     }
 
-    unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    if (!CompileShader(fragmentSource, fragmentShader))
+    unsigned int fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+    if (!compile_shader(fragment_source, fragment_shader))
     {
-        glDeleteShader(vertexShader);
-        glDeleteShader(fragmentShader);
+        glDeleteShader(vertex_shader);
+        glDeleteShader(fragment_shader);
         return 0;
     }
 
-    unsigned int shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
+    unsigned int shader_program = glCreateProgram();
+    glAttachShader(shader_program, vertex_shader);
+    glAttachShader(shader_program, fragment_shader);
+    glLinkProgram(shader_program);
 
     int success;
-    char infoLog[512];
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    char info_log[512];
+    glGetProgramiv(shader_program, GL_LINK_STATUS, &success);
     if (!success)
     {
-        glGetProgramInfoLog(shaderProgram, 512, nullptr, infoLog);
-        spdlog::error("Shader program linking failed: {}", infoLog);
-        shaderProgram = 0;
+        glGetProgramInfoLog(shader_program, 512, nullptr, info_log);
+        spdlog::error("Shader program linking failed: {}", info_log);
+        shader_program = 0;
     }
 
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
+    glDeleteShader(vertex_shader);
+    glDeleteShader(fragment_shader);
 
-    return shaderProgram;
+    return shader_program;
 }
 
 int main()
@@ -117,28 +117,28 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, OPENGL_MINOR_VERSION);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    std::string windowName = "Triangle Transformations";
+    std::string window_name = "Triangle Transformations";
 
-    GLFWwindow* pWindow = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, windowName.c_str(), nullptr, nullptr);
-    if (!pWindow)
+    GLFWwindow* p_window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, window_name.c_str(), nullptr, nullptr);
+    if (!p_window)
     {
         spdlog::error("Failed to create GLFW window");
         glfwTerminate();
         return -1;
     }
 
-    glfwMakeContextCurrent(pWindow);
-    glfwSetFramebufferSizeCallback(pWindow, framebufferSizeCallback);
+    glfwMakeContextCurrent(p_window);
+    glfwSetFramebufferSizeCallback(p_window, framebuffer_size_callback);
 
     if (!gladLoadGL(glfwGetProcAddress))
     {
         spdlog::error("Failed to initialize GLAD");
-        glfwDestroyWindow(pWindow);
+        glfwDestroyWindow(p_window);
         glfwTerminate();
         return -1;
     }
     
-    float triangleVertices[] = {
+    float triangle_vertices[] = {
         // positions    // colors
          0.0f,  0.25f,  0.0f, 1.0f, 1.0f, 1.0f,
         -0.25f, -0.25f, 0.0f, 1.0f, 1.0f, 1.0f,
@@ -154,88 +154,90 @@ int main()
     glBindVertexArray(vao);
     
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(triangleVertices), triangleVertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(triangle_vertices), triangle_vertices, GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(2 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    std::string vertexShaderSource;
-    std::string fragmentShaderSource;
+    std::string vertex_shader_source;
+    std::string fragment_shader_source;
 
-    std::filesystem::path vertexShaderPath = "shaders/vertex.glsl";
-    std::filesystem::path fragmentShaderPath = "shaders/fragment.glsl";
+    std::filesystem::path vertex_shader_path = "shaders/vertex.glsl";
+    std::filesystem::path fragment_shader_path = "shaders/fragment.glsl";
 
     try
     {
-        vertexShaderSource = Orion::Utils::FileOperations::LoadFileAsString(vertexShaderPath);
-        fragmentShaderSource = Orion::Utils::FileOperations::LoadFileAsString(fragmentShaderPath);
+        vertex_shader_source = Orion::Utils::FileOperations::LoadFileAsString(vertex_shader_path);
+        fragment_shader_source = Orion::Utils::FileOperations::LoadFileAsString(fragment_shader_path);
     }
     catch (const std::exception& exception)
     {
         spdlog::error("Failed to load shader files: {}", exception.what());
-        glfwDestroyWindow(pWindow);
+        glfwDestroyWindow(p_window);
         glfwTerminate();
         return -1;
     }
 
-    unsigned int shaderProgram = CreateShaderProgram(vertexShaderSource, fragmentShaderSource);
-    if (shaderProgram == 0)
+    unsigned int shader_program = create_shader_program(vertex_shader_source, fragment_shader_source);
+    if (shader_program == 0)
     {
-        glfwDestroyWindow(pWindow);
+        glfwDestroyWindow(p_window);
         glfwTerminate();
         return -1;
     }
 
-    const float rotationAngle = glm::radians(90.0f);
-    const glm::vec2 nonUniformScale{ 0.5f, 1.5f };
-    const glm::vec2 topLeftPosition{ -0.5f, 0.5f };
-    const glm::vec2 bottomLeftPosition{ -0.5f, -0.5f };
-    const glm::vec2 topRightPosition{ 0.5f, 0.5f };
-    const glm::vec2 bottomRightPosition{ 0.5f, -0.5f };
+    const float rotation_angle = glm::radians(90.0f);
+    const glm::vec2 non_uniform_scale{ 0.5f, 1.5f };
+    const glm::vec2 top_left_position{ -0.5f, 0.5f };
+    const glm::vec2 bottom_left_position{ -0.5f, -0.5f };
+    const glm::vec2 top_right_position{ 0.5f, 0.5f };
+    const glm::vec2 bottom_right_position{ 0.5f, -0.5f };
 
-    const glm::mat3 translateTopLeft = CreateTranslation2D(topLeftPosition);
-    const glm::mat3 translateBottomLeft = CreateTranslation2D(bottomLeftPosition);
-    const glm::mat3 translateTopRight = CreateTranslation2D(topRightPosition);
-    const glm::mat3 translateBottomRight = CreateTranslation2D(bottomRightPosition);
+    const glm::mat3 translate_top_left = create_translation_2d(top_left_position);
+    const glm::mat3 translate_bottom_left = create_translation_2d(bottom_left_position);
+    const glm::mat3 translate_top_right = create_translation_2d(top_right_position);
+    const glm::mat3 translate_bottom_right = create_translation_2d(bottom_right_position);
 
-    const glm::mat3 rotate2D = CreateRotation2D(rotationAngle);
-    const glm::mat3 scale2D = CreateScale2D(nonUniformScale);
+    const glm::mat3 rotate_2d = create_rotation_2d(rotation_angle);
+    const glm::mat3 scale_2d = create_scale_2d(non_uniform_scale);
 
-    const glm::mat3 topLeft = translateTopLeft;
-    const glm::mat3 bottomLeft = translateBottomLeft * rotate2D;
-    const glm::mat3 topRight = translateTopRight * scale2D;
-    const glm::mat3 bottomRight = translateBottomRight * rotate2D * scale2D;
+    const glm::mat3 top_left = translate_top_left;
+    const glm::mat3 bottom_left = translate_bottom_left * rotate_2d;
+    const glm::mat3 top_right = translate_top_right * scale_2d;
+    const glm::mat3 bottom_right = translate_bottom_right * rotate_2d * scale_2d;
 
-    int transformLocation = glGetUniformLocation(shaderProgram, "u_transform");
-    while (!glfwWindowShouldClose(pWindow))
+    int transform_location = glGetUniformLocation(shader_program, "u_transform");
+    while (!glfwWindowShouldClose(p_window))
     {
         glClearColor(BACKGROUND_COLOR[0], BACKGROUND_COLOR[1], BACKGROUND_COLOR[2], BACKGROUND_COLOR[3]);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glUseProgram(shaderProgram);
+        glUseProgram(shader_program);
         glBindVertexArray(vao);
 
-        glUniformMatrix3fv(transformLocation, 1, GL_FALSE, glm::value_ptr(topLeft));
+        glUniformMatrix3fv(transform_location, 1, GL_FALSE, glm::value_ptr(top_left));
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
-        glUniformMatrix3fv(transformLocation, 1, GL_FALSE, glm::value_ptr(bottomLeft));
+        glUniformMatrix3fv(transform_location, 1, GL_FALSE, glm::value_ptr(bottom_left));
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
-        glUniformMatrix3fv(transformLocation, 1, GL_FALSE, glm::value_ptr(topRight));
+        glUniformMatrix3fv(transform_location, 1, GL_FALSE, glm::value_ptr(top_right));
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
-        glUniformMatrix3fv(transformLocation, 1, GL_FALSE, glm::value_ptr(bottomRight));
+        glUniformMatrix3fv(transform_location, 1, GL_FALSE, glm::value_ptr(bottom_right));
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
-        glfwSwapBuffers(pWindow);
+        glfwSwapBuffers(p_window);
         glfwPollEvents();
     }
 
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo);
     
-    glfwDestroyWindow(pWindow);
+    glfwDestroyWindow(p_window);
     glfwTerminate();
+
+    return 0;
 }
