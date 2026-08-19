@@ -17,16 +17,16 @@ As for uniforms, they are also one of the building blocks you have to understand
 
 I will try to give my own personal view on why transformations are one of the building blocks in rendering.
 
-One important thing you have to understand about building a graphics engine is that not everything inside the graphics engine revolves around rendering. For example, let's say you want to render a triangle. From the previous lessons, we know that a triangle is comprised of 3 vertices. In order for OpenGL to see how you have defined those 3 vertices, you need to upload that vertex data array to the GPU using `glBufferData`. Now stop right here, before the `glBufferData` operation is called. Let's focus purely on the `triangleVertices` array from the previous lesson.
+One important thing you have to understand about building a graphics engine is that not everything inside the graphics engine revolves around rendering. For example, let's say you want to render a triangle. From the previous lessons, we know that a triangle is comprised of 3 vertices. In order for OpenGL to see how you have defined those 3 vertices, you need to upload that vertex data array to the GPU using `glBufferData`. Now stop right here, before the `glBufferData` operation is called. Let's focus purely on the `triangle_vertices` array from the previous lesson.
 
-If we isolated this `triangleVertices` array from all the OpenGL operations, could we say that `triangleVertices` is somehow related to rendering? Just look here:
+If we isolated this `triangle_vertices` array from all the OpenGL operations, could we say that `triangle_vertices` is somehow related to rendering? Just look here:
 
 ```C++
 int main()
 {
     // Some code
 
-    float triangleVertices[] = {
+    float triangle_vertices[] = {
         // positions    // colors
          0.0f,  0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // top vertex 
         -0.5f, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // bottom left
@@ -40,10 +40,10 @@ int main()
 
 ```
 
-Looking at this piece of code, does it give any information that we are going to render a triangle on the screen defined by triangleVertices? No, it does not, and this is one of the major separations of concern you have to understand. The whole graphics project you are building can, and as a matter of fact should, be separated into 2 parts:
+Looking at this piece of code, does it give any information that we are going to render a triangle on the screen defined by triangle_vertices? No, it does not, and this is one of the major separations of concern you have to understand. The whole graphics project you are building can, and as a matter of fact should, be separated into 2 parts:
 
-__Rendering__ - everything regarding the graphics API for OpenGL, Vulkan, or any other graphics backend.
-__Real World__ - everything regarding the real-world logic, like geometrical object definitions, geometrical object construction, physics, lighting, orientations, scenes, etc.
+**Rendering** - everything regarding the graphics API for OpenGL, Vulkan, or any other graphics backend.
+**Real World** - everything regarding the real-world logic, like geometrical object definitions, geometrical object construction, physics, lighting, orientations, scenes, etc.
 
 You probably already know what rendering is, but this idea of a real world is a new concept that at first might be weird to understand, especially as to why we even need to separate it from rendering. To understand more easily what real world means, I suggest replacing the word "real" with "virtual", thus real world becomes virtual world. Does it make more sense now? Every object we create, every logic we apply to it, only lives inside computers, thus making it virtual. In order to render something, that something needs to be described and built from scratch. Going back to the triangle example, we have to provide OpenGL with some data that it has to render. This "data" is what I, and I hope a lot of other people, call the real world. This data for the triangle is quite simple, just 18 numbers in a sequential order. But in order to render something that would visually awe other people, a simple triangle is not enough. Just imagine how many different geometrical shapes are required to render this frame:
 
@@ -87,7 +87,7 @@ This is extremely inefficient. Computers are fast, but that definitely hinders t
 With transformations, instead of doing all those steps, why can't we just manipulate how the data is interpreted during rendering? Let's take our good old triangle data from previous lessons:
 
 ```C++
-float triangleVertices[] = {
+float triangle_vertices[] = {
     // positions    // colors
     0.0f,  0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // top vertex 
     -0.5f, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // bottom left
@@ -154,10 +154,10 @@ __Model space__ is a type of coordinate system that is relative to the object it
 
 So imagine you want to create a triangle whose center is shifted 4 units to the left. There are 2 options for how you can achieve that:
 
-1. Populate `triangleVertices` like this:
+1. Populate `triangle_vertices` like this:
 
     ```C++
-    float triangleVertices[] = {
+    float triangle_vertices[] = {
         // positions    // colors
          0.0f - 4,  0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // top vertex 
         -0.5f - 4, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // bottom left
@@ -215,20 +215,20 @@ int main()
         Vec2{ 0.5f, -0.5f }
     };
 
-    float scaleFactor = 2.0f;
+    float scale_factor = 2.0f;
 
     for (Vec2& vertex : triangle)
     {
         // --- Scaling ---
-        vertex.x = vertex.x * scaleFactor;
-        vertex.y = vertex.y * scaleFactor;
+        vertex.x = vertex.x * scale_factor;
+        vertex.y = vertex.y * scale_factor;
 
         // --- Rotation (90 degrees) ---
-        float oldX = vertex.x;
-        float oldY = vertex.y;
+        float old_x = vertex.x;
+        float old_y = vertex.y;
 
-        vertex.x = -oldY;
-        vertex.y = oldX;
+        vertex.x = -old_y;
+        vertex.y = old_x;
     }
 }
 ```
@@ -249,7 +249,7 @@ struct Mat2
     float data[2][2];
 };
 
-Vec2 Multiply(const Mat2& matrix, const Vec2& vector)
+Vec2 multiply(const Mat2& matrix, const Vec2& vector)
 {
     Vec2 result;
     result.x = matrix.data[0][0] * vector.x + matrix.data[0][1] * vector.y;
@@ -257,7 +257,7 @@ Vec2 Multiply(const Mat2& matrix, const Vec2& vector)
     return result;
 }
 
-Mat2 Multiply(const Mat2& a, const Mat2& b)
+Mat2 multiply(const Mat2& a, const Mat2& b)
 {
     Mat2 result = { 0.0f };
 
@@ -286,25 +286,25 @@ int main()
         Vec2{ 0.5f, -0.5f }
     };
 
-    float scaleFactor = 2.0f;
+    float scale_factor = 2.0f;
 
-    Mat2 scaleMatrix =
+    Mat2 scale_matrix =
     {{
-        { scaleFactor, 0.0f },
-        { 0.0f, scaleFactor }
+        { scale_factor, 0.0f },
+        { 0.0f, scale_factor }
     }};
 
-    Mat2 rotationMatrix =
+    Mat2 rotation_matrix =
     {{
         { 0.0f, -1.0f },
         { 1.0f,  0.0f }
     }};
 
-    Mat2 transformationMatrix = Multiply(rotationMatrix, scaleMatrix);
+    Mat2 transformation_matrix = multiply(rotation_matrix, scale_matrix);
 
     for (Vec2& vertex : triangle)
     {
-        vertex = Multiply(transformationMatrix, vertex);
+        vertex = multiply(transformation_matrix, vertex);
     }
 
     return 0;
@@ -535,22 +535,22 @@ To sum everything up, __homogeneous coordinates__ allow us to unify all affine t
 
 First, let's start here, since it will be over in "half" a minute. A uniform is a way that lets developers directly pass variables to shaders. What is the point of allowing developers to directly pass values to shaders? The first thing that comes to my mind is the parallelism of the GPU. Remember the definition of a __shader__? Cough cough, a program that runs on the GPU. Also, remember that GPUs are great for program executions that are independent from one another. You can Google what SIMD is.
 
-Ok, I will elaborate on this a little more. ___The following example is going to be run on the CPU, meaning a single CPU core is going to be used___. Imagine a simple array of numbers. Let's define it as `int arrayOfNumbers[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};`. Imagine that there is a function that takes exactly 1 second to complete, which does:
+Ok, I will elaborate on this a little more. ___The following example is going to be run on the CPU, meaning a single CPU core is going to be used___. Imagine a simple array of numbers. Let's define it as `int array_of_numbers[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};`. Imagine that there is a function that takes exactly 1 second to complete, which does:
 
 ```C++
-int Some1SFunction(int originalValue):
+int some_1_s_function(int original_value):
     ...
-    return processedOuput;
+    return processed_output;
 ```
 
-Also, imagine, that now, I want to apply this function to all of the numbers in the `arrayOfNumbers`. One way to do this is the following:
+Also, imagine, that now, I want to apply this function to all of the numbers in the `array_of_numbers`. One way to do this is the following:
 
 ```C++
-for (const number : arrayOfNumbers)
-    int result = Some1SFunction(number);
+for (const number : array_of_numbers)
+    int result = some_1_s_function(number);
 ```
 
-On a CPU, this function would take 9 seconds to complete, since it would be called 9 times. To speed this up, we can use threads. So if our CPU had 9 or more cores, each core could take a single call of `Some1SFunction`, and voila, the time would be reduced from 9 seconds to just 1 second.
+On a CPU, this function would take 9 seconds to complete, since it would be called 9 times. To speed this up, we can use threads. So if our CPU had 9 or more cores, each core could take a single call of `some_1_s_function`, and voila, the time would be reduced from 9 seconds to just 1 second.
 
 Ok, but what if our array has 10000 numbers? The CPU definitely does not have cores in the thousands. That's sad, but you know what does? Yes, the GPU. With some programming knowledge, you could run this operation on that 10000-number array, and since GPUs have thousands of mini-cores, this operation could be done in seconds.
 
@@ -599,17 +599,17 @@ To easily use transfomations, we are going to use [glm](https://github.com/g-tru
 Take a look at the transformations we are going to use:
 
 ```C++
-glm::mat3 CreateTranslation2D(const glm::vec2& translation)
+glm::mat3 create_translation_2d(const glm::vec2& translation)
 {
     glm::mat3 result(1.0f);
     result[2] = glm::vec3(translation, 1.0f);
     return result;
 }
 
-glm::mat3 CreateRotation2D(float angleInRadians)
+glm::mat3 create_rotation_2d(float angle_in_radians)
 {
-    const float cosine = std::cos(angleInRadians);
-    const float sine = std::sin(angleInRadians);
+    const float cosine = std::cos(angle_in_radians);
+    const float sine = std::sin(angle_in_radians);
 
     glm::mat3 result(1.0f);
     result[0] = glm::vec3(cosine, sine, 0.0f);
@@ -617,7 +617,7 @@ glm::mat3 CreateRotation2D(float angleInRadians)
     return result;
 }
 
-glm::mat3 CreateScale2D(const glm::vec2& scale)
+glm::mat3 create_scale_2d(const glm::vec2& scale)
 {
     glm::mat3 result(1.0f);
     result[0] = glm::vec3(scale.x, 0.0f, 0.0f);
@@ -628,55 +628,55 @@ glm::mat3 CreateScale2D(const glm::vec2& scale)
 ...
 
 
-    const float rotationAngle = glm::radians(90.0f);
-    const glm::vec2 nonUniformScale{ 0.5f, 1.5f };
-    const glm::vec2 topLeftPosition{ -0.5f, 0.5f };
-    const glm::vec2 bottomLeftPosition{ -0.5f, -0.5f };
-    const glm::vec2 topRightPosition{ 0.5f, 0.5f };
-    const glm::vec2 bottomRightPosition{ 0.5f, -0.5f };
+    const float rotation_angle = glm::radians(90.0f);
+    const glm::vec2 non_uniform_scale{ 0.5f, 1.5f };
+    const glm::vec2 top_left_position{ -0.5f, 0.5f };
+    const glm::vec2 bottom_left_position{ -0.5f, -0.5f };
+    const glm::vec2 top_right_position{ 0.5f, 0.5f };
+    const glm::vec2 bottom_right_position{ 0.5f, -0.5f };
 
-    const glm::mat3 translateTopLeft = CreateTranslation2D(topLeftPosition);
-    const glm::mat3 translateBottomLeft = CreateTranslation2D(bottomLeftPosition);
-    const glm::mat3 translateTopRight = CreateTranslation2D(topRightPosition);
-    const glm::mat3 translateBottomRight = CreateTranslation2D(bottomRightPosition);
+    const glm::mat3 translate_top_left = create_translation_2d(top_left_position);
+    const glm::mat3 translate_bottom_left = create_translation_2d(bottom_left_position);
+    const glm::mat3 translate_top_right = create_translation_2d(top_right_position);
+    const glm::mat3 translate_bottom_right = create_translation_2d(bottom_right_position);
 
-    const glm::mat3 rotate2D = CreateRotation2D(rotationAngle);
-    const glm::mat3 scale2D = CreateScale2D(nonUniformScale);
+    const glm::mat3 rotate_2d = create_rotation_2d(rotation_angle);
+    const glm::mat3 scale_2d = create_scale_2d(non_uniform_scale);
 
-    const glm::mat3 topLeft = translateTopLeft;
-    const glm::mat3 bottomLeft = translateBottomLeft * rotate2D;
-    const glm::mat3 topRight = translateTopRight * scale2D;
-    const glm::mat3 bottomRight = translateBottomRight * rotate2D * scale2D;
+    const glm::mat3 top_left = translate_top_left;
+    const glm::mat3 bottom_left = translate_bottom_left * rotate_2d;
+    const glm::mat3 top_right = translate_top_right * scale_2d;
+    const glm::mat3 bottom_right = translate_bottom_right * rotate_2d * scale_2d;
 ```
 
 Let's go line by line and I will try to explain what is going on in here:
 
 ```C++
-const float rotationAngle = glm::radians(90.0f);
-const glm::vec2 nonUniformScale{ 0.5f, 1.5f };
-const glm::vec2 topLeftPosition{ -0.5f, 0.5f };
-const glm::vec2 bottomLeftPosition{ -0.5f, -0.5f };
-const glm::vec2 topRightPosition{ 0.5f, 0.5f };
-const glm::vec2 bottomRightPosition{ 0.5f, -0.5f };
+const float rotation_angle = glm::radians(90.0f);
+const glm::vec2 non_uniform_scale{ 0.5f, 1.5f };
+const glm::vec2 top_left_position{ -0.5f, 0.5f };
+const glm::vec2 bottom_left_position{ -0.5f, -0.5f };
+const glm::vec2 top_right_position{ 0.5f, 0.5f };
+const glm::vec2 bottom_right_position{ 0.5f, -0.5f };
 ```
 Here, basically, we define what we want to transform in the simplest terms. You can say that these lines only define what transformations are going to be used later. At this point, these are just simple values that we are going to use later. Also, we have not yet defined which objects we are going to apply these transformations to.
 
-`const float rotationAngle = glm::radians(90.0f);` is pretty self-explanatory: a single value, in radians, that tells us how much to rotate something. But the next 5 lines are vectors, which have 2 numbers in them. Since we are rendering triangles in a 2D world, and in the future we are going to transition to 3D, scaling and translation need to be 2D vectors. Why? Because each of those 2 numbers defines transformation on a single axis. Let's take this line: `const glm::vec2 nonUniformScale{ 0.5f, 1.5f };`. This is a scaling vector which tells us how much to scale the X and Y axes separately, i.e. `0.5` scales the X axis, and `1.5` scales the Y axis. Keep in mind that X and Y axes are set arbitrarily, meaning that you can use `1.5` for X and `0.5` for Y. But the convention is this: the first number in a transformation vector is for X, the second for Y, and the third for Z. Translation works the same way. In `const glm::vec2 topLeftPosition{ -0.5f, 0.5f };`, `-0.5` tells us where to move on the X axis, and `0.5` tells us where to move on the Y axis.
+`const float rotation_angle = glm::radians(90.0f);` is pretty self-explanatory: a single value, in radians, that tells us how much to rotate something. But the next 5 lines are vectors, which have 2 numbers in them. Since we are rendering triangles in a 2D world, and in the future we are going to transition to 3D, scaling and translation need to be 2D vectors. Why? Because each of those 2 numbers defines transformation on a single axis. Let's take this line: `const glm::vec2 non_uniform_scale{ 0.5f, 1.5f };`. This is a scaling vector which tells us how much to scale the X and Y axes separately, i.e. `0.5` scales the X axis, and `1.5` scales the Y axis. Keep in mind that X and Y axes are set arbitrarily, meaning that you can use `1.5` for X and `0.5` for Y. But the convention is this: the first number in a transformation vector is for X, the second for Y, and the third for Z. Translation works the same way. In `const glm::vec2 top_left_position{ -0.5f, 0.5f };`, `-0.5` tells us where to move on the X axis, and `0.5` tells us where to move on the Y axis.
 
 Now let's discuss these lines:
 
 ```C++
-glm::mat3 CreateTranslation2D(const glm::vec2& translation)
+glm::mat3 create_translation_2d(const glm::vec2& translation)
 {
     glm::mat3 result(1.0f);
     result[2] = glm::vec3(translation, 1.0f);
     return result;
 }
 
-glm::mat3 CreateRotation2D(float angleInRadians)
+glm::mat3 create_rotation_2d(float angle_in_radians)
 {
-    const float cosine = std::cos(angleInRadians);
-    const float sine = std::sin(angleInRadians);
+    const float cosine = std::cos(angle_in_radians);
+    const float sine = std::sin(angle_in_radians);
 
     glm::mat3 result(1.0f);
     result[0] = glm::vec3(cosine, sine, 0.0f);
@@ -684,7 +684,7 @@ glm::mat3 CreateRotation2D(float angleInRadians)
     return result;
 }
 
-glm::mat3 CreateScale2D(const glm::vec2& scale)
+glm::mat3 create_scale_2d(const glm::vec2& scale)
 {
     glm::mat3 result(1.0f);
     result[0] = glm::vec3(scale.x, 0.0f, 0.0f);
@@ -694,19 +694,19 @@ glm::mat3 CreateScale2D(const glm::vec2& scale)
 
 ...
 
-    const glm::mat3 translateTopLeft = CreateTranslation2D(topLeftPosition);
-    const glm::mat3 translateBottomLeft = CreateTranslation2D(bottomLeftPosition);
-    const glm::mat3 translateTopRight = CreateTranslation2D(topRightPosition);
-    const glm::mat3 translateBottomRight = CreateTranslation2D(bottomRightPosition);
+    const glm::mat3 translate_top_left = create_translation_2d(top_left_position);
+    const glm::mat3 translate_bottom_left = create_translation_2d(bottom_left_position);
+    const glm::mat3 translate_top_right = create_translation_2d(top_right_position);
+    const glm::mat3 translate_bottom_right = create_translation_2d(bottom_right_position);
 
-    const glm::mat3 rotate2D = CreateRotation2D(rotationAngle);
-    const glm::mat3 scale2D = CreateScale2D(nonUniformScale);
+    const glm::mat3 rotate_2d = create_rotation_2d(rotation_angle);
+    const glm::mat3 scale_2d = create_scale_2d(non_uniform_scale);
 ```
 
 This is where the matrices come into play. As I said before, matrices are great for reusability, for adding transformations into a single entity, and also, matrices are a standard way in which transformations should be used. Let's discuss this part:
 
 ```C++
-glm::mat3 CreateTranslation2D(const glm::vec2& translation)
+glm::mat3 create_translation_2d(const glm::vec2& translation)
 {
     glm::mat3 result(1.0f);
     result[2] = glm::vec3(translation, 1.0f);
@@ -715,13 +715,13 @@ glm::mat3 CreateTranslation2D(const glm::vec2& translation)
 
 ...
 
-const glm::mat3 translateTopLeft = CreateTranslation2D(topLeftPosition);
-const glm::mat3 translateBottomLeft = CreateTranslation2D(bottomLeftPosition);
-const glm::mat3 translateTopRight = CreateTranslation2D(topRightPosition);
-const glm::mat3 translateBottomRight = CreateTranslation2D(bottomRightPosition);
+const glm::mat3 translate_top_left = create_translation_2d(top_left_position);
+const glm::mat3 translate_bottom_left = create_translation_2d(bottom_left_position);
+const glm::mat3 translate_top_right = create_translation_2d(top_right_position);
+const glm::mat3 translate_bottom_right = create_translation_2d(bottom_right_position);
 ```
 
-These lines help us create a translation transformation matrix. Since we know how matrices work, and again, I hope you read the articles I provided, I will tell you what the translation matrix looks like. `CreateTranslation2D(const glm::vec2& translation)` constructs a matrix that looks like this:
+These lines help us create a translation transformation matrix. Since we know how matrices work, and again, I hope you read the articles I provided, I will tell you what the translation matrix looks like. `create_translation_2d(const glm::vec2& translation)` constructs a matrix that looks like this:
 
 ```
 [  1  0  tx  ]
@@ -741,15 +741,15 @@ Do you see the difference now? These are just 2 options for how you can move you
 
 Going back to the code part, notice that there are 4 different translation matrices. For this lesson, we need 4 translations because our goal is to render 4 triangles placed at different positions on the screen, as seen in the first image in the Transformations section. This means that each of those triangles has a translation transformation applied to it so that its position can be changed on the screen. Remember how, in model space and world space, I talked about the differences between these 2 coordinate systems? This is where understanding these concepts helps us realize the need for transformations better.
 
-If you look at `triangleVertices`, you can see that the positions are defined in model space, meaning that all vertex positions are relative to the origin. If you rendered the triangle with the positions from `triangleVertices`, without the translation transformation applied, you would see exactly the same triangle as in lesson 2.
+If you look at `triangle_vertices`, you can see that the positions are defined in model space, meaning that all vertex positions are relative to the origin. If you rendered the triangle with the positions from `triangle_vertices`, without the translation transformation applied, you would see exactly the same triangle as in lesson 2.
 
 Before showing how to apply transformations to objects, let's first look at these lines, just so that we can finish with the transformation definitions:
 
 ```C++
-glm::mat3 CreateRotation2D(float angleInRadians)
+glm::mat3 create_rotation_2d(float angle_in_radians)
 {
-    const float cosine = std::cos(angleInRadians);
-    const float sine = std::sin(angleInRadians);
+    const float cosine = std::cos(angle_in_radians);
+    const float sine = std::sin(angle_in_radians);
 
     glm::mat3 result(1.0f);
     result[0] = glm::vec3(cosine, sine, 0.0f);
@@ -757,7 +757,7 @@ glm::mat3 CreateRotation2D(float angleInRadians)
     return result;
 }
 
-glm::mat3 CreateScale2D(const glm::vec2& scale)
+glm::mat3 create_scale_2d(const glm::vec2& scale)
 {
     glm::mat3 result(1.0f);
     result[0] = glm::vec3(scale.x, 0.0f, 0.0f);
@@ -767,8 +767,8 @@ glm::mat3 CreateScale2D(const glm::vec2& scale)
 
 ...
 
-    const glm::mat3 rotate2D = CreateRotation2D(rotationAngle);
-    const glm::mat3 scale2D = CreateScale2D(nonUniformScale);
+    const glm::mat3 rotate_2d = create_rotation_2d(rotation_angle);
+    const glm::mat3 scale_2d = create_scale_2d(non_uniform_scale);
 ```
 
 Analogous to the translation matrices, here we are constructing matrices for rotation and scaling. The created matrices are exactly the same shape as the translation matrix.
@@ -845,24 +845,24 @@ Why does every object have its own model matrix? Well, just think about it. You 
 So with this knowledge, we can go to this part:
 
 ```C++
-const glm::mat3 topLeft = translateTopLeft;
-const glm::mat3 bottomLeft = translateBottomLeft * rotate2D;
-const glm::mat3 topRight = translateTopRight * scale2D;
-const glm::mat3 bottomRight = translateBottomRight * rotate2D * scale2D;
+const glm::mat3 top_left = translate_top_left;
+const glm::mat3 bottom_left = translate_bottom_left * rotate_2d;
+const glm::mat3 top_right = translate_top_right * scale_2d;
+const glm::mat3 bottom_right = translate_bottom_right * rotate_2d * scale_2d;
 ```
 
 Since we have 4 triangles, we have 4 unique model matrices. Take a look again at this image:
 
 ![triangle_transformations](Assets/triangle_transformations.png)
 
-1. `topLeft` - model matrix for the triangle at the top-left corner
-2. `bottomLeft` - model matrix for the triangle at the bottom-left corner
-3. `topRight` - model matrix for the triangle at the top-right corner
-4. `bottomRight` - model matrix for the triangle at the bottom-right corner
+1. `top_left` - model matrix for the triangle at the top-left corner
+2. `bottom_left` - model matrix for the triangle at the bottom-left corner
+3. `top_right` - model matrix for the triangle at the top-right corner
+4. `bottom_right` - model matrix for the triangle at the bottom-right corner
 
 Each of these model matrices transforms the original triangle in a unique way. Again, notice that we retain the multiplication order for model matrices that follows this rule: `M = T x R x S`.
 
-You might ask, "Why do some of the model matrices not have all the transformations in them, like where `topLeft` is only a translation matrix?" There are 2 ways you can think about them:
+You might ask, "Why do some of the model matrices not have all the transformations in them, like where `top_left` is only a translation matrix?" There are 2 ways you can think about them:
 
 1. Think that the model matrix does not need to have all transformations embedded in it.
 2. Always think that the model matrix needs to have all the transformations embedded in it, but if it is missing one or another, implicitly substitute that transformation matrix with an identity matrix. It works because the identity matrix does not change the outer product.
@@ -874,8 +874,8 @@ Both of these ideas work fine; it is just the way you want to think about the mo
 
 Finally, we have arrived at the end of this lesson: the long-awaited main rendering loop. There are basically 2 new lines that need discussion, since all others have been talked about in the previous lessons. Let's go line by line:
 
-1. `int transformLocation = glGetUniformLocation(shaderProgram, "u_transform");` This line allows us to get the ID of a location in the shader program. Using this ID, we will be able to directly set `u_transform`, which is a variable representing a model matrix. Notice that the ID is of type `int` and not `unsigned int`. It is like this because `glGetUniformLocation` can return `-1` if the specified uniform does not exist in the shader program. Right now, if you open the VS shader for this lesson, you will notice that it has `u_transform` defined as a uniform. Names have to match, so if you tried to do this, `int transformLocation = glGetUniformLocation(shaderProgram, "u_transformmm");`, then `transformLocation` would have a value of `-1`. The arguments are also pretty self-explanatory: `shaderProgram` tells us for which shader program the location is needed, and `"u_transform"` specifies which uniform is needed from the shader program.
-2. `glUniformMatrix3fv(transformLocation, 1, GL_FALSE, glm::value_ptr(topLeft));` In short, this line is where we actually set our transformation matrix's values in the shader. Its arguments are as follows:
+1. `int transform_location = glGetUniformLocation(shader_program, "u_transform");` This line allows us to get the ID of a location in the shader program. Using this ID, we will be able to directly set `u_transform`, which is a variable representing a model matrix. Notice that the ID is of type `int` and not `unsigned int`. It is like this because `glGetUniformLocation` can return `-1` if the specified uniform does not exist in the shader program. Right now, if you open the VS shader for this lesson, you will notice that it has `u_transform` defined as a uniform. Names have to match, so if you tried to do this, `int transform_location = glGetUniformLocation(shader_program, "u_transformmm");`, then `transform_location` would have a value of `-1`. The arguments are also pretty self-explanatory: `shader_program` tells us for which shader program the location is needed, and `"u_transform"` specifies which uniform is needed from the shader program.
+2. `glUniformMatrix3fv(transform_location, 1, GL_FALSE, glm::value_ptr(top_left));` In short, this line is where we actually set our transformation matrix's values in the shader. Its arguments are as follows:
 
 1. `GLint location` - specifies the location in the shader. Notice that you do not need to specify the shader program itself, only the ID of a location. This is one of those "OpenGL is a state machine where every little tiny thing has its own ID" situations.
 2. `GLsizei count` - the count of how many matrices we are sending to the shader. Shaders can have uniforms as arrays too. We will talk about this in the future.
