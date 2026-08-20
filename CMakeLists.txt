@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.24.0)
 
-project(OpenGLLearn)
+project(open_gl_learn)
 
-add_subdirectory(Lessons)
-add_subdirectory(Orion)
-add_subdirectory(External)
+add_subdirectory(lessons)
+add_subdirectory(orion)
+add_subdirectory(external)

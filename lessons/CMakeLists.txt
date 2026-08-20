@@ -1,0 +1,9 @@
+cmake_minimum_required(VERSION 3.24)
+
+project(lessons)
+
+add_subdirectory(lesson_1__glfw_window)
+add_subdirectory(lesson_2__triangle)
+add_subdirectory(lesson_3__ebo)
+add_subdirectory(lesson_4__transformations)
+add_subdirectory(lesson_5__going_to_3d)
