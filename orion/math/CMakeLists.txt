@@ -60,7 +60,6 @@ target_include_directories(${PROJECT_NAME}
 # ==== Link Libraries ====
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
-        precompiled_headers
         spdlog::spdlog
         glm::glm
 )

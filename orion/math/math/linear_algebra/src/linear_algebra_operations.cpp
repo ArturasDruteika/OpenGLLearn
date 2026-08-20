@@ -1,5 +1,7 @@
 #include "../include/linear_algebra_operations.hpp"
 
+#include <cmath>
+
 
 namespace orion::math
 {
@@ -119,34 +121,34 @@ namespace orion::math
 	// === Normalize ===
 	Vec2 LinAlgOps::normalize(const Vec2& v, float epsilon)
 	{
-		float lenSq = dot_prod(v, v);
-		if (lenSq <= epsilon * epsilon)
+		float len_sq = dot_prod(v, v);
+		if (len_sq <= epsilon * epsilon)
 		{
 			return v; // Avoid NaNs on zero-length vectors
 		}
-		float invLen = 1.0f / std::sqrt(lenSq);
+		float invLen = 1.0f / std::sqrt(len_sq);
 		return Vec2{ v[0] * invLen, v[1] * invLen };
 	}
 
 	Vec3 LinAlgOps::normalize(const Vec3& v, float epsilon)
 	{
-		float lenSq = dot_prod(v, v);
-		if (lenSq <= epsilon * epsilon)
+		float len_sq = dot_prod(v, v);
+		if (len_sq <= epsilon * epsilon)
 		{
 			return v;
 		}
-		float invLen = 1.0f / std::sqrt(lenSq);
+		float invLen = 1.0f / std::sqrt(len_sq);
 		return Vec3{ v[0] * invLen, v[1] * invLen, v[2] * invLen };
 	}
 
 	Vec4 LinAlgOps::normalize(const Vec4& v, float epsilon)
 	{
-		float lenSq = dot_prod(v, v);
-		if (lenSq <= epsilon * epsilon)
+		float len_sq = dot_prod(v, v);
+		if (len_sq <= epsilon * epsilon)
 		{
 			return v;
 		}
-		float invLen = 1.0f / std::sqrt(lenSq);
+		float invLen = 1.0f / std::sqrt(len_sq);
 		return Vec4{ v[0] * invLen, v[1] * invLen, v[2] * invLen, v[3] * invLen };
 	}
 
