@@ -1458,8 +1458,8 @@ constexpr float NEAR_PLANE = 0.1f;
 constexpr float FAR_PLANE = 100.0f;
 
 // Global changeable parameters
-int g_framebufferWidth = WINDOW_WIDTH;
-int g_framebufferHeight = WINDOW_HEIGHT;
+int g_framebuffer_width = WINDOW_WIDTH;
+int g_framebuffer_height = WINDOW_HEIGHT;
 ```
 
 Not a lot of stuff to discuss here, mainly keep an eye on these 3 constants:
@@ -1486,18 +1486,18 @@ struct Vertex
 Since vertices are objects which can have components, like positions, colors and, later, normals and etc., we need to create a separate struct for it with all those components as members for it. This way it will be easier to manage vertices in the future. 
 
 ```C++
-glm::mat4 CreateRotationX3D(float angleInRadians);
-glm::mat4 CreateRotationY3D(float angleInRadians);
-glm::mat4 CreateRotationZ3D(float angleInRadians);
-glm::mat4 CreateScale3D(const glm::vec3& scale);
+glm::mat4 create_rotation_x3d(float angle_in_radians);
+glm::mat4 create_rotation_y3d(float angle_in_radians);
+glm::mat4 create_rotation_z3d(float angle_in_radians);
+glm::mat4 create_scale_3d(const glm::vec3& scale);
 ```
 
 These functions serve the same purpose as they did in lesson 4. The only difference is that these functions are suited to work in 3D environment.
 
 ```C++
-void framebufferSizeCallback(GLFWwindow* window, int width, int height);
-int CompileShader(const std::string& source, unsigned int shaderID);
-unsigned int CreateShaderProgram(const std::string& vertexSource, const std::string& fragmentSource);
+void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+int compile_shader(const std::string& source, unsigned int shader_id);
+unsigned int create_shader_program(const std::string& vertex_source, const std::string& fragment_source);
 ```
 
 These functions are exactly the same as in the previous lessons.
@@ -1508,46 +1508,46 @@ These functions are exactly the same as in the previous lessons.
 ```C++
     // Pyramid is comprised of 5 vertices
     const glm::vec3 top = { 0.0f, 0.35f, 0.0f };
-    const glm::vec3 frontLeft = { -0.25f, -0.25f, 0.25f };
-    const glm::vec3 frontRight = { 0.25f, -0.25f, 0.25f };
-    const glm::vec3 backLeft = { -0.25f, -0.25f, -0.25f };
-    const glm::vec3 backRight = { 0.25f, -0.25f, -0.25f };
+    const glm::vec3 front_left = { -0.25f, -0.25f, 0.25f };
+    const glm::vec3 front_right = { 0.25f, -0.25f, 0.25f };
+    const glm::vec3 back_left = { -0.25f, -0.25f, -0.25f };
+    const glm::vec3 back_right = { 0.25f, -0.25f, -0.25f };
 
     // Each side of the pyramid will have its own unique color
-    const glm::vec4 neonBlue1 = { 0.0f, 0.3f, 0.8f, 1.0f };
-    const glm::vec4 neonBlue2 = { 0.0f, 0.7f, 1.0f, 1.0f };
-    const glm::vec4 neonGreen = { 0.2f, 1.0f, 0.2f, 1.0f };
-    const glm::vec4 neonPurple = { 0.8f, 0.0f, 1.0f, 1.0f };
-    const glm::vec4 baseBlue = { 0.0f, 0.4f, 0.8f, 1.0f };
-    const glm::vec4 basePurple = { 0.4f, 0.0f, 0.8f, 1.0f };
+    const glm::vec4 neon_blue_1 = { 0.0f, 0.3f, 0.8f, 1.0f };
+    const glm::vec4 neon_blue_2 = { 0.0f, 0.7f, 1.0f, 1.0f };
+    const glm::vec4 neon_green = { 0.2f, 1.0f, 0.2f, 1.0f };
+    const glm::vec4 neon_purple = { 0.8f, 0.0f, 1.0f, 1.0f };
+    const glm::vec4 base_blue = { 0.0f, 0.4f, 0.8f, 1.0f };
+    const glm::vec4 base_purple = { 0.4f, 0.0f, 0.8f, 1.0f };
 
     const std::vector<Vertex> vertices =
     {
         // Front face
-        { top, neonBlue1 },        // 0: top
-        { frontLeft, neonBlue2 },  // 1: front-left
-        { frontRight, neonBlue2 }, // 2: front-right
+        { top, neon_blue_1 },        // 0: top
+        { front_left, neon_blue_2 },  // 1: front-left
+        { front_right, neon_blue_2 }, // 2: front-right
 
         // Right face
-        { top, neonGreen },        // 3: top
-        { frontRight, neonGreen }, // 4: front-right
-        { backRight, neonGreen },  // 5: back-right
+        { top, neon_green },        // 3: top
+        { front_right, neon_green }, // 4: front-right
+        { back_right, neon_green },  // 5: back-right
 
         // Back face
-        { top, neonPurple },       // 6: top
-        { backRight, neonPurple }, // 7: back-right
-        { backLeft, neonPurple },  // 8: back-left
+        { top, neon_purple },       // 6: top
+        { back_right, neon_purple }, // 7: back-right
+        { back_left, neon_purple },  // 8: back-left
 
         // Left face
-        { top, neonBlue2 },        // 9: top
-        { backLeft, neonBlue1 },   // 10: back-left
-        { frontLeft, neonBlue1 },  // 11: front-left
+        { top, neon_blue_2 },        // 9: top
+        { back_left, neon_blue_1 },   // 10: back-left
+        { front_left, neon_blue_1 },  // 11: front-left
 
         // Base face - square
-        { frontLeft, baseBlue },    // 12: front-left
-        { backLeft, baseBlue },     // 13: back-left
-        { backRight, basePurple },  // 14: back-right
-        { frontRight, basePurple }  // 15: front-right
+        { front_left, base_blue },    // 12: front-left
+        { back_left, base_blue },     // 13: back-left
+        { back_right, base_purple },  // 14: back-right
+        { front_right, base_purple }  // 15: front-right
     };
 ```
 
@@ -1623,16 +1623,16 @@ Other than this, all other ioerations are explained in the previous lessons.
 ### Shaders
 
 ```C++
-    std::string vertexShaderSource;
-    std::string fragmentShaderSource;
+    std::string vertex_shader_source;
+    std::string fragment_shader_source;
 
-    std::filesystem::path vertexShaderPath = "shaders/vertex.glsl";
-    std::filesystem::path fragmentShaderPath = "shaders/fragment.glsl";
+    std::filesystem::path vertex_shader_path = "shaders/vertex.glsl";
+    std::filesystem::path fragment_shader_path = "shaders/fragment.glsl";
 
     try
     {
-        vertexShaderSource = Orion::Utils::FileOperations::LoadFileAsString(vertexShaderPath);
-        fragmentShaderSource = Orion::Utils::FileOperations::LoadFileAsString(fragmentShaderPath);
+        vertex_shader_source = Orion::Utils::FileOperations::LoadFileAsString(vertex_shader_path);
+        fragment_shader_source = Orion::Utils::FileOperations::LoadFileAsString(fragment_shader_path);
     }
     catch (const std::exception& exception)
     {
@@ -1640,18 +1640,18 @@ Other than this, all other ioerations are explained in the previous lessons.
         glDeleteVertexArrays(1, &vao);
         glDeleteBuffers(1, &vbo);
         glDeleteBuffers(1, &ebo);
-        glfwDestroyWindow(pWindow);
+        glfwDestroyWindow(p_window);
         glfwTerminate();
         return -1;
     }
 
-    unsigned int shaderProgram = CreateShaderProgram(vertexShaderSource, fragmentShaderSource);
-    if (shaderProgram == 0)
+    unsigned int shader_program = create_shader_program(vertex_shader_source, fragment_shader_source);
+    if (shader_program == 0)
     {
         glDeleteVertexArrays(1, &vao);
         glDeleteBuffers(1, &vbo);
         glDeleteBuffers(1, &ebo);
-        glfwDestroyWindow(pWindow);
+        glfwDestroyWindow(p_window);
         glfwTerminate();
         return -1;
     }
@@ -1663,49 +1663,49 @@ Also, the same piece if code that we have seen in the previous lessons. No need 
 ### Camera
 
 ``` C++
-const glm::mat4 CreateViewMatrix(
-    const glm::vec3& cameraPosition,
-    float cameraRotationAngleX,
-    float cameraRotationAngleY,
-    float cameraRotationAngleZ,
-    float orbitRotationAngleX,
-    float orbitRotationAngleY,
-    float orbitRotationAngleZ
+const glm::mat4 create_view_matrix(
+    const glm::vec3& camera_position,
+    float camera_rotation_angle_x,
+    float camera_rotation_angle_y,
+    float camera_rotation_angle_z,
+    float orbit_rotation_angle_x,
+    float orbit_rotation_angle_y,
+    float orbit_rotation_angle_z
 )
 {
     // Camera local rotation matrices
-    const glm::mat4 cameraRotateX3D = CreateRotationX3D(cameraRotationAngleX);
-    const glm::mat4 cameraRotateY3D = CreateRotationY3D(cameraRotationAngleY);
-    const glm::mat4 cameraRotateZ3D = CreateRotationZ3D(cameraRotationAngleZ);
+    const glm::mat4 camera_rotate_x3d = create_rotation_x3d(camera_rotation_angle_x);
+    const glm::mat4 camera_rotate_y3d = create_rotation_y3d(camera_rotation_angle_y);
+    const glm::mat4 camera_rotate_z3d = create_rotation_z3d(camera_rotation_angle_z);
 
     // Camera orbit rotation matrices
-    const glm::mat4 orbitRotateX3D = CreateRotationX3D(orbitRotationAngleX);
-    const glm::mat4 orbitRotateY3D = CreateRotationY3D(orbitRotationAngleY);
-    const glm::mat4 orbitRotateZ3D = CreateRotationZ3D(orbitRotationAngleZ);
+    const glm::mat4 orbit_rotate_x3d = create_rotation_x3d(orbit_rotation_angle_x);
+    const glm::mat4 orbit_rotate_y3d = create_rotation_y3d(orbit_rotation_angle_y);
+    const glm::mat4 orbit_rotate_z3d = create_rotation_z3d(orbit_rotation_angle_z);
 
     // Local camera rotation: X first, then Y, then Z
-    const glm::mat4 cameraRotation3D = cameraRotateZ3D * cameraRotateY3D * cameraRotateX3D;
+    const glm::mat4 camera_rotation_3d = camera_rotate_z3d * camera_rotate_y3d * camera_rotate_x3d;
     // Orbit rotation: X first, then Y, then Z
-    const glm::mat4 orbitRotation3D = orbitRotateZ3D * orbitRotateY3D * orbitRotateX3D;
+    const glm::mat4 orbit_rotation_3d = orbit_rotate_z3d * orbit_rotate_y3d * orbit_rotate_x3d;
     // Create a single matrix comprised of camera and orbital rotations 
-    const glm::mat4 finalCameraRotation3D = orbitRotation3D * cameraRotation3D;
+    const glm::mat4 final_camera_rotation_3d = orbit_rotation_3d * camera_rotation_3d;
 
     // Adjust position in real world
-    const glm::vec3 newCameraPosition = glm::vec3(orbitRotation3D * glm::vec4(cameraPosition, 1.0f));
+    const glm::vec3 new_camera_position = glm::vec3(orbit_rotation_3d * glm::vec4(camera_position, 1.0f));
 
     // Calculate inverse camera rotation.
     // For an orthonormal rotation matrix, inverse(rotation) = transpose(rotation).
-    const glm::mat3 viewRotation = glm::transpose(glm::mat3(finalCameraRotation3D));
+    const glm::mat3 view_rotation = glm::transpose(glm::mat3(final_camera_rotation_3d));
 
     // Calculate inverse camera translation in the rotated coordinate system
-    const glm::vec3 viewTranslation = -viewRotation * newCameraPosition;
+    const glm::vec3 view_translation = -view_rotation * new_camera_position;
 
     // Calculate view matrix
     glm::mat4 view(1.0f);
-    view[0] = glm::vec4(viewRotation[0], 0.0f);
-    view[1] = glm::vec4(viewRotation[1], 0.0f);
-    view[2] = glm::vec4(viewRotation[2], 0.0f);
-    view[3] = glm::vec4(viewTranslation, 1.0f);
+    view[0] = glm::vec4(view_rotation[0], 0.0f);
+    view[1] = glm::vec4(view_rotation[1], 0.0f);
+    view[2] = glm::vec4(view_rotation[2], 0.0f);
+    view[3] = glm::vec4(view_translation, 1.0f);
 
     return view;
 }
@@ -1713,26 +1713,26 @@ const glm::mat4 CreateViewMatrix(
 ...
 
 // Camera local angles
-const float cameraRotationAngleX = glm::radians(5.0f);   // pitch
-const float cameraRotationAngleY = glm::radians(-5.0f);   // yaw
-const float cameraRotationAngleZ = glm::radians(90.0f);  // roll
+const float camera_rotation_angle_x = glm::radians(5.0f);   // pitch
+const float camera_rotation_angle_y = glm::radians(-5.0f);   // yaw
+const float camera_rotation_angle_z = glm::radians(90.0f);  // roll
 
 // Camera orbit angles around origin
-const float orbitRotationAngleX = glm::radians(20.0f);
-const float orbitRotationAngleY = glm::radians(-35.0f);
-const float orbitRotationAngleZ = glm::radians(0.0f);
+const float orbit_rotation_angle_x = glm::radians(20.0f);
+const float orbit_rotation_angle_y = glm::radians(-35.0f);
+const float orbit_rotation_angle_z = glm::radians(0.0f);
 
 // Camera base transform
-const glm::vec3 baseCameraPosition = { 0.0f, 0.0f, 2.5f };
+const glm::vec3 base_camera_position = { 0.0f, 0.0f, 2.5f };
 
-const glm::mat4 view = CreateViewMatrix(
-    baseCameraPosition,
-    cameraRotationAngleX,
-    cameraRotationAngleY,
-    cameraRotationAngleZ,
-    orbitRotationAngleX,
-    orbitRotationAngleY,
-    orbitRotationAngleZ
+const glm::mat4 view = create_view_matrix(
+    base_camera_position,
+    camera_rotation_angle_x,
+    camera_rotation_angle_y,
+    camera_rotation_angle_z,
+    orbit_rotation_angle_x,
+    orbit_rotation_angle_y,
+    orbit_rotation_angle_z
 );
 ```
 
@@ -1757,9 +1757,9 @@ Lets's discuss first discuss the case where the camera is rotatedd itself.
 
 ```C++
 // Camera local angles
-const float cameraRotationAngleX = glm::radians(5.0f);   // pitch
-const float cameraRotationAngleY = glm::radians(-5.0f);   // yaw
-const float cameraRotationAngleZ = glm::radians(90.0f);  // roll
+const float camera_rotation_angle_x = glm::radians(5.0f);   // pitch
+const float camera_rotation_angle_y = glm::radians(-5.0f);   // yaw
+const float camera_rotation_angle_z = glm::radians(90.0f);  // roll
 ```
 
 Here we are defining the way camera is rotatedd around it's own axes. Forget about camera position, it should not bother you because we are performing a camera rotation in camera local space. 
@@ -1828,30 +1828,30 @@ As you can see, you can combine the rotations also, pretty easily also. But, as 
 I will give you an actual example of camera rotations in our 3D world with a pyramid. First, let's see how the code would be changed to achieve that:
 
 ```C++
-const glm::mat4 CreateViewMatrix(
-    const glm::vec3& cameraPosition,
-    float cameraRotationAngleX,
-    float cameraRotationAngleY,
-    float cameraRotationAngleZ
+const glm::mat4 create_view_matrix(
+    const glm::vec3& camera_position,
+    float camera_rotation_angle_x,
+    float camera_rotation_angle_y,
+    float camera_rotation_angle_z
 )
 {
     // Camera local rotation matrices
-    const glm::mat4 cameraRotateX3D = CreateRotationX3D(cameraRotationAngleX);
-    const glm::mat4 cameraRotateY3D = CreateRotationY3D(cameraRotationAngleY);
-    const glm::mat4 cameraRotateZ3D = CreateRotationZ3D(cameraRotationAngleZ);
+    const glm::mat4 camera_rotate_x3d = create_rotation_x3d(camera_rotation_angle_x);
+    const glm::mat4 camera_rotate_y3d = create_rotation_y3d(camera_rotation_angle_y);
+    const glm::mat4 camera_rotate_z3d = create_rotation_z3d(camera_rotation_angle_z);
 
     // Local camera rotation: X first, then Y, then Z
-    const glm::mat4 cameraRotation3D = cameraRotateZ3D * cameraRotateY3D * cameraRotateX3D;
+    const glm::mat4 camera_rotation_3d = camera_rotate_z3d * camera_rotate_y3d * camera_rotate_x3d;
 
     // Calculate inverse camera rotation.
     // For an orthonormal rotation matrix, inverse(rotation) = transpose(rotation).
-    const glm::mat3 viewRotation = glm::transpose(glm::mat3(cameraRotation3D));
+    const glm::mat3 view_rotation = glm::transpose(glm::mat3(camera_rotation_3d));
 
     // Calculate view matrix (rotation only)
     glm::mat4 view(1.0f);
-    view[0] = glm::vec4(viewRotation[0], 0.0f);
-    view[1] = glm::vec4(viewRotation[1], 0.0f);
-    view[2] = glm::vec4(viewRotation[2], 0.0f);
+    view[0] = glm::vec4(view_rotation[0], 0.0f);
+    view[1] = glm::vec4(view_rotation[1], 0.0f);
+    view[2] = glm::vec4(view_rotation[2], 0.0f);
     // view[3] remains (0, 0, 0, 1)
 
     return view;
@@ -1859,17 +1859,17 @@ const glm::mat4 CreateViewMatrix(
 
 
 // Camera local angles
-const float cameraRotationAngleX = glm::radians(15.0f);  // pitch
-const float cameraRotationAngleY = glm::radians(15.0f);  // yaw
-const float cameraRotationAngleZ = glm::radians(45.0f);  // roll
+const float camera_rotation_angle_x = glm::radians(15.0f);  // pitch
+const float camera_rotation_angle_y = glm::radians(15.0f);  // yaw
+const float camera_rotation_angle_z = glm::radians(45.0f);  // roll
 
-const glm::vec3 baseCameraPosition = { 0.0f, 0.0f, 2.5f };
+const glm::vec3 base_camera_position = { 0.0f, 0.0f, 2.5f };
 
-const glm::mat4 view = CreateViewMatrix(
-    baseCameraPosition,
-    cameraRotationAngleX,
-    cameraRotationAngleY,
-    cameraRotationAngleZ
+const glm::mat4 view = create_view_matrix(
+    base_camera_position,
+    camera_rotation_angle_x,
+    camera_rotation_angle_y,
+    camera_rotation_angle_z
 )
 ```
 
@@ -1879,18 +1879,18 @@ First, we have angles definitions:
 
 ```C++
 // Camera local angles
-const float cameraRotationAngleX = glm::radians(15.0f);  // pitch
-const float cameraRotationAngleY = glm::radians(15.0f);  // yaw
-const float cameraRotationAngleZ = glm::radians(45.0f);  // roll
+const float camera_rotation_angle_x = glm::radians(15.0f);  // pitch
+const float camera_rotation_angle_y = glm::radians(15.0f);  // yaw
+const float camera_rotation_angle_z = glm::radians(45.0f);  // roll
 ```
 
 As I said earlier, we need to define the angles. Then we have camera rotation transformation matrices:
 
 ```C++
 // Camera local rotation matrices
-const glm::mat4 cameraRotateX3D = CreateRotationX3D(cameraRotationAngleX);
-const glm::mat4 cameraRotateY3D = CreateRotationY3D(cameraRotationAngleY);
-const glm::mat4 cameraRotateZ3D = CreateRotationZ3D(cameraRotationAngleZ);
+const glm::mat4 camera_rotate_x3d = create_rotation_x3d(camera_rotation_angle_x);
+const glm::mat4 camera_rotate_y3d = create_rotation_y3d(camera_rotation_angle_y);
+const glm::mat4 camera_rotate_z3d = create_rotation_z3d(camera_rotation_angle_z);
 ```
 
 Remember that when we apply rotations, that essentially means that we are rotating the entirety of the camera's local space. That means, that we are rotating space itself. And if you remember, rotation is a transformation. Because rotation is a transformation, in order to represent it we need matrices.
@@ -1941,10 +1941,10 @@ Since we have rotations in matrix form, we can now combine them into a single en
 
 ```C++
 // Local camera rotation: X first, then Y, then Z
-const glm::mat4 cameraRotation3D = cameraRotateZ3D * cameraRotateY3D * cameraRotateX3D;
+const glm::mat4 camera_rotation_3d = camera_rotate_z3d * camera_rotate_y3d * camera_rotate_x3d;
 ```
 
-This `cameraRotation3D` in reality looks like this:
+This `camera_rotation_3d` in reality looks like this:
 
 $
     R
@@ -1980,7 +1980,7 @@ $
 
 Looks pretty complex, but I still suggest looking at it as separate x, y, z transformation matrices.
 
-`cameraRotation3D` is has all the rotations "encoded" into itself. Also, notice the order of multiplications, it really matters. Remember that when combining matrices, you have to look from the right side to know which operation happens first. So in this case:
+`camera_rotation_3d` is has all the rotations "encoded" into itself. Also, notice the order of multiplications, it really matters. Remember that when combining matrices, you have to look from the right side to know which operation happens first. So in this case:
 
 1. Apply X rotation
 2. Apply Y rotation
@@ -1989,7 +1989,7 @@ Looks pretty complex, but I still suggest looking at it as separate x, y, z tran
 ```C++
 // Calculate inverse camera rotation.
 // For an orthonormal rotation matrix, inverse(rotation) = transpose(rotation).
-const glm::mat3 viewRotation = glm::transpose(glm::mat3(cameraRotation3D));
+const glm::mat3 view_rotation = glm::transpose(glm::mat3(camera_rotation_3d));
 ```
 
 Angles and rotation matrices are intuitive, but what about the inverse stuff? For me, the easiest and the most intuitive thing that helped me to understand is Einstein. Yes, the same old crazy, but brilliantly clever guy that talk a lot about light and relativity. 
@@ -2069,14 +2069,14 @@ If all the rotations are set to 0:
 
 ```C++
 // Camera local angles
-const float cameraRotationAngleX = glm::radians(0.0f);
-const float cameraRotationAngleY = glm::radians(0.0f);
-const float cameraRotationAngleZ = glm::radians(0.0f);
+const float camera_rotation_angle_x = glm::radians(0.0f);
+const float camera_rotation_angle_y = glm::radians(0.0f);
+const float camera_rotation_angle_z = glm::radians(0.0f);
 
 // Camera orbit angles around origin
-const float orbitRotationAngleX = glm::radians(0.0f);
-const float orbitRotationAngleY = glm::radians(0.0f);
-const float orbitRotationAngleZ = glm::radians(0.0f);
+const float orbit_rotation_angle_x = glm::radians(0.0f);
+const float orbit_rotation_angle_y = glm::radians(0.0f);
+const float orbit_rotation_angle_z = glm::radians(0.0f);
 ```
 
 this is the view we are going to get:
@@ -2107,63 +2107,63 @@ Moving forward towards the final pieces that are needed to calculate the `view` 
 
 ```C++
 // Camera orbit rotation matrices
-const glm::mat4 orbitRotateX3D = CreateRotationX3D(orbitRotationAngleX);
-const glm::mat4 orbitRotateY3D = CreateRotationY3D(orbitRotationAngleY);
-const glm::mat4 orbitRotateZ3D = CreateRotationZ3D(orbitRotationAngleZ);
+const glm::mat4 orbit_rotate_x3d = create_rotation_x3d(orbit_rotation_angle_x);
+const glm::mat4 orbit_rotate_y3d = create_rotation_y3d(orbit_rotation_angle_y);
+const glm::mat4 orbit_rotate_z3d = create_rotation_z3d(orbit_rotation_angle_z);
 ```
 
 These lines create orbital rotation matrices for each axis.
 
 ```C++
 // Local camera rotation: X first, then Y, then Z
-const glm::mat4 cameraRotation3D = cameraRotateZ3D * cameraRotateY3D * cameraRotateX3D;
+const glm::mat4 camera_rotation_3d = camera_rotate_z3d * camera_rotate_y3d * camera_rotate_x3d;
 // Orbit rotation: X first, then Y, then Z
-const glm::mat4 orbitRotation3D = orbitRotateZ3D * orbitRotateY3D * orbitRotateX3D;
+const glm::mat4 orbit_rotation_3d = orbit_rotate_z3d * orbit_rotate_y3d * orbit_rotate_x3d;
 // Create a single matrix comprised of camera and orbital rotations 
-const glm::mat4 finalCameraRotation3D = orbitRotation3D * cameraRotation3D;
+const glm::mat4 final_camera_rotation_3d = orbit_rotation_3d * camera_rotation_3d;
 ```
 
-These 3 lines create 2 matrices that both encode all the x, y, z transformations which then are used to create a single `finalCameraRotation3D` which encodes both camera and orbital rotations.
+These 3 lines create 2 matrices that both encode all the x, y, z transformations which then are used to create a single `final_camera_rotation_3d` which encodes both camera and orbital rotations.
 
 ```C++
 // Adjust position in real world
-const glm::vec3 newCameraPosition = glm::vec3(orbitRotation3D * glm::vec4(baseCameraPosition, 1.0f));
+const glm::vec3 new_camera_position = glm::vec3(orbit_rotation_3d * glm::vec4(base_camera_position, 1.0f));
 ```
 
 We need to update camera position because we applied orbital rotation (do not forget that orbital rotations change position and camera rotation does not). The calculation itself is pretty simple:
 
-1. `glm::vec4(baseCameraPosition, 1.0f)`: transform camera original position (3D) into homogeneous space.
-2. `orbitRotation3D * glm::vec4(baseCameraPosition, 1.0f)`: multiply this position vector (in homogeneous space) with orbital transformation matrix (we do not need camera rotation matrix because it does not transform camera position)
+1. `glm::vec4(base_camera_position, 1.0f)`: transform camera original position (3D) into homogeneous space.
+2. `orbit_rotation_3d * glm::vec4(base_camera_position, 1.0f)`: multiply this position vector (in homogeneous space) with orbital transformation matrix (we do not need camera rotation matrix because it does not transform camera position)
 3. `glm::vec3(...)` transform that vector back to model space (from homogeneous space). We can just drop the homogeneous coordinate and not think about it.
 
 ```C++
 // Calculate inverse camera rotation.
 // For an orthonormal rotation matrix, inverse(rotation) = transpose(rotation).
-const glm::mat3 viewRotation = glm::transpose(glm::mat3(finalCameraRotation3D));
+const glm::mat3 view_rotation = glm::transpose(glm::mat3(final_camera_rotation_3d));
 ```
 
 As mentioned before, we create a rotation matrix, that is an inverse of camera rotation. We do it, because in camera space rotation can be done by rotating everything around camera to the opposite side of the defined rotation.
 
 ```C++
 // Calculate inverse camera translation in the rotated coordinate system
-const glm::vec3 viewTranslation = viewRotation * (-newCameraPosition);
+const glm::vec3 view_translation = view_rotation * (-new_camera_position);
 ```
 
 This line is actually really confusing. To better understand it I suggest that you start to think in terms of camera space. This operation only makes sense if you are in camera space.
 
-Let's first make one thing clear: `glm::vec3 viewTranslation` is a translation vector expressed in view (camera) space, not world space. It tells us how much the world should be translated as part of the transformation from world space into camera (view) space. Do not forget that due to orbital camera rotations the camera position has also changed, because of it, we have to also encode it into our view transformation.
+Let's first make one thing clear: `glm::vec3 view_translation` is a translation vector expressed in view (camera) space, not world space. It tells us how much the world should be translated as part of the transformation from world space into camera (view) space. Do not forget that due to orbital camera rotations the camera position has also changed, because of it, we have to also encode it into our view transformation.
 
-`newCameraPosition` still is in the world space, but the `viewRotation` is the transformation that transforms points from world space to camera space.
+`new_camera_position` still is in the world space, but the `view_rotation` is the transformation that transforms points from world space to camera space.
 
 What we have now:
 
 | Variable | Coordinate System | Description |
 |----------|-------------------|-------------|
-| `newCameraPosition` | **World Space** | The camera's position in the world after applying the orbit rotation. |
-| `viewRotation` | **View Space** (World → View transform) | The inverse camera rotation. It converts vectors from **world space** to **view (camera) space**. |
-| `viewTranslation` | **View Space** | The translation component of the view matrix. It tells how much the world must be translated in **view space** so that the camera ends up at the origin `(0, 0, 0)`. |
+| `new_camera_position` | **World Space** | The camera's position in the world after applying the orbit rotation. |
+| `view_rotation` | **View Space** (World → View transform) | The inverse camera rotation. It converts vectors from **world space** to **view (camera) space**. |
+| `view_translation` | **View Space** | The translation component of the view matrix. It tells how much the world must be translated in **view space** so that the camera ends up at the origin `(0, 0, 0)`. |
 
-Now that we understand in which domain each variable lives, we can start understanding the reason why this: `const glm::vec3 viewTranslation = viewRotation * (-newCameraPosition);` looks the way it looks. The deeper question is why the `newCameraPosition` vector has a negative sign? 
+Now that we understand in which domain each variable lives, we can start understanding the reason why this: `const glm::vec3 view_translation = view_rotation * (-new_camera_position);` looks the way it looks. The deeper question is why the `new_camera_position` vector has a negative sign? 
 
 The reason behind it the same as when I was explaining why inverse rotation is needed. With rotations, the idea was that if you rotate to the left by some $\theta$, it is the same as the whole world in the camera space rotates right by the same $\theta$.
 
@@ -2174,28 +2174,28 @@ Then why do you have to multiply negative translation with rotation matrix? I me
 ```C++
 // Calculate view matrix
 glm::mat4 view(1.0f);
-view[0] = glm::vec4(viewRotation[0], 0.0f);
-view[1] = glm::vec4(viewRotation[1], 0.0f);
-view[2] = glm::vec4(viewRotation[2], 0.0f);
+view[0] = glm::vec4(view_rotation[0], 0.0f);
+view[1] = glm::vec4(view_rotation[1], 0.0f);
+view[2] = glm::vec4(view_rotation[2], 0.0f);
 // Correct
-// view[3] = glm::vec4(viewTranslation, 1.0f);
+// view[3] = glm::vec4(view_translation, 1.0f);
 // Why can't it be this?
-view[3] = glm::vec4(newCameraPosition, 1.0f);
+view[3] = glm::vec4(new_camera_position, 1.0f);
 ```
 
 The idea is simple. Imagine that I give you a compass and tell you "go walk 10m straight north and then turn 90&deg; to the east". It is kinda easy and intuitive, but what if I modify the compass, so that north is 90&deg; to the left of the actual north, and I give you the same instructions "go walk 10m north straight and then turn 90&deg; to the east". Naturally, the question arises "north and east to what? New modified compass, or the actual compass? If we followed the actual north, then 90&deg; east would be turning to the right hand side, but with the modified compass, now, going 10m north is going 10m to the left of the first direction, and then turning 90&deg; east would be looking into real world north.
 
-The same problem would happen with translation. In world coordinates, a traslation "5 units to the right" would be transformed into something very different, because first you have to know what that translation looks like in camera space. Do not remember that view matrix maps world space to camera space, so becuase of it we also have to map the camera trasnlation to camera space, which is what `const glm::vec3 viewTranslation = viewRotation * (-newCameraPosition);` is doing for us.
+The same problem would happen with translation. In world coordinates, a traslation "5 units to the right" would be transformed into something very different, because first you have to know what that translation looks like in camera space. Do not remember that view matrix maps world space to camera space, so becuase of it we also have to map the camera trasnlation to camera space, which is what `const glm::vec3 view_translation = view_rotation * (-new_camera_position);` is doing for us.
 
 Finally, we have arrived to the goal of camera, the view matrix:
 
 ```C++
 // Calculate view matrix
 glm::mat4 view(1.0f);
-view[0] = glm::vec4(viewRotation[0], 0.0f);
-view[1] = glm::vec4(viewRotation[1], 0.0f);
-view[2] = glm::vec4(viewRotation[2], 0.0f);
-view[3] = glm::vec4(viewTranslation, 1.0f);
+view[0] = glm::vec4(view_rotation[0], 0.0f);
+view[1] = glm::vec4(view_rotation[1], 0.0f);
+view[2] = glm::vec4(view_rotation[2], 0.0f);
+view[3] = glm::vec4(view_translation, 1.0f);
 ```
 
 In reality, it is pretty simple to understand it. To remind you what a mathematical version of view matrix looks like:
@@ -2241,7 +2241,7 @@ $
     -R^{-1}\mathbf{p}.
 $
 
-Now you can clearly see, that the 3x3 part of the view matrix is just the rotation part (i.e. `viewRotation`), while the last column is just a trasnalation part (i.e. `viewTranslation`).
+Now you can clearly see, that the 3x3 part of the view matrix is just the rotation part (i.e. `view_rotation`), while the last column is just a trasnalation part (i.e. `view_translation`).
 
 
 ### MVP matrix
@@ -2277,8 +2277,8 @@ We already have a constructed view matrix, and we know how to construct a model 
 
 ```C++
 const glm::vec3 scale = { 1.4f, 1.4f, 1.4f };
-const glm::mat4 scale3D = CreateScale3D(scale);
-const glm::mat4 model = scale3D;
+const glm::mat4 scale_3d = create_scale_3d(scale);
+const glm::mat4 model = scale_3d;
 ```
 
 For this lesson, I did not want to use all 3, but still felt the need to have a model matrix that would somehow impact the final world. Because of it I decided that only scaing of the entire world will be used.
@@ -2288,13 +2288,13 @@ To be honest, I just realized that we are slightly advanced, because in the last
 Finally, we need to construct a projection matrix. In this lesson it is done as follows:
 
 ```C++
-const float aspectRatio =
-    static_cast<float>(g_framebufferWidth) /
-    static_cast<float>(g_framebufferHeight > 0 ? g_framebufferHeight : 1);
+const float aspect_ratio =
+    static_cast<float>(g_framebuffer_width) /
+    static_cast<float>(g_framebuffer_height > 0 ? g_framebuffer_height : 1);
 
 const glm::mat4 projection = glm::perspective(
     glm::radians(FOV_DEGREES_Y_AXIS),
-    aspectRatio,
+    aspect_ratio,
     NEAR_PLANE,
     FAR_PLANE
 );
@@ -2302,7 +2302,7 @@ const glm::mat4 projection = glm::perspective(
 const glm::mat4 mvp = projection * view * model;
 ```
 
-What happens here is we need to have an aspect ration, in order to construct the projection matrix. Because aspect ration is simply $width / height$, we do exactly the same thing in our code. Notice that the `aspectRatio` is calculated constantly in the main rendering loop. If we resize our window, we need to immediately see the effect of the resize.
+What happens here is we need to have an aspect ration, in order to construct the projection matrix. Because aspect ration is simply $width / height$, we do exactly the same thing in our code. Notice that the `aspect_ratio` is calculated constantly in the main rendering loop. If we resize our window, we need to immediately see the effect of the resize.
 
 And then there is the projection matrix construction. From this projection matrix:
 
@@ -2352,11 +2352,11 @@ uniform mat4 u_mvp;
 and in our code we do this:
 
 ```C++
-int mvpLocation = glGetUniformLocation(shaderProgram, "u_mvp");
+int mvp_location = glGetUniformLocation(shader_program, "u_mvp");
 
 ...
 
-    glUniformMatrix4fv(mvpLocation, 1, GL_FALSE, glm::value_ptr(mvp));
+    glUniformMatrix4fv(mvp_location, 1, GL_FALSE, glm::value_ptr(mvp));
 ```
 
 What I want to say is that we calculate MVP matrix inside our c++ application. You may ask "Why do you stress this fact? Why is it important?" The main reason is speed.
@@ -2386,15 +2386,15 @@ void main()
 and then replace the c++ code like this:
 
 ```C++
-int modelMatrixLocation = glGetUniformLocation(shaderProgram, "u_m");
-int viewMatrixLocation = glGetUniformLocation(shaderProgram, "u_v");
-int prpjectionMatrixLocation = glGetUniformLocation(shaderProgram, "u_p");
+int model_matrix_location = glGetUniformLocation(shader_program, "u_m");
+int view_matrix_location = glGetUniformLocation(shader_program, "u_v");
+int projection_matrix_location = glGetUniformLocation(shader_program, "u_p");
 
 ...
 
-    glUniformMatrix4fv(modelMatrixLocation, 1, GL_FALSE, glm::value_ptr(model));
-    glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, glm::value_ptr(view));
-    glUniformMatrix4fv(prpjectionMatrixLocation, 1, GL_FALSE, glm::value_ptr(projection));
+    glUniformMatrix4fv(model_matrix_location, 1, GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix4fv(view_matrix_location, 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(projection_matrix_location, 1, GL_FALSE, glm::value_ptr(projection));
 ```
 
 This still works the same as previous code, but (a very big but) the speed of the entire rendering system drops. For this example it might not look significant enough that your eyes could catch up, but if we render huge scenes with lighting and etc, you would definitely see the difference. 
