@@ -1,202 +1,1747 @@
-# Lesson 3 - Element Buffer Object
+# Lesson 3 — Element Buffer Objects
 
-This lesson is going to be way smaller than the previous one. Mainly, because the code is 95% the same. The only thing I changed is that I added __Element Buffer Object__. Let's learn what this object is and why should we use it.
+In the previous lesson, we learned how to store vertex data in a **Vertex Buffer Object (VBO)** and describe that data using a **Vertex Array Object (VAO)**.
 
-### What is it? Why do should we use it?
+In this lesson, we are going to introduce another important OpenGL concept: the **Element Buffer Object (EBO)**.
 
-Well, this object is not making anything easier for, but rather it is helping the hardware, specifically, the VRAM, to deal with less data. How does it do it?
+An EBO is also commonly referred to as an **Index Buffer Object**.
 
-To answer this question, let's go back to the original data, we had in the lesson 2:
+Its purpose is simple:
 
-```C++
-float triangle_vertices[] = {
-     // positions   // colors
-     0.0f,  0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // top vertex 
-    -0.5f, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // bottom left
-     0.5f, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f  // bottom right
-};
+> **An EBO allows multiple primitives to reuse the same vertex data by referencing vertices through indices.**
+
+This technique is called **indexed rendering**.
+
+By the end of this lesson, you should understand:
+
+1. What an EBO is.
+2. Why indexed rendering is useful.
+3. What vertex indices are.
+4. How an EBO relates to a VBO and VAO.
+5. How to upload index data to OpenGL.
+6. How to render indexed geometry using `glDrawElements()`.
+
+---
+
+# Contents
+
+1. [What Is an Element Buffer Object?](#1-what-is-an-element-buffer-object)
+2. [The Problem: Duplicate Vertex Data](#2-the-problem-duplicate-vertex-data)
+3. [Reusing Vertices with Indices](#3-reusing-vertices-with-indices)
+4. [Memory Comparison](#4-memory-comparison)
+5. [Vertex Sharing in 3D](#5-vertex-sharing-in-3d)
+6. [Implementing an EBO in OpenGL](#6-implementing-an-ebo-in-opengl)
+   - [6.1 Define the Vertex Data](#61-define-the-vertex-data)
+   - [6.2 Define the Index Data](#62-define-the-index-data)
+   - [6.3 Create the VAO, VBO, and EBO](#63-create-the-vao-vbo-and-ebo)
+   - [6.4 Upload the Vertex Data](#64-upload-the-vertex-data)
+   - [6.5 Upload the Index Data](#65-upload-the-index-data)
+   - [6.6 Configure the Vertex Attributes](#66-configure-the-vertex-attributes)
+7. [The Relationship Between an EBO and a VAO](#7-the-relationship-between-an-ebo-and-a-vao)
+8. [Drawing with glDrawElements](#8-drawing-with-gldrawelements)
+   - [8.1 Primitive Type](#81-primitive-type)
+   - [8.2 Index Count](#82-index-count)
+   - [8.3 Index Type](#83-index-type)
+   - [8.4 Index Offset](#84-index-offset)
+9. [glDrawArrays vs. glDrawElements](#9-gldrawarrays-vs-gldrawelements)
+10. [Complete EBO Setup](#10-complete-ebo-setup)
+11. [Common EBO Mistakes](#11-common-ebo-mistakes)
+12. [Deleting the OpenGL Objects](#12-deleting-the-opengl-objects)
+13. [Conclusion](#13-conclusion)
+
+---
+
+# 1. What Is an Element Buffer Object?
+
+An **Element Buffer Object (EBO)** is a buffer object that stores **indices** used during indexed rendering.
+
+Technically, OpenGL does not create a special type of buffer object called an "EBO".
+
+Both VBOs and EBOs are created using:
+
+```cpp
+glGenBuffers(...);
 ```
 
-This is the data needed to render a single triangle with a color specified. How would we render 2 triangles? The first idea that come to mind is this "
+They are both ordinary OpenGL **buffer objects**.
 
-```C++
-float triangle_vertices[] = {
-     // positions   // colors
-     0.0f,  0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // top vertex 
-    -0.5f, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // bottom left
-     0.5f, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f  // bottom right
+The terms **VBO** and **EBO** describe how we use those buffers.
 
-     // positions   // colors
-     0.0f,  0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // top vertex 
-    -0.5f, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // bottom left
-     0.5f, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f  // bottom right
-};
+A buffer used for vertex data is commonly bound to:
+
+```cpp
+GL_ARRAY_BUFFER
 ```
 
-At first, it looks pretty standard: just add more data describing a new triangle to the `triangleVertices`. Following this rule (18 numbers, going sequentially, in the `triangleVertices` define a single triangle) 2 triangles have 36 numbers, 3 triangles have 54 numbers and etc. The rule for this is N * 18, where N is the number of triangles.
+while a buffer used for vertex indices is bound to:
 
-This rule is pretty simple, but now, let's imagine a scenario where 2 triangles form a single square. This would make `triangleVertices` look like this:
-
-```C++
-float square_vertices[] = {
-    // positions   // colors
-    -0.5f,  0.5f,  1.0f, 1.0f, 1.0f, // top left        triangle 1
-    -0.5f, -0.5f,  1.0f, 1.0f, 1.0f, // bottom left     triangle 1
-     0.5f, -0.5f,  1.0f, 1.0f, 1.0f, // bottom right    triangle 1
-
-    -0.5f,  0.5f,  1.0f, 1.0f, 1.0f, // top left        triangle 2
-     0.5f, -0.5f,  1.0f, 1.0f, 1.0f, // bottom right    triangle 2
-     0.5f,  0.5f,  1.0f, 1.0f, 1.0f  // top right       triangle 2
-};
+```cpp
+GL_ELEMENT_ARRAY_BUFFER
 ```
 
-Again, it looks pretty understandable, BUT, here lies 1 problem that scales up pretty fast if the triangle number is also increasing. 
+Conceptually:
 
-What is this problem, I want you to understand? Take a look again at the `squareVertices`. Can you see that some vertices have literally the same data? Specifically, __top left__ and __bottom right__ vertices of both triangles have exactly the same values. Look at this image:
+    VBO
+    └── stores vertex attributes
 
-![Same Vertices](assets/square__same_vertices.png)
+    EBO
+    └── stores indices that reference those vertices
 
-Red arrows point to the vertex for the triangle 1, green - triangle 2 (black line was added by me to visually help you to distinguish what is triangle 1 and triangle 2). What happens in 3 dimensions (what we certainly will cover in the future), the square becomes a cube. To form a cube, you need 2 x 6 = 12 triangles (cube has 6 faces, where each face is just a square, and we know that to render a square we need 2 triangles). For cubes the situation is even worse. Each cube vertex is the intersection of 3 cube faces, that means that 1 vertex is intersection of 6 triangles. With this configuation, there will be 6 defined vertex data points which are totaly the same. 
+The purpose of the EBO becomes clearer when multiple triangles share vertices.
 
-Keep in mind, that each data point (defined vertex data) takes up a real part on the GPU RAM (VRAM). Even though, 1 number takes a very tiny part on the VRAM, it still adds up to huge duplicated data if we render multiple objects every render iteration.
+Suppose our vertex format contains:
 
-What I want you to understand is that you should ask yourself this "do I really need to use this simple, yet archaic method to define vertices data?". I mean since I am doing this lesson, the answer is definitely yes, there is. And this is where the __element buffer object__ comes in handy.
+    2 floats → position
+    4 floats → color
 
-One of the reason why __Element Buffer Object (EBO)__ was created was to solve this particular issue that I have described earlier. Using EBO, you can basically just tell which vertex should be taken for which triangle. Let's go straight to the example. Instead of this:
+That gives us:
 
-```C++
-float triangle_vertices[] = {
-    // positions   // colors
-    -0.5f,  0.5f,  1.0f, 1.0f, 1.0f, // top left        triangle 1
-    -0.5f, -0.5f,  1.0f, 1.0f, 1.0f, // bottom left     triangle 1
-     0.5f, -0.5f,  1.0f, 1.0f, 1.0f, // bottom right    triangle 1
+    6 floats per vertex
 
-    -0.5f,  0.5f,  1.0f, 1.0f, 1.0f, // top left        triangle 2
-     0.5f, -0.5f,  1.0f, 1.0f, 1.0f, // bottom right    triangle 2
-     0.5f,  0.5f,  1.0f, 1.0f, 1.0f  // top right       triangle 2
-};
-```
+A single triangle requires three vertices:
 
-why can't we rewrite this as:
+    3 vertices × 6 floats = 18 floats
 
-```C++
+For example:
+
+```cpp
 float triangle_vertices[] = {
     // positions    // colors
+     0.0f,  0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // top
+    -0.5f, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // bottom left
+     0.5f, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f  // bottom right
+};
+```
+
+For a completely independent triangle, storing three separate vertices is perfectly reasonable.
+
+The problem appears when multiple triangles need to use the **same vertices**.
+
+---
+
+# 2. The Problem: Duplicate Vertex Data
+
+Imagine that we want to render a square.
+
+A square can be constructed from two triangles:
+
+    top left ---------------- top right
+       |                    /   |
+       |                  /     |
+       |                /       |
+       |              /         |
+       |            /           |
+       |          /             |
+       |        /               |
+       |      /                 |
+       |    /                   |
+       |  /                     |
+    bottom left ------------ bottom right
+
+For this lesson, we are rendering using `GL_TRIANGLES`, so every triangle requires three vertices.
+
+Without indexed rendering, we could describe the square using six vertex entries:
+
+```cpp
+float square_vertices[] = {
+    // positions    // colors
+
+    // Triangle 1
     -0.5f,  0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // top left
     -0.5f, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // bottom left
      0.5f, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // bottom right
-     0.5f,  0.5f,   0.0f, 1.0f, 1.0f, 1.0f  // top right
-};
 
-unsigned int indices[] = { 
+    // Triangle 2
+     0.5f, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // bottom right
+     0.5f,  0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // top right
+    -0.5f,  0.5f,   0.0f, 1.0f, 1.0f, 1.0f  // top left
+};
+```
+
+Take a closer look at the data.
+
+The **top-left** vertex appears twice.
+
+The **bottom-right** vertex also appears twice.
+
+Both triangles use those vertices, but without indices we have stored complete copies of their data.
+
+![Same Vertices](assets/square__same_vertices.png)
+
+For a square, duplicating two vertices is insignificant.
+
+However, larger meshes can contain thousands or millions of triangles, and neighboring triangles frequently share vertices.
+
+If complete vertex records are duplicated unnecessarily, we may increase:
+
+- vertex-buffer size
+- GPU memory usage
+- vertex-data bandwidth
+- the amount of vertex processing required
+
+This is where **indexed rendering** becomes useful.
+
+---
+
+# 3. Reusing Vertices with Indices
+
+Instead of storing six complete vertex entries, we can store the four unique vertices of the square:
+
+```cpp
+float square_vertices[] = {
+    // positions    // colors
+    -0.5f,  0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // 0 - top left
+    -0.5f, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // 1 - bottom left
+     0.5f, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // 2 - bottom right
+     0.5f,  0.5f,   0.0f, 1.0f, 1.0f, 1.0f  // 3 - top right
+};
+```
+
+Each complete vertex now has an index:
+
+    0 → top left
+    1 → bottom left
+    2 → bottom right
+    3 → top right
+
+We then create a separate array that describes which vertices should be used to construct our triangles:
+
+```cpp
+unsigned int indices[] = {
     0, 1, 2, // triangle 1
     2, 3, 0  // triangle 2
 };
 ```
 
-Without going any further, one thing can be instantly visible. This configuration uses less amount of numbers for triangles description. Since some of you have at least some basic background in computer science, you should know that `float` and `int` are C++ datatypes that take some amount of space in memory. Both of these types take up 4 bytes in the RAM (or VRAM if we talk about GPUs).
+The first triangle uses:
 
-Based on our first and second examples for the `triangleVertices` and `indices`, let's calculate how many bytes bytes in total we are going to need in order to store 2 triangles that combine into a single uniform square.
+    0, 1, 2
 
-1. There are 2 triangles defined, where each triangle has 3 vertices where each vertex needs 6 numbers (2 for position, 4 for color), so in total there are 2 (triangles) x 3 (vertex per triangle) x 6 (elements er vertex) = 36 (numbers needed to describe 2 triangles). Each of these numbers is a `float`, so in total we are going to need 36 x 4 (bytes for `float`) = __144__ bytes of memory in the VRAM (do not forget, that we are uploading this data as a databuffer to the GPU using `glBufferData(GL_ARRAY_BUFFER, sizeof(triangleVertices), triangleVertices, GL_STATIC_DRAW);` operation)
-2. There are 2 triangles defined. Instead of defining each vertex separately (sometimes dublicating them), we are just defining unique vertices. We also have an additional array called `indices[]`, which store indices of the vertices definitions in the `triangleVertices`. Let's calculate the total size of `triangleVertices` + `indices` in the VRAM. 
-     1. First, let's calculate the space it takes to store `triangleVertices`. There are 4 unique vertices, where each is described by 6 numbers (2 for position, 4 for color), so in total it takes 4 (unique vertices) x 6 = 24 (numbers needed to describe 4 unique vertices). 24 * 4 (bytes for `float`) = 96 (bytes to describe 4 unique vertices).
-     2. Second, let's calculate the space it takes to store `indices`. There are 2 triangles, each triangle needs 3 vertices, in total 2 (triangles) x 3 (vertices) = 6 (indices for 2 triangles). Each number in the `indices` is of type `int`, so we need 6 (indices for 2 triangles) x 4 (bytes for `int`) = 24 (bytes to describe 6 indices for 2 triangles)
-     3. In total, when we add up `triangleVertices` + `indices`, we get 96 + 24 = __120__ (bytes to describe 2 triangles)
+which means:
 
-Do you see, even for 2 triangles, we already are saving 24 bytes of memory. It scales really fast, if we use more than 2 triangles. Looks at this table:
+    top left
+        ↓
+    bottom left
+        ↓
+    bottom right
 
-| Number of Triangles | Without EBO (bytes) | With EBO (bytes) |
-|---------------------|---------------------|------------------|
-| 3                   | 216                 | 156              |
-| 10                  | 720                 | 408              |
-| 1000                | 72,000              | 36,048           |
+The second triangle uses:
 
-Trust me, for complex scenes, there are more than 1000 triangles per frame. Even better, look what happens, if we are describing triangles in 3D. That means, that each vertex is defined by 7 numbers instead of 6. Now, 3 numbers define the position (X, Y, Z) and 4 define color:
+    2, 3, 0
 
-| Number of Triangles | Without EBO (bytes) | With EBO (bytes) |
-|---------------------|---------------------|------------------|
-| 3                   | 252                 | 180              |
-| 10                  | 840                 | 460              |
-| 1000                | 84,000              | 36,120           |
+which means:
 
-Do you see, how helpful is EBO for you VRAM? I hope, that these 2 tables helped you answer that the 2 questions I have given to you: __What is it? Why do should we use it?__.
+    bottom right
+        ↓
+    top right
+        ↓
+    top left
 
+Notice that indices `0` and `2` appear more than once.
 
-### Code
+That does **not** mean the vertex data itself appears more than once.
 
-Since we now now, what is EBO, let's see how to code it using OpenGL. Before scaring you, I just want to immediately address that it is really simple to implement EBO in the OpenGL. 
+The VBO still contains only four complete vertices:
 
-Ok, first, we have to define the data:
+    VBO:
 
-```C++
-float triangle_vertices[] = {
-     // positions    // colors
-     -0.5f,  0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // top left
-     -0.5f, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // bottom left
-     0.5f, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // bottom right
-     0.5f,  0.5f,   0.0f, 1.0f, 1.0f, 1.0f  // top right
-};
+    vertex 0 → top left
+    vertex 1 → bottom left
+    vertex 2 → bottom right
+    vertex 3 → top right
 
-unsigned int indices[] = { 
-     0, 1, 2, // triangle 1
-     2, 3, 0  // triangle 2
+The EBO tells OpenGL how to reuse them:
+
+    EBO:
+
+    0, 1, 2,
+    2, 3, 0
+
+This is the fundamental idea behind indexed rendering:
+
+> **Store reusable vertex data once and reference it multiple times using indices.**
+
+---
+
+# 4. Memory Comparison
+
+Let's compare the amount of data required for our square.
+
+Our vertex format contains:
+
+    2 floats → position
+    4 floats → color
+
+Therefore:
+
+    6 floats per vertex
+
+For this example, we will assume:
+
+    float        = 4 bytes
+    unsigned int = 4 bytes
+
+These are the typical sizes used with the corresponding OpenGL data types in this lesson.
+
+## Without Indexed Rendering
+
+The non-indexed square contains six complete vertex entries:
+
+    6 vertices × 6 floats = 36 floats
+
+At 4 bytes per float:
+
+    36 × 4 = 144 bytes
+
+Therefore:
+
+    Vertex data = 144 bytes
+
+There is no index buffer.
+
+So the total is:
+
+    144 bytes
+
+## With Indexed Rendering
+
+The indexed version contains four complete vertices:
+
+    4 vertices × 6 floats = 24 floats
+
+At 4 bytes per float:
+
+    24 × 4 = 96 bytes
+
+The EBO contains six `unsigned int` indices:
+
+    6 indices × 4 bytes = 24 bytes
+
+Therefore:
+
+    Vertex data = 96 bytes
+    Index data  = 24 bytes
+
+    Total = 120 bytes
+
+Our comparison is:
+
+| Representation | Vertex Data | Index Data | Total |
+|---|---:|---:|---:|
+| Non-indexed | 144 bytes | 0 bytes | 144 bytes |
+| Indexed | 96 bytes | 24 bytes | 120 bytes |
+| **Difference** | | | **24 bytes saved** |
+
+For a square, saving 24 bytes is obviously not important.
+
+The purpose of this example is to demonstrate the concept.
+
+On larger meshes, vertex records may contain considerably more information than just a position and color.
+
+For example:
+
+    position
+    normal
+    texture coordinates
+    tangent
+    bitangent
+    bone IDs
+    bone weights
+    ...
+
+The larger each complete vertex becomes, the more valuable vertex reuse can become.
+
+> **Important:** You cannot calculate the memory savings of indexed rendering from the number of triangles alone.
+
+Two meshes containing the same number of triangles may contain very different numbers of unique vertices.
+
+The amount of memory saved depends on:
+
+- mesh topology
+- the number of reusable vertices
+- the size of each vertex
+- the chosen index type
+
+---
+
+# 5. Vertex Sharing in 3D
+
+There is an important detail about vertex reuse that becomes especially relevant in 3D graphics.
+
+Suppose a vertex contains:
+
+    x, y, z       → position
+    r, g, b, a    → color
+
+That gives us:
+
+    3 position floats
+    +
+    4 color floats
+    =
+    7 floats per vertex
+
+Later, our vertices may contain additional attributes such as:
+
+- texture coordinates
+- normals
+- tangents
+- bitangents
+- bone IDs
+- bone weights
+
+At that point, two vertices having the same **position** does not necessarily mean that they are the same complete vertex.
+
+For example, imagine two faces of a cube meeting at one corner.
+
+The position might be identical:
+
+    Position:
+    (0.5, 0.5, 0.5)
+
+but each face may require a different normal:
+
+    Face A normal:
+    (1.0, 0.0, 0.0)
+
+    Face B normal:
+    (0.0, 1.0, 0.0)
+
+The positions are identical, but the complete vertex records are not.
+
+Similarly, the same position may require different texture coordinates on different faces.
+
+Therefore:
+
+> **An index identifies a complete vertex record, not only a position.**
+
+If any attribute that belongs to the vertex must be different, we generally need a separate vertex entry.
+
+This becomes especially important when working with:
+
+- hard edges
+- texture seams
+- cube faces
+- imported 3D models
+- normal mapping
+
+For now, remember:
+
+> **Vertices can only be shared when the complete set of vertex attributes we need is compatible with that sharing.**
+
+---
+
+# 6. Implementing an EBO in OpenGL
+
+We now understand the purpose of indexed rendering.
+
+Let's implement it.
+
+We are going to use three OpenGL objects:
+
+    VAO → stores vertex-input state
+    VBO → stores vertex data
+    EBO → stores vertex indices
+
+---
+
+## 6.1 Define the Vertex Data
+
+First, define the four unique vertices of the square:
+
+```cpp
+float square_vertices[] = {
+    // positions    // colors
+    -0.5f,  0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // 0 - top left
+    -0.5f, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // 1 - bottom left
+     0.5f, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // 2 - bottom right
+     0.5f,  0.5f,   0.0f, 1.0f, 1.0f, 1.0f  // 3 - top right
 };
 ```
 
-Second, we have to define an EBO object:
+Our VBO will eventually contain this data.
 
-```C++
-unsigned int vbo;
+Conceptually:
+
+    VBO
+    │
+    ├── vertex 0
+    ├── vertex 1
+    ├── vertex 2
+    └── vertex 3
+
+---
+
+## 6.2 Define the Index Data
+
+Next, define the indices:
+
+```cpp
+unsigned int indices[] = {
+    0, 1, 2, // triangle 1
+    2, 3, 0  // triangle 2
+};
+```
+
+Our EBO will contain this data.
+
+Conceptually:
+
+    EBO
+    │
+    └── 0, 1, 2, 2, 3, 0
+
+The two arrays therefore have different responsibilities:
+
+    square_vertices
+        → contains the actual vertex attributes
+
+    indices
+        → determines which vertices are used to construct the triangles
+
+---
+
+## 6.3 Create the VAO, VBO, and EBO
+
+First, create variables that will store the OpenGL object names:
+
+```cpp
 unsigned int vao;
-unsigned int ebo; // new
+unsigned int vbo;
+unsigned int ebo;
+```
 
+Generate the objects:
+
+```cpp
 glGenVertexArrays(1, &vao);
 glGenBuffers(1, &vbo);
-glGenBuffers(1, &ebo); // new
+glGenBuffers(1, &ebo);
 ```
 
-As you can see, `ebo` is of the same type as the `vbo` and `vao` which we learned about in the lesson 2. It is the same procedure as with many other objects in OpenGL. This object is `unsigned int` because it has an ID attached to it, so that OpenGL could internally map this ID to the actual buffered indices data in the VRAM. We, also, have to generate a buffer for this `ebo`. Keep in mind that the same operation is called as for the `vbo`. It is because we are going to store `indices` as a data buffer inside the VRAM. Now, how to tell OpenGL how to use it? Let's look here:
+Notice that both the VBO and EBO are generated using:
 
-```C++
-glBindVertexArray(vao);
+```cpp
+glGenBuffers(...);
+```
 
+This is because both are **buffer objects**.
+
+`glGenBuffers()` does not create a "vertex buffer" or an "element buffer" specifically.
+
+It generates a buffer object name.
+
+How we use that buffer depends on which target we bind it to and which OpenGL operations use it.
+
+For our VBO:
+
+```cpp
 glBindBuffer(GL_ARRAY_BUFFER, vbo);
-glBufferData(GL_ARRAY_BUFFER, sizeof(triangle_vertices), triangle_vertices, GL_STATIC_DRAW);
+```
 
+For our EBO:
+
+```cpp
 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+```
 
-glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+The variables:
+
+```cpp
+vbo
+ebo
+```
+
+do not contain the vertex or index data themselves.
+
+They contain integer object names that OpenGL uses to identify the corresponding buffer objects.
+
+---
+
+## 6.4 Upload the Vertex Data
+
+First, bind the VAO:
+
+```cpp
+glBindVertexArray(vao);
+```
+
+Then bind the VBO to `GL_ARRAY_BUFFER`:
+
+```cpp
+glBindBuffer(GL_ARRAY_BUFFER, vbo);
+```
+
+Now upload the vertex data:
+
+```cpp
+glBufferData(
+    GL_ARRAY_BUFFER,
+    sizeof(square_vertices),
+    square_vertices,
+    GL_STATIC_DRAW
+);
+```
+
+Let's review the arguments:
+
+    GL_ARRAY_BUFFER
+        → operate on the buffer currently bound
+          to the GL_ARRAY_BUFFER target
+
+    sizeof(square_vertices)
+        → allocate enough storage for the entire
+          square_vertices array
+
+    square_vertices
+        → copy data from this array into the buffer
+
+    GL_STATIC_DRAW
+        → usage hint indicating that the data is expected
+          to change rarely and be used for drawing
+
+It is worth emphasizing that `GL_STATIC_DRAW` is a **usage hint** given to the OpenGL implementation.
+
+It does not make the buffer permanently immutable.
+
+---
+
+## 6.5 Upload the Index Data
+
+Now bind the EBO to `GL_ELEMENT_ARRAY_BUFFER`:
+
+```cpp
+glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+```
+
+Upload the index data:
+
+```cpp
+glBufferData(
+    GL_ELEMENT_ARRAY_BUFFER,
+    sizeof(indices),
+    indices,
+    GL_STATIC_DRAW
+);
+```
+
+The process is nearly identical to uploading the VBO.
+
+The major difference is the buffer target:
+
+    VBO → GL_ARRAY_BUFFER
+    EBO → GL_ELEMENT_ARRAY_BUFFER
+
+After uploading both buffers, we conceptually have:
+
+    VBO
+    │
+    ├── vertex 0
+    ├── vertex 1
+    ├── vertex 2
+    └── vertex 3
+
+    EBO
+    │
+    └── 0, 1, 2, 2, 3, 0
+
+The EBO does not contain copies of the vertices.
+
+It only contains indices that reference them.
+
+---
+
+## 6.6 Configure the Vertex Attributes
+
+Our vertex layout contains:
+
+    2 floats → position
+    4 floats → color
+
+Therefore, one complete vertex contains:
+
+    6 floats
+
+The stride between consecutive vertices is:
+
+    6 × sizeof(float)
+
+Our position attribute contains two components and starts at offset zero:
+
+```cpp
+glVertexAttribPointer(
+    0,
+    2,
+    GL_FLOAT,
+    GL_FALSE,
+    6 * sizeof(float),
+    (void*)0
+);
+
 glEnableVertexAttribArray(0);
-glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(2 * sizeof(float)));
+```
+
+Our color attribute contains four components.
+
+Because the position occupies the first two floats, the color starts at:
+
+    2 × sizeof(float)
+
+Therefore:
+
+```cpp
+glVertexAttribPointer(
+    1,
+    4,
+    GL_FLOAT,
+    GL_FALSE,
+    6 * sizeof(float),
+    (void*)(2 * sizeof(float))
+);
+
 glEnableVertexAttribArray(1);
 ```
 
-Pay attention that even though the operation is the same for binding both `indices` and `triangleVertices`, but the arguments are different. Why these need to change can be found in the [docs.gl](https://docs.gl/gl4/glBufferData). Just look at what is the difference between `GL_ARRAY_BUFFER` and `GL_ELEMENT_ARRAY_BUFFER`. Again, keep in mind, that OpenGL is a big state machine (you hear this term a lot when reading tutorials or learning something about OpenGL). In a sense, it means that everything in OpenGL is configured by pressing some buttons, or turning something on and off (by buttons and turning something on / off I mean that calling operations and setting something). 
+Our complete configuration is now:
 
-Also, another major change is that now, we first have to bind `vao` before doing any operations using ebo. Why? Because binding `ebo` can be thought as "rules" on how the data buffer from the VRAM should be read. Keep in mind that.
+```cpp
+glBindVertexArray(vao);
 
-The final thing we need to change in our example, is in the rendering `while` loop, it is how we issue a draw call. Previously, we did it, by calling this operation:
+// Upload vertex data
+glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
-```C++
-glDrawArrays(GL_TRIANGLES, 0, 3);
+glBufferData(
+    GL_ARRAY_BUFFER,
+    sizeof(square_vertices),
+    square_vertices,
+    GL_STATIC_DRAW
+);
+
+// Upload index data
+glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+
+glBufferData(
+    GL_ELEMENT_ARRAY_BUFFER,
+    sizeof(indices),
+    indices,
+    GL_STATIC_DRAW
+);
+
+// Position attribute
+glVertexAttribPointer(
+    0,
+    2,
+    GL_FLOAT,
+    GL_FALSE,
+    6 * sizeof(float),
+    (void*)0
+);
+
+glEnableVertexAttribArray(0);
+
+// Color attribute
+glVertexAttribPointer(
+    1,
+    4,
+    GL_FLOAT,
+    GL_FALSE,
+    6 * sizeof(float),
+    (void*)(2 * sizeof(float))
+);
+
+glEnableVertexAttribArray(1);
 ```
 
-Now we have to change this a bit and do this instead:
+---
 
-```C++
+# 7. The Relationship Between an EBO and a VAO
+
+There is an important difference between how VBO and EBO bindings interact with a VAO.
+
+The binding of:
+
+```cpp
+GL_ELEMENT_ARRAY_BUFFER
+```
+
+is part of the **VAO's state**.
+
+Consider:
+
+```cpp
+glBindVertexArray(vao);
+glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+```
+
+Because `vao` is currently bound, the element-buffer binding becomes associated with that VAO.
+
+Conceptually:
+
+    VAO
+    │
+    ├── Vertex Attribute 0
+    │   ├── format
+    │   ├── stride
+    │   ├── offset
+    │   └── vertex-buffer association
+    │
+    ├── Vertex Attribute 1
+    │   ├── format
+    │   ├── stride
+    │   ├── offset
+    │   └── vertex-buffer association
+    │
+    └── Element Buffer Binding
+        └── EBO
+
+Later, when we bind the VAO again:
+
+```cpp
+glBindVertexArray(vao);
+```
+
+its element-buffer binding is restored.
+
+This means that during rendering we normally do not need to bind the EBO separately every frame.
+
+Binding the correct VAO is enough.
+
+For example:
+
+```cpp
+glBindVertexArray(vao);
 glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 ```
 
-Why did we have to change it? Well, previously, we had just a single data buffer in the memory, so during the processing, OpenGL had to just look into the memory, where the data buffer is loaded, read all of it, apply reading rules from the VAO, and that's it. Even the function name `glDrawArrays` kinda indicates that arrays should be draw (keep in mind that `triangleVertices` is an array, so the data inside the VRAM is also array-like). Also, `glDrawArrays` expects data in the buffer to be sequential (exact order they appear in the memory), meaning that once 3 vertices are read, it needs to construct a triangle, then again, 3 new vertices are read --> construct a triangle. Now, for the `glDrawElements`, the story is a bit different. OpenGL still needs to look into VRAM, but it needs to do it twice, once for the `triangleVertices` and the second time for the `indices`. Another change is that `glDrawElements` does not read data from the buffer sequentially. The triangles are constructed based on what indices define them, that is why we need an index buffer inside the VRAM. 
+The VAO already knows which element buffer should be used.
 
-To my knowledge, I do not know and I do not think, that this way (I mean using `glDrawElements` instead of `glDrawArrays` is any slower in terms of speed).
+## What About `GL_ARRAY_BUFFER`?
 
+There is an important distinction here.
 
-### Conclusion
+The current global `GL_ARRAY_BUFFER` binding is **not** simply stored in the VAO as an equivalent counterpart to the EBO binding.
 
-I hope this really helped you to understand those 2 main questions I asked in the beginning about EBO:
+Instead, when we call:
 
-* __What is it?__ It is a special OpenGL type of object that stores indices data for the vertices.
-* __Why do should we use it?__ Because it allows our program not duplicate vertex data, thus preventing for overloading the VRAM with unnecessary data. This literaly saves memory space in VRAM.
+```cpp
+glVertexAttribPointer(...);
+```
+
+OpenGL associates the buffer currently bound to `GL_ARRAY_BUFFER` with that particular vertex attribute configuration.
+
+So, in the traditional vertex-attribute setup used in this lesson:
+
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        ↓
+    glVertexAttribPointer(...)
+        ↓
+    the attribute configuration records
+    which buffer supplies its data
+
+The EBO works differently:
+
+    glBindVertexArray(vao);
+        ↓
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        ↓
+    the VAO stores that element-buffer binding
+
+This is an important OpenGL state-management detail.
+
+A useful rule for now is:
+
+> **Bind the VAO before binding the EBO that should be associated with it.**
+
+---
+
+# 8. Drawing with `glDrawElements`
+
+Before introducing an EBO, we rendered using `glDrawArrays()`.
+
+For example:
+
+```cpp
+glDrawArrays(GL_TRIANGLES, 0, 3);
+```
+
+`glDrawArrays()` processes vertices sequentially.
+
+For six vertices:
+
+    vertex 0
+    vertex 1
+    vertex 2
+        ↓
+    triangle 1
+
+    vertex 3
+    vertex 4
+    vertex 5
+        ↓
+    triangle 2
+
+With indexed rendering, we instead want OpenGL to follow the indices stored in our EBO.
+
+Therefore, we use:
+
+```cpp
+glDrawElements(
+    GL_TRIANGLES,
+    6,
+    GL_UNSIGNED_INT,
+    nullptr
+);
+```
+
+The function has four important arguments:
+
+    glDrawElements(
+        primitive type,
+        index count,
+        index type,
+        index offset
+    );
+
+Let's examine each one.
+
+---
+
+## 8.1 Primitive Type
+
+The first argument is:
+
+```cpp
+GL_TRIANGLES
+```
+
+This tells OpenGL how the indexed vertices should be assembled into primitives.
+
+With `GL_TRIANGLES`, every group of three indices forms an independent triangle.
+
+Our EBO contains:
+
+    0, 1, 2, 2, 3, 0
+
+OpenGL interprets this as:
+
+    0, 1, 2
+    └───────┘
+    triangle 1
+
+    2, 3, 0
+    └───────┘
+    triangle 2
+
+The EBO itself does not say "these are triangles."
+
+The primitive mode passed to `glDrawElements()` determines how OpenGL interprets the index sequence.
+
+---
+
+## 8.2 Index Count
+
+The second argument is:
+
+```cpp
+6
+```
+
+This tells OpenGL how many **indices** to process.
+
+Our index array contains:
+
+```cpp
+unsigned int indices[] = {
+    0, 1, 2,
+    2, 3, 0
+};
+```
+
+There are six indices.
+
+Therefore:
+
+```cpp
+glDrawElements(
+    GL_TRIANGLES,
+    6,
+    GL_UNSIGNED_INT,
+    nullptr
+);
+```
+
+uses all six.
+
+A common mistake is to pass the number of unique vertices instead.
+
+For our square:
+
+    Unique vertices = 4
+    Indices         = 6
+    Triangles       = 2
+
+The `count` parameter must be:
+
+    6
+
+because it represents the number of **indices to read**, not the number of unique vertices.
+
+---
+
+## 8.3 Index Type
+
+The third argument is:
+
+```cpp
+GL_UNSIGNED_INT
+```
+
+This tells OpenGL the data type stored inside the EBO.
+
+Our C++ array is:
+
+```cpp
+unsigned int indices[] = {
+    0, 1, 2,
+    2, 3, 0
+};
+```
+
+Therefore, we use:
+
+```cpp
+GL_UNSIGNED_INT
+```
+
+`glDrawElements()` supports these index types:
+
+    GL_UNSIGNED_BYTE
+    GL_UNSIGNED_SHORT
+    GL_UNSIGNED_INT
+
+Their typical sizes are:
+
+| OpenGL Type | Size | Maximum Index Value |
+|---|---:|---:|
+| `GL_UNSIGNED_BYTE` | 1 byte | 255 |
+| `GL_UNSIGNED_SHORT` | 2 bytes | 65,535 |
+| `GL_UNSIGNED_INT` | 4 bytes | 4,294,967,295 |
+
+A smaller index type can reduce the size of the EBO.
+
+For example, if a mesh contains no more than 65,536 addressable vertices for a draw, `GL_UNSIGNED_SHORT` may be sufficient.
+
+For our beginner examples, `GL_UNSIGNED_INT` is convenient and easy to understand.
+
+The important requirement is:
+
+> **The type passed to `glDrawElements()` must match the type of the indices stored in the EBO.**
+
+---
+
+## 8.4 Index Offset
+
+The final argument is:
+
+```cpp
+nullptr
+```
+
+When an element buffer is bound, this argument is interpreted as a **byte offset into the EBO**.
+
+Passing:
+
+```cpp
+nullptr
+```
+
+represents an offset of zero.
+
+Therefore:
+
+```cpp
+glDrawElements(
+    GL_TRIANGLES,
+    6,
+    GL_UNSIGNED_INT,
+    nullptr
+);
+```
+
+means:
+
+> Read 6 unsigned integer indices starting from byte offset 0 of the currently bound element buffer and use them to construct triangles.
+
+In other words:
+
+    EBO:
+
+    offset 0
+       ↓
+    [0][1][2][2][3][0]
+
+OpenGL begins reading from the first index.
+
+Later, if one EBO contained indices for several groups of geometry, a non-zero offset could be used to begin reading from another location.
+
+For now:
+
+```cpp
+nullptr
+```
+
+simply means:
+
+> **Start at the beginning of the EBO.**
+
+---
+
+# 9. `glDrawArrays` vs. `glDrawElements`
+
+We now have two different approaches to drawing geometry.
+
+## `glDrawArrays()`
+
+`glDrawArrays()` processes vertices sequentially.
+
+For example:
+
+```cpp
+glDrawArrays(GL_TRIANGLES, 0, 6);
+```
+
+conceptually processes:
+
+    0 → 1 → 2 → 3 → 4 → 5
+
+With `GL_TRIANGLES`, OpenGL forms:
+
+    0, 1, 2 → triangle 1
+    3, 4, 5 → triangle 2
+
+If the two triangles need identical complete vertices, those vertex entries still need to appear more than once in the vertex data.
+
+---
+
+## `glDrawElements()`
+
+`glDrawElements()` follows indices stored in an element buffer.
+
+For our square:
+
+    0 → 1 → 2 → 2 → 3 → 0
+
+The VBO contains only:
+
+    vertex 0
+    vertex 1
+    vertex 2
+    vertex 3
+
+while the EBO contains:
+
+    0, 1, 2,
+    2, 3, 0
+
+This allows vertices `0` and `2` to be referenced multiple times.
+
+The basic difference is:
+
+| Function | How Vertices Are Selected |
+|---|---|
+| `glDrawArrays()` | Sequentially |
+| `glDrawElements()` | Through indices |
+
+Indexed rendering has two major potential advantages.
+
+### Reduced Vertex-Data Duplication
+
+Shared complete vertex records can be stored once instead of being duplicated for every triangle that uses them.
+
+### Reduced Repeated Vertex Processing
+
+GPUs commonly contain a **post-transform vertex cache**.
+
+When nearby indexed triangles reference the same vertex, the GPU may be able to reuse a previously calculated vertex-shader result rather than running the vertex shader again for that vertex.
+
+Conceptually:
+
+    index 2
+        ↓
+    process vertex 2
+        ↓
+    result may be cached
+        ↓
+    index 2 appears again
+        ↓
+    cached result may be reused
+
+This is one reason why index ordering can matter for performance in larger meshes.
+
+However, indexed rendering should not be understood as automatically faster in every possible situation.
+
+Performance depends on many factors, including:
+
+- mesh topology
+- vertex reuse
+- index ordering
+- vertex size
+- vertex shader complexity
+- memory-access patterns
+- GPU architecture
+
+For now, the main idea is:
+
+> **Indexed rendering is especially useful when multiple primitives can reuse the same complete vertices.**
+
+---
+
+# 10. Complete EBO Setup
+
+Let's put everything together.
+
+## Vertex and Index Data
+
+```cpp
+float square_vertices[] = {
+    // positions    // colors
+    -0.5f,  0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // 0 - top left
+    -0.5f, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // 1 - bottom left
+     0.5f, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // 2 - bottom right
+     0.5f,  0.5f,   0.0f, 1.0f, 1.0f, 1.0f  // 3 - top right
+};
+
+unsigned int indices[] = {
+    0, 1, 2,
+    2, 3, 0
+};
+```
+
+## Generate the Objects
+
+```cpp
+unsigned int vao;
+unsigned int vbo;
+unsigned int ebo;
+
+glGenVertexArrays(1, &vao);
+glGenBuffers(1, &vbo);
+glGenBuffers(1, &ebo);
+```
+
+## Bind the VAO
+
+```cpp
+glBindVertexArray(vao);
+```
+
+## Upload the Vertex Data
+
+```cpp
+glBindBuffer(GL_ARRAY_BUFFER, vbo);
+
+glBufferData(
+    GL_ARRAY_BUFFER,
+    sizeof(square_vertices),
+    square_vertices,
+    GL_STATIC_DRAW
+);
+```
+
+## Upload the Index Data
+
+```cpp
+glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+
+glBufferData(
+    GL_ELEMENT_ARRAY_BUFFER,
+    sizeof(indices),
+    indices,
+    GL_STATIC_DRAW
+);
+```
+
+## Configure the Position Attribute
+
+```cpp
+glVertexAttribPointer(
+    0,
+    2,
+    GL_FLOAT,
+    GL_FALSE,
+    6 * sizeof(float),
+    (void*)0
+);
+
+glEnableVertexAttribArray(0);
+```
+
+## Configure the Color Attribute
+
+```cpp
+glVertexAttribPointer(
+    1,
+    4,
+    GL_FLOAT,
+    GL_FALSE,
+    6 * sizeof(float),
+    (void*)(2 * sizeof(float))
+);
+
+glEnableVertexAttribArray(1);
+```
+
+## Unbind the VAO
+
+```cpp
+glBindVertexArray(0);
+```
+
+The complete initialization code is therefore:
+
+```cpp
+float square_vertices[] = {
+    // positions    // colors
+    -0.5f,  0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // 0 - top left
+    -0.5f, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // 1 - bottom left
+     0.5f, -0.5f,   0.0f, 1.0f, 1.0f, 1.0f, // 2 - bottom right
+     0.5f,  0.5f,   0.0f, 1.0f, 1.0f, 1.0f  // 3 - top right
+};
+
+unsigned int indices[] = {
+    0, 1, 2,
+    2, 3, 0
+};
+
+unsigned int vao;
+unsigned int vbo;
+unsigned int ebo;
+
+glGenVertexArrays(1, &vao);
+glGenBuffers(1, &vbo);
+glGenBuffers(1, &ebo);
+
+glBindVertexArray(vao);
+
+// Upload vertex data
+glBindBuffer(GL_ARRAY_BUFFER, vbo);
+
+glBufferData(
+    GL_ARRAY_BUFFER,
+    sizeof(square_vertices),
+    square_vertices,
+    GL_STATIC_DRAW
+);
+
+// Upload index data
+glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+
+glBufferData(
+    GL_ELEMENT_ARRAY_BUFFER,
+    sizeof(indices),
+    indices,
+    GL_STATIC_DRAW
+);
+
+// Position attribute
+glVertexAttribPointer(
+    0,
+    2,
+    GL_FLOAT,
+    GL_FALSE,
+    6 * sizeof(float),
+    (void*)0
+);
+
+glEnableVertexAttribArray(0);
+
+// Color attribute
+glVertexAttribPointer(
+    1,
+    4,
+    GL_FLOAT,
+    GL_FALSE,
+    6 * sizeof(float),
+    (void*)(2 * sizeof(float))
+);
+
+glEnableVertexAttribArray(1);
+
+// Unbind the VAO
+glBindVertexArray(0);
+```
+
+Then, inside the rendering loop:
+
+```cpp
+glBindVertexArray(vao);
+
+glDrawElements(
+    GL_TRIANGLES,
+    6,
+    GL_UNSIGNED_INT,
+    nullptr
+);
+```
+
+Because the EBO is associated with the VAO, we do not need to bind the EBO again before every draw call.
+
+Conceptually, the rendering process looks like this:
+
+    Bind VAO
+        ↓
+    restore vertex-input configuration
+        ↓
+    restore associated EBO binding
+        ↓
+    call glDrawElements()
+        ↓
+    read indices from the EBO
+        ↓
+    indices select vertex records
+        ↓
+    vertex shader processes required vertices
+        ↓
+    OpenGL assembles the resulting vertices
+    into triangles
+        ↓
+    triangles continue through the
+    graphics pipeline
+
+For our square:
+
+    EBO:
+    0, 1, 2, 2, 3, 0
+
+        ↓
+
+    Triangle 1:
+    vertex 0
+    vertex 1
+    vertex 2
+
+        ↓
+
+    Triangle 2:
+    vertex 2
+    vertex 3
+    vertex 0
+
+---
+
+# 11. Common EBO Mistakes
+
+There are several mistakes that are easy to make when first working with indexed rendering.
+
+## Mistake 1: Passing the Number of Vertices to `glDrawElements()`
+
+Consider:
+
+```cpp
+glDrawElements(
+    GL_TRIANGLES,
+    6,
+    GL_UNSIGNED_INT,
+    nullptr
+);
+```
+
+The second argument is the number of **indices**, not the number of unique vertices.
+
+Our square has:
+
+    4 unique vertices
+    6 indices
+
+Therefore:
+
+    Correct count = 6
+
+not:
+
+    Incorrect count = 4
+
+---
+
+## Mistake 2: Using the Wrong Index Type
+
+If the EBO contains:
+
+```cpp
+unsigned int indices[] = {
+    0, 1, 2,
+    2, 3, 0
+};
+```
+
+then the draw call should use:
+
+```cpp
+GL_UNSIGNED_INT
+```
+
+If the buffer instead contained an appropriate array of unsigned 16-bit indices, the corresponding OpenGL type would be:
+
+```cpp
+GL_UNSIGNED_SHORT
+```
+
+The type passed to `glDrawElements()` must describe the actual index representation stored in the EBO.
+
+---
+
+## Mistake 3: Forgetting That EBO Binding Is VAO State
+
+Suppose we have:
+
+```cpp
+glBindVertexArray(vao);
+glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+```
+
+The EBO binding is now associated with that VAO.
+
+If we later change or clear the element-buffer binding while the same VAO is bound, we also change that VAO's element-buffer state.
+
+For example, this is usually **not** what we want during setup:
+
+```cpp
+glBindVertexArray(vao);
+glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+
+// ...
+
+glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+```
+
+because the final call changes the element-buffer binding stored in the currently bound VAO.
+
+If you want to finish configuring the VAO, it is generally simpler to unbind the VAO:
+
+```cpp
+glBindVertexArray(0);
+```
+
+without first clearing its EBO binding.
+
+---
+
+## Mistake 4: Thinking an Index Refers Only to a Position
+
+An index selects a **complete vertex**.
+
+If your vertex contains:
+
+    position
+    color
+    normal
+    texture coordinates
+
+then an index selects all of those attributes together.
+
+Two vertices with the same position but different normals are not necessarily reusable as one vertex.
+
+For example:
+
+    Vertex A:
+    position = (1, 1, 1)
+    normal   = (1, 0, 0)
+
+    Vertex B:
+    position = (1, 1, 1)
+    normal   = (0, 1, 0)
+
+These must normally be represented as separate vertex entries because their complete attribute data differs.
+
+---
+
+## Mistake 5: Using an Invalid Index
+
+Every index must refer to a valid vertex that can be fetched from the configured vertex buffers.
+
+If we only have four vertices:
+
+    valid indices:
+
+    0
+    1
+    2
+    3
+
+then an index such as:
+
+    7
+
+would attempt to reference vertex data outside the intended range.
+
+Your index data must therefore correspond correctly to the available vertex data.
+
+---
+
+# 12. Deleting the OpenGL Objects
+
+When the objects are no longer needed, we should delete them.
+
+Delete the EBO:
+
+```cpp
+glDeleteBuffers(1, &ebo);
+```
+
+Delete the VBO:
+
+```cpp
+glDeleteBuffers(1, &vbo);
+```
+
+Delete the VAO:
+
+```cpp
+glDeleteVertexArrays(1, &vao);
+```
+
+Together:
+
+```cpp
+glDeleteBuffers(1, &ebo);
+glDeleteBuffers(1, &vbo);
+glDeleteVertexArrays(1, &vao);
+```
+
+This releases the OpenGL objects when we no longer need them.
+
+---
+
+# 13. Conclusion
+
+In this lesson, we introduced **indexed rendering** and the **Element Buffer Object**.
+
+Let's summarize the most important concepts.
+
+## What Is an EBO?
+
+An EBO is a buffer object used to store **indices**.
+
+The indices determine which vertices are used when OpenGL assembles primitives.
+
+For example:
+
+    VBO:
+
+    vertex 0 → top left
+    vertex 1 → bottom left
+    vertex 2 → bottom right
+    vertex 3 → top right
+
+    EBO:
+
+    0, 1, 2,
+    2, 3, 0
+
+The VBO contains the actual vertex attributes.
+
+The EBO contains indices that reference those vertices.
+
+---
+
+## Why Use an EBO?
+
+Without indexed rendering, two triangles might require:
+
+    Triangle 1:
+
+    A, B, C
+
+    Triangle 2:
+
+    C, D, A
+
+Vertices `A` and `C` are used by both triangles.
+
+Without indices, their complete data may need to be duplicated.
+
+With indexed rendering, we can instead store:
+
+    Vertices:
+
+    0 → A
+    1 → B
+    2 → C
+    3 → D
+
+and reference them using:
+
+    Indices:
+
+    0, 1, 2
+    2, 3, 0
+
+The complete vertex records for `A` and `C` are stored once but referenced more than once.
+
+---
+
+## `glDrawArrays()` vs. `glDrawElements()`
+
+`glDrawArrays()` processes vertices sequentially:
+
+    0 → 1 → 2 → 3 → 4 → 5
+
+`glDrawElements()` follows an index sequence:
+
+    0 → 1 → 2 → 2 → 3 → 0
+
+Therefore:
+
+| Function | Vertex Selection |
+|---|---|
+| `glDrawArrays()` | Sequential |
+| `glDrawElements()` | Index-based |
+
+---
+
+## VAO, VBO, and EBO
+
+At this point, we have introduced three important OpenGL objects:
+
+| Object | Purpose |
+|---|---|
+| **VBO** | Stores vertex data |
+| **EBO** | Stores indices |
+| **VAO** | Stores vertex-input configuration and the element-buffer binding |
+
+A simplified conceptual representation is:
+
+    VAO
+    │
+    ├── Vertex Attribute Configuration
+    │       │
+    │       └── VBO
+    │           │
+    │           └── Vertex Data
+    │
+    └── EBO
+        │
+        └── Indices
+
+During indexed rendering:
+
+    glBindVertexArray(vao)
+        ↓
+    glDrawElements(...)
+        ↓
+    read indices from EBO
+        ↓
+    select vertex records
+        ↓
+    process vertices
+        ↓
+    assemble primitives
+        ↓
+    continue through the
+    graphics pipeline
+
+The most important idea to remember from this lesson is:
+
+> **A VBO stores vertex data. An EBO stores indices that select vertices. A VAO stores the vertex-input configuration and its associated element-buffer binding.**
+
+With VAOs, VBOs, and EBOs together, we now have the basic OpenGL objects required to represent and render indexed geometry efficiently.
