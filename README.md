@@ -12,6 +12,30 @@ The long-term goal is to gradually move from drawing the first triangle to under
 
 ---
 
+# Setup & Building
+1. Clone the repository and initialize submodules:
+    ```sh
+    git clone --recursive https://github.com/ArturasDruteika/open_gl_learn.git
+    # or, if already cloned:
+    git submodule update --init --recursive
+    ```
+2. Install build dependencies (Linux example):
+    ```sh
+    ./scripts/setup-linux.sh
+    ```
+3. Build the project:
+    ```sh
+    ./scripts/build-linux.sh
+    ```
+4. Run the app (Example)
+    ```sh
+    cd build/release/bin
+    ./name_of_the_lesson
+    # e.g. ./lesson_5__going_to_3d
+    ```
+
+---
+
 # Contents
 
 - [About the Project](#about-the-project)
