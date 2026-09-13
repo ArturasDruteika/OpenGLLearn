@@ -28,3 +28,8 @@ target_link_libraries(${PROJECT_NAME}
 add_dependencies(${PROJECT_NAME}
     Glad
 )
+
+install(
+    TARGETS ${PROJECT_NAME}
+    RUNTIME DESTINATION bin
+)
